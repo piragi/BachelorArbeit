@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:showIn="@layout/activity_device">
+
+    <Button
+        android:id="@+id/button_connect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:background="#14a4e2"
+        android:text="CONNECT"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Heart Rate"
+        android:id="@+id/textViewHRLabel"
+        android:layout_below="@+id/button_connect"
+        android:layout_alignParentStart="true"
+
+        android:layout_marginTop="41dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="HR Value"
+        android:id="@+id/textViewHRValue"
+        android:layout_alignTop="@+id/textViewHRLabel"
+        android:layout_alignParentRight="true"
+        android:gravity="right"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Breathing Rate"
+        android:id="@+id/textViewBRLabel"
+        android:layout_below="@+id/textViewHRLabel"
+        android:layout_alignParentStart="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="BR Value"
+        android:id="@+id/textViewBRValue"
+        android:layout_alignTop="@+id/textViewBRLabel"
+        android:layout_alignParentRight="true"
+        android:gravity="right"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Activity"
+        android:id="@+id/textViewActLabel"
+        android:layout_below="@+id/textViewBRLabel"
+        android:layout_alignParentStart="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="ACT Value"
+        android:id="@+id/textViewActValue"
+        android:layout_alignTop="@+id/textViewActLabel"
+        android:layout_alignParentRight="true"
+        android:gravity="right"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Steps"
+        android:id="@+id/textViewStepLabel"
+        android:layout_below="@+id/textViewActLabel"
+        android:layout_alignParentStart="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Steps Value"
+        android:id="@+id/textViewStepValue"
+        android:layout_alignTop="@+id/textViewStepLabel"
+        android:layout_alignParentRight="true"
+        android:gravity="right"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Cadence"
+        android:id="@+id/textViewCadenceLabel"
+        android:layout_below="@+id/textViewStepLabel"
+        android:layout_alignParentStart="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Cadence Value"
+        android:id="@+id/textViewCadenceValue"
+        android:layout_alignTop="@+id/textViewCadenceLabel"
+        android:layout_alignParentRight="true"
+        android:gravity="right"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Min. Vent."
+        android:id="@+id/textViewMVLabel"
+        android:layout_below="@+id/textViewCadenceLabel"
+        android:layout_alignParentStart="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Min Vent Value"
+        android:id="@+id/textViewMVValue"
+        android:layout_alignTop="@+id/textViewMVLabel"
+        android:layout_alignParentRight="true"
+        android:gravity="right"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Resp. Circ. Temp."
+        android:id="@+id/textViewRTLabel"
+        android:layout_below="@+id/textViewMVLabel"
+        android:layout_alignParentStart="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Resp. Circ. Value"
+        android:id="@+id/textViewRTValue"
+        android:layout_alignTop="@+id/textViewRTLabel"
+        android:layout_alignParentRight="true"
+        android:gravity="right"/>
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Thor raw"
+        android:id="@+id/textViewThorRawLabel"
+        android:layout_below="@+id/textViewRTLabel"
+        android:layout_alignParentStart="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Thor raw value"
+        android:id="@+id/textViewThorRawValue"
+        android:layout_alignTop="@+id/textViewThorRawLabel"
+        android:layout_alignParentRight="true"
+        android:gravity="right"/>
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Thor tempe corrected"
+        android:id="@+id/textViewThroCorrLabel"
+        android:layout_below="@+id/textViewThorRawLabel"
+        android:layout_alignParentStart="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Thor corrdis value"
+        android:id="@+id/textViewThorCorrValue"
+        android:layout_alignTop="@+id/textViewThroCorrLabel"
+        android:layout_alignParentRight="true"
+        android:gravity="right"/>
+
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Abdo raw"
+        android:id="@+id/textViewAbdoRawLabel"
+        android:layout_below="@+id/textViewThorCorrValue"
+        android:layout_alignParentStart="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Abdo raw Value"
+        android:id="@+id/textViewAbdoRawValue"
+        android:layout_alignTop="@+id/textViewAbdoRawLabel"
+        android:layout_alignParentRight="true"
+        android:gravity="right"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Abdo tempe corrected"
+        android:id="@+id/textViewAbdoCorrLabel"
+        android:layout_below="@+id/textViewAbdoRawValue"
+        android:layout_alignParentStart="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Abdo corr Value"
+        android:id="@+id/textViewAbdoCorrValue"
+        android:layout_alignTop="@+id/textViewAbdoCorrLabel"
+        android:layout_alignParentRight="true"
+        android:gravity="right"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Vol corr adjusted(L)"
+        android:id="@+id/textViewVolRespLabel"
+        android:layout_below="@+id/textViewAbdoCorrValue"
+        android:layout_alignParentStart="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Vol adj Value"
+        android:id="@+id/textViewVolRespValue"
+        android:layout_alignTop="@+id/textViewVolRespLabel"
+        android:layout_alignParentRight="true"
+        android:gravity="right"/>
+</RelativeLayout>
