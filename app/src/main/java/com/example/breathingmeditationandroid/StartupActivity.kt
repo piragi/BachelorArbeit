@@ -3,6 +3,7 @@ package com.example.breathingmeditationandroid
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -77,11 +78,15 @@ class StartupActivity : AppCompatActivity() {
             var _textView: TextView
 
             constructor(v: View) : super(v) {
-                    _textView = v.findViewById(R.id.row_item) as TextView
-                    val container = v.findViewById<LinearLayout>(R.id.container)
-                    container.setOnClickListener {
-                       Log.i("blug","hello world")
+                _textView = v.findViewById(R.id.row_item) as TextView
+                val container = v.findViewById<LinearLayout>(R.id.container)
+                container.setOnClickListener {
+                    Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
+                        startService(intent)
                     }
+                    Log.i("blug", "hello world")
+
+                }
             }
         }
     }
