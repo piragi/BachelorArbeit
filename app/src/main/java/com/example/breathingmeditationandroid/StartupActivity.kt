@@ -87,10 +87,13 @@ class StartupActivity : AppCompatActivity() {
                     if (_device == null) {
                         Toast.makeText(applicationContext, "whutwhut", Toast.LENGTH_SHORT).show()
                     }
-                    Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
+                    Intent(applicationContext, TestView::class.java).also { intent ->
                         intent.putExtra("Device", _device)
-                        startService(intent)
+                        startActivity(intent)
                     }
+
+                    //startActivity(Intent(applicationContext, TestView::class.java))
+
                 }
             }
         }

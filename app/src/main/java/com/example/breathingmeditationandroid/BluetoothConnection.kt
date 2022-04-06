@@ -18,6 +18,9 @@ import kotlin.concurrent.thread
 //inspired by: https://developer.android.com/guide/components/services
 class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener, HexoskinCommandWriter {
 
+    //Binder for clients
+    private val binder: LocalBinder = LocalBinder()
+
     private val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
     //service
@@ -41,7 +44,15 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     private var mHexoskinAPI: HexoskinAPI? = null
 
     //Values
-    private var mSteps: String = "0"
+    var mSteps: String = "0"
+
+    inner class LocalBinder : Binder() {
+        fun getService(): BluetoothConnection = this@BluetoothConnection
+    }
+
+    override fun onBind(intent: Intent): IBinder {
+        return binder
+    }
 
 
     private inner class ServiceHandler(looper: Looper) : Handler(looper) {
@@ -175,11 +186,6 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
             mHexoskinAPI!!.Uninit()
             mHexoskinAPI = null
         }
-    }
-
-
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
     }
 
     override fun onDestroy() {
