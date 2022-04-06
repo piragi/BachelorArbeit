@@ -28,23 +28,17 @@ class StartupActivity : AppCompatActivity() {
 
         //View erstellen
         setContentView(R.layout.activity_device_list)
-        //setSupportActionBar((Toolbar) findViewByID(R.id.toolbar))
-        //setTitle(R.string.title)
         val _recyclerView: RecyclerView = findViewById(R.id.my_recycler_view)
         _recyclerView.setHasFixedSize(true)
         val _layoutManager: RecyclerView.LayoutManager = LinearLayoutManager(this)
         _recyclerView.layoutManager = _layoutManager
 
-
-        //request permission
-//        val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean -> if (isGranted) {
-//            //go on
-//        } else { finish()} }
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.BLUETOOTH), 0)
 
         val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
         val pairedDevices: Set<BluetoothDevice>? = bluetoothAdapter?.bondedDevices
 
+        //TODO: change the null check
         if (pairedDevices != null) {
             if (pairedDevices.isNotEmpty()) {
                 mDevices.addAll(pairedDevices)
@@ -79,21 +73,13 @@ class StartupActivity : AppCompatActivity() {
             var _textView: TextView
 
             constructor(v: View) : super(v) {
-
-
                 _textView = v.findViewById(R.id.row_item) as TextView
                 val container = v.findViewById<LinearLayout>(R.id.container)
                 container.setOnClickListener {
-                    if (_device == null) {
-                        Toast.makeText(applicationContext, "whutwhut", Toast.LENGTH_SHORT).show()
-                    }
                     Intent(applicationContext, TestView::class.java).also { intent ->
                         intent.putExtra("Device", _device)
                         startActivity(intent)
                     }
-
-                    //startActivity(Intent(applicationContext, TestView::class.java))
-
                 }
             }
         }

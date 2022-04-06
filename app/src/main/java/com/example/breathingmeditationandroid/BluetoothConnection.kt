@@ -8,6 +8,7 @@ import android.os.*
 import android.util.Log
 import android.widget.Toast
 import com.hexoskin.hsapi_android.*
+import com.hexoskin.resp_drift_correction.CorrectionResult
 import com.hexoskin.resp_drift_correction.Corrector
 import java.io.IOException
 import java.io.InputStream
@@ -45,6 +46,13 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
 
     //Values
     var mSteps: String = "0"
+    var mHr: String = "0"
+    var mBr: String = "0"
+    var mCadence: String = "0"
+    var mMv: String = "0"
+    var mAct: String = "0"
+    var mThorRaw: String = "0"
+    var mAbdoCorrected: String = "0"
 
     inner class LocalBinder : Binder() {
         fun getService(): BluetoothConnection = this@BluetoothConnection
@@ -61,9 +69,6 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
             try {
                 //sending the received data to the activity we are viewing rn
                 //thread has to loop till quit signal and send data to the activity we are in
-
-                Thread.sleep(7000)
-                Toast.makeText(applicationContext, mSteps, Toast.LENGTH_LONG).show()
 
             } catch (e: InterruptedException) {
                 //Restore interrupt status
@@ -88,8 +93,6 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        //Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show()
-
         //connect to the Hexoskin
         try {
             mDevice = intent?.extras?.getParcelable("Device")
@@ -108,8 +111,16 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
             mHexoskinAPI!!.enableBluetoothTransmission()
             mHexoskinAPI!!.setRealTimeMode(true, false, true, true, true)
 
-            //Toast.makeText(this, "connected", Toast.LENGTH_SHORT).show()
-
+            //The hexoskin only keeps bluetooth transmission for 1 minute. After that it disable
+            //the bluetooth transmission. This is for Hexoskin device to continue to transmit data
+            mKeepAliveTimer = Timer()
+            mKeepAliveTimer!!.scheduleAtFixedRate(object : TimerTask() {
+                override fun run() {
+                    if (mHexoskinAPI != null) {
+                        mHexoskinAPI!!.enableBluetoothTransmission()
+                    }
+                }
+            }, 0, (45 * 1000).toLong())
 
         } catch (e: IOException) {
             e.printStackTrace()
@@ -206,14 +217,54 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
             }
 
             if (type == HexoskinDataType.STEP) {
-                mSteps = "MAKING MOVES $value"
+                mSteps = "$value"
+            } else if (type == HexoskinDataType.HEART_RATE) {
+                mHr = "$value"
+            } else if (type == HexoskinDataType.BREATHING_RATE) {
+                mBr = "$value"
+            } else if (type == HexoskinDataType.CADENCE) {
+                mCadence = "$value"
+            } else if (type == HexoskinDataType.MINUTE_VENTILATION) {
+                mMv = "$value"
+            } else if (type == HexoskinDataType.ACTIVITY) {
+                mAct = "$value"
             }
         }
 
 
     }
 
-    override fun onRawData(p0: HexoskinDataType?, p1: Long, p2: Array<out IntArray>?) {
+    override fun onRawData(type: HexoskinDataType?, time: Long, values: Array<out IntArray>?) {
+
+        var dataString = StringBuilder()
+        values?.let {
+            for (array in values) {
+                dataString.append("$time-")
+                for (value in array) {
+                    dataString.append("$value ")
+                }
+            }
+
+            if (type == HexoskinDataType.RAW_RESP) {
+                for (i in values[0].indices) {
+                    var thor = values[0][i]
+                    var abdo = values[1][i]
+
+                    //adding respiration values
+                    var adjustedTimestamp =
+                        mCorrector.addRespiration(time + i * 2, mHexoskinAPI!!.currentSessionStartTime, thor, abdo)
+
+                    if (adjustedTimestamp >= 0) {
+                        var correction = mCorrector.getCorrectedRespiration(adjustedTimestamp)
+                        mAbdoCorrected = correction.abdominal.toString()
+                    }
+                }
+
+                mThorRaw = values[0][0].toString()
+
+            }
+        }
+
         return
     }
 

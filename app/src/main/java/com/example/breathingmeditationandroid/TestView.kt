@@ -9,16 +9,16 @@ import android.os.Bundle
 import android.os.IBinder
 import android.view.View
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import kotlin.concurrent.thread
 
 class TestView : AppCompatActivity() {
 
     //View
     private lateinit var textSteps: TextView
+    private lateinit var textAbdominalCorrected: TextView
+    private lateinit var textThorasicRaw: TextView
+
 
     //Bluetooth Connection
     private var mDevice: BluetoothDevice? = null
@@ -46,7 +46,9 @@ class TestView : AppCompatActivity() {
 
         //setup View
         setContentView(R.layout.activity_device)
-        textSteps = (findViewById<View>(R.id.textViewStepValue) as TextView)
+        textSteps = findViewById<View>(R.id.textViewStepValue) as TextView
+        textAbdominalCorrected = findViewById<View>(R.id.textViewAbdoRawValue) as TextView
+        textThorasicRaw = findViewById<View>(R.id.textViewThorRawValue) as TextView
 
         //setup and start bluetooth service
         mDevice = intent?.extras?.getParcelable("Device")
@@ -61,15 +63,12 @@ class TestView : AppCompatActivity() {
         thread(start = true) {
 
             while (true) {
-                if (textSteps.text != mService.mSteps) {
-                    runOnUiThread(java.lang.Runnable {
-
-
-                        textSteps.text = mService.mSteps
-
-
-                    })
-                }
+                Thread.sleep(75)
+                runOnUiThread(java.lang.Runnable {
+                    textSteps.text = mService.mSteps
+                    textAbdominalCorrected.text = mService.mAbdoCorrected
+                    textThorasicRaw.text = mService.mThorRaw
+                })
             }
 
         }
