@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -78,14 +79,18 @@ class StartupActivity : AppCompatActivity() {
             var _textView: TextView
 
             constructor(v: View) : super(v) {
+
+
                 _textView = v.findViewById(R.id.row_item) as TextView
                 val container = v.findViewById<LinearLayout>(R.id.container)
                 container.setOnClickListener {
+                    if (_device == null) {
+                        Toast.makeText(applicationContext, "whutwhut", Toast.LENGTH_SHORT).show()
+                    }
                     Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
+                        intent.putExtra("Device", _device)
                         startService(intent)
                     }
-                    Log.i("blug", "hello world")
-
                 }
             }
         }

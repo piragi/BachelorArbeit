@@ -5,11 +5,10 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Intent
 import android.os.*
+import android.util.Log
 import android.widget.Toast
-import com.hexoskin.hsapi_android.HexoskinAPI
-import com.hexoskin.hsapi_android.HexoskinDataListener
-import com.hexoskin.hsapi_android.HexoskinDataStatus
-import com.hexoskin.hsapi_android.HexoskinDataType
+import com.hexoskin.hsapi_android.*
+import com.hexoskin.resp_drift_correction.Corrector
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -17,7 +16,7 @@ import java.util.*
 import kotlin.concurrent.thread
 
 //inspired by: https://developer.android.com/guide/components/services
-class BluetoothConnection : Service(), HexoskinDataListener {
+class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener, HexoskinCommandWriter {
 
     private val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
@@ -34,9 +33,15 @@ class BluetoothConnection : Service(), HexoskinDataListener {
     //Reader
     private var mReader: Thread? = null
 
+    //Corrector
+    private var mCorrector: Corrector = Corrector()
+
     //Hexoskin specifics
     private var mKeepAliveTimer: Timer? = null
     private var mHexoskinAPI: HexoskinAPI? = null
+
+    //Values
+    private var mSteps: String = "0"
 
 
     private inner class ServiceHandler(looper: Looper) : Handler(looper) {
@@ -44,7 +49,11 @@ class BluetoothConnection : Service(), HexoskinDataListener {
             //we get a message from the thread
             try {
                 //sending the received data to the activity we are viewing rn
-                Thread.sleep(100000)
+                //thread has to loop till quit signal and send data to the activity we are in
+
+                Thread.sleep(7000)
+                Toast.makeText(applicationContext, mSteps, Toast.LENGTH_LONG).show()
+
             } catch (e: InterruptedException) {
                 //Restore interrupt status
                 Thread.currentThread().interrupt()
@@ -52,7 +61,7 @@ class BluetoothConnection : Service(), HexoskinDataListener {
 
             // Stop the service using the startId, so that we don't stop
             // the service in the middle of handling another job
-            stopSelf(msg.arg1)
+            //stopSelf(msg.arg1)
         }
 
     }
@@ -68,18 +77,28 @@ class BluetoothConnection : Service(), HexoskinDataListener {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show()
 
         //connect to the Hexoskin
         try {
+            mDevice = intent?.extras?.getParcelable("Device")
+            mCorrector.init()
+            disconnected()
             mSocket = mDevice?.createRfcommSocketToServiceRecord(uuid)
             mSocket?.connect()
             mInput = mSocket?.inputStream
             mOutput = mSocket?.outputStream
 
-            //listenBluetoothIncomingData()
+            listenBluetoothIncomingData()
 
-            Toast.makeText(this, "connected", Toast.LENGTH_SHORT).show()
+            mHexoskinAPI = HexoskinAPI(this, this, this)
+            mHexoskinAPI!!.Init()
+
+            mHexoskinAPI!!.enableBluetoothTransmission()
+            mHexoskinAPI!!.setRealTimeMode(true, false, true, true, true)
+
+            //Toast.makeText(this, "connected", Toast.LENGTH_SHORT).show()
+
 
         } catch (e: IOException) {
             e.printStackTrace()
@@ -98,14 +117,17 @@ class BluetoothConnection : Service(), HexoskinDataListener {
     }
 
     fun listenBluetoothIncomingData() {
-        mReader = thread {
+
+        //disconnected()
+        thread(start = true) {
             val buffer = ByteArray(512)
             while (!Thread.interrupted()) {
                 try {
                     val length = mInput!!.read(buffer, 0, 512)
                     if (length < 1) continue
-                    val data = Arrays.copyOfRange(buffer, 0, length)
+                    val data = buffer.copyOfRange(0, length)
                     mHexoskinAPI!!.decode(data)
+
                 } catch (e: IOException) {
                     e.printStackTrace()
                     break
@@ -115,12 +137,43 @@ class BluetoothConnection : Service(), HexoskinDataListener {
     }
 
     fun disconnected() {
-        if (mSocket != null && mSocket!!.isConnected) {
+
+        if (mSocket?.isConnected == true) {
             try {
-                mSocket!!.close()
+                mSocket?.close()
             } catch (e1: IOException) {
                 e1.printStackTrace()
             }
+        }
+        if (mInput != null) {
+            try {
+                mInput!!.close()
+            } catch (e1: IOException) {
+                e1.printStackTrace()
+            }
+        }
+
+        if (mOutput != null) {
+            try {
+                mOutput!!.close()
+            } catch (e1: IOException) {
+                e1.printStackTrace()
+            }
+        }
+
+        if (mReader != null) {
+            mReader!!.interrupt()
+            mReader = null
+        }
+
+        if (mKeepAliveTimer != null) {
+            mKeepAliveTimer!!.cancel()
+            mKeepAliveTimer!!.purge()
+        }
+
+        if (mHexoskinAPI != null) {
+            mHexoskinAPI!!.Uninit()
+            mHexoskinAPI = null
         }
     }
 
@@ -133,12 +186,45 @@ class BluetoothConnection : Service(), HexoskinDataListener {
         Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show()
     }
 
-    override fun onData(p0: HexoskinDataType?, p1: Long, p2: Int, p3: EnumSet<HexoskinDataStatus>?) {
-        TODO("Not yet implemented")
+    override fun onData(type: HexoskinDataType?, time: Long, value: Int, status: EnumSet<HexoskinDataStatus>?) {
+        //Corrector
+        type?.let {
+            if (type == HexoskinDataType.INSPIRATION) {
+                mCorrector.addInspiration(time, mHexoskinAPI!!.currentSessionStartTime)
+            } else if (type == HexoskinDataType.EXPIRATION) {
+                mCorrector.addExpiration(time, mHexoskinAPI!!.currentSessionStartTime)
+            } else if (type == HexoskinDataType.RESP_CIRCUIT_TEMPERATURE) {
+                val converted: Float =
+                    mHexoskinAPI!!.hexoskin_sample_conversion(HexoskinDataType.RESP_CIRCUIT_TEMPERATURE, value)
+                mCorrector.addRespTemperature(time, mHexoskinAPI!!.currentSessionStartTime, converted.toDouble())
+            }
+
+            if (type == HexoskinDataType.STEP) {
+                mSteps = "MAKING MOVES $value"
+            }
+        }
+
+
     }
 
     override fun onRawData(p0: HexoskinDataType?, p1: Long, p2: Array<out IntArray>?) {
-        TODO("Not yet implemented")
+        return
+    }
+
+    override fun onLog(logLevel: Int, logTxt: String?) {
+        Log.println(logLevel, "HexoskinAPI", logTxt)
+    }
+
+    override fun getLogLevel(): Int {
+        return Log.DEBUG
+    }
+
+    override fun write(cmd: ByteArray?) {
+        try {
+            mOutput?.write(cmd)
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
     }
 
 }
