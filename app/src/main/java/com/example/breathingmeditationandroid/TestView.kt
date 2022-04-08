@@ -9,10 +9,10 @@ import android.os.Bundle
 import android.os.IBinder
 import android.view.View
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
 import kotlin.concurrent.thread
 
-class TestView : AppCompatActivity() {
+class TestView : ComponentActivity() {
 
     //View
     private lateinit var textSteps: TextView
@@ -59,24 +59,24 @@ class TestView : AppCompatActivity() {
         }
     }
 
+    fun preview() {
+
+    }
+
     fun updateView() {
         thread(start = true) {
 
             while (true) {
                 Thread.sleep(75)
-                runOnUiThread(java.lang.Runnable {
-                    textSteps.text = mService.mSteps
-                    textAbdominalCorrected.text = mService.mAbdoCorrected
-                    textThorasicRaw.text = mService.mThorRaw
-                })
+                runOnUiThread {
+                    with(mService) {
+                        textSteps.text = mSteps
+                        textAbdominalCorrected.text = mAbdoCorrected
+                        textThorasicRaw.text = mThorRaw
+                    }
+                }
             }
-
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-
-
-    }
 }

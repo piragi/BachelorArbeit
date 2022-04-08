@@ -8,7 +8,6 @@ import android.os.*
 import android.util.Log
 import android.widget.Toast
 import com.hexoskin.hsapi_android.*
-import com.hexoskin.resp_drift_correction.CorrectionResult
 import com.hexoskin.resp_drift_correction.Corrector
 import java.io.IOException
 import java.io.InputStream
@@ -46,11 +45,11 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
 
     //Values
     var mSteps: String = "0"
-    var mHr: String = "0"
-    var mBr: String = "0"
-    var mCadence: String = "0"
-    var mMv: String = "0"
-    var mAct: String = "0"
+    private var mHr: String = "0"
+    private var mBr: String = "0"
+    private var mCadence: String = "0"
+    private var mMv: String = "0"
+    private var mAct: String = "0"
     var mThorRaw: String = "0"
     var mAbdoCorrected: String = "0"
 
@@ -116,7 +115,7 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
             mKeepAliveTimer = Timer()
             mKeepAliveTimer!!.scheduleAtFixedRate(object : TimerTask() {
                 override fun run() {
-                    if (mHexoskinAPI != null) {
+                    mHexoskinAPI?.let {
                         mHexoskinAPI!!.enableBluetoothTransmission()
                     }
                 }
@@ -138,7 +137,7 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         return START_STICKY
     }
 
-    fun listenBluetoothIncomingData() {
+    private fun listenBluetoothIncomingData() {
 
         //disconnected()
         thread(start = true) {
@@ -158,7 +157,7 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         }
     }
 
-    fun disconnected() {
+    private fun disconnected() {
 
         if (mSocket?.isConnected == true) {
             try {
@@ -167,33 +166,21 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                 e1.printStackTrace()
             }
         }
-        if (mInput != null) {
-            try {
-                mInput!!.close()
-            } catch (e1: IOException) {
-                e1.printStackTrace()
-            }
+
+        try {
+            mInput?.close()
+            mOutput?.close()
+            mKeepAliveTimer?.cancel()
+            mKeepAliveTimer?.purge()
+        } catch (e1: IOException) {
+            e1.printStackTrace()
         }
 
-        if (mOutput != null) {
-            try {
-                mOutput!!.close()
-            } catch (e1: IOException) {
-                e1.printStackTrace()
-            }
-        }
-
-        if (mReader != null) {
+        mReader?.let {
             mReader!!.interrupt()
             mReader = null
         }
-
-        if (mKeepAliveTimer != null) {
-            mKeepAliveTimer!!.cancel()
-            mKeepAliveTimer!!.purge()
-        }
-
-        if (mHexoskinAPI != null) {
+        mHexoskinAPI?.let {
             mHexoskinAPI!!.Uninit()
             mHexoskinAPI = null
         }
@@ -206,28 +193,21 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     override fun onData(type: HexoskinDataType?, time: Long, value: Int, status: EnumSet<HexoskinDataStatus>?) {
         //Corrector
         type?.let {
-            if (type == HexoskinDataType.INSPIRATION) {
-                mCorrector.addInspiration(time, mHexoskinAPI!!.currentSessionStartTime)
-            } else if (type == HexoskinDataType.EXPIRATION) {
-                mCorrector.addExpiration(time, mHexoskinAPI!!.currentSessionStartTime)
-            } else if (type == HexoskinDataType.RESP_CIRCUIT_TEMPERATURE) {
-                val converted: Float =
-                    mHexoskinAPI!!.hexoskin_sample_conversion(HexoskinDataType.RESP_CIRCUIT_TEMPERATURE, value)
-                mCorrector.addRespTemperature(time, mHexoskinAPI!!.currentSessionStartTime, converted.toDouble())
-            }
-
-            if (type == HexoskinDataType.STEP) {
-                mSteps = "$value"
-            } else if (type == HexoskinDataType.HEART_RATE) {
-                mHr = "$value"
-            } else if (type == HexoskinDataType.BREATHING_RATE) {
-                mBr = "$value"
-            } else if (type == HexoskinDataType.CADENCE) {
-                mCadence = "$value"
-            } else if (type == HexoskinDataType.MINUTE_VENTILATION) {
-                mMv = "$value"
-            } else if (type == HexoskinDataType.ACTIVITY) {
-                mAct = "$value"
+            when (type) {
+                HexoskinDataType.INSPIRATION -> mCorrector.addInspiration(time, mHexoskinAPI!!.currentSessionStartTime)
+                HexoskinDataType.EXPIRATION -> mCorrector.addExpiration(time, mHexoskinAPI!!.currentSessionStartTime)
+                HexoskinDataType.RESP_CIRCUIT_TEMPERATURE -> {
+                    val converted: Float =
+                        mHexoskinAPI!!.hexoskin_sample_conversion(HexoskinDataType.RESP_CIRCUIT_TEMPERATURE, value)
+                    mCorrector.addRespTemperature(time, mHexoskinAPI!!.currentSessionStartTime, converted.toDouble())
+                }
+                HexoskinDataType.STEP -> mSteps = "$value"
+                HexoskinDataType.HEART_RATE -> mHr = "$value"
+                HexoskinDataType.BREATHING_RATE -> mBr = "$value"
+                HexoskinDataType.CADENCE -> mCadence = "$value"
+                HexoskinDataType.MINUTE_VENTILATION -> mMv = "$value"
+                HexoskinDataType.ACTIVITY -> mAct = "$value"
+                else -> return
             }
         }
 
@@ -236,7 +216,7 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
 
     override fun onRawData(type: HexoskinDataType?, time: Long, values: Array<out IntArray>?) {
 
-        var dataString = StringBuilder()
+        val dataString = StringBuilder()
         values?.let {
             for (array in values) {
                 dataString.append("$time-")
@@ -247,28 +227,25 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
 
             if (type == HexoskinDataType.RAW_RESP) {
                 for (i in values[0].indices) {
-                    var thor = values[0][i]
-                    var abdo = values[1][i]
+                    val thor = values[0][i]
+                    val abdo = values[1][i]
 
                     //adding respiration values
-                    var adjustedTimestamp =
+                    val adjustedTimestamp =
                         mCorrector.addRespiration(time + i * 2, mHexoskinAPI!!.currentSessionStartTime, thor, abdo)
 
                     if (adjustedTimestamp >= 0) {
-                        var correction = mCorrector.getCorrectedRespiration(adjustedTimestamp)
+                        val correction = mCorrector.getCorrectedRespiration(adjustedTimestamp)
                         mAbdoCorrected = correction.abdominal.toString()
                     }
                 }
-
                 mThorRaw = values[0][0].toString()
-
             }
         }
-
         return
     }
 
-    override fun onLog(logLevel: Int, logTxt: String?) {
+    override fun onLog(logLevel: Int, logTxt: String) {
         Log.println(logLevel, "HexoskinAPI", logTxt)
     }
 
