@@ -1,5 +1,6 @@
 package com.example.breathingmeditationandroid
 
+import android.annotation.SuppressLint
 import android.app.Service
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
@@ -44,14 +45,14 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     private var mHexoskinAPI: HexoskinAPI? = null
 
     //Values
-    var mSteps: String = "0"
+    var mSteps: Int = 0
     private var mHr: String = "0"
     private var mBr: String = "0"
     private var mCadence: String = "0"
     private var mMv: String = "0"
     private var mAct: String = "0"
     var mThorRaw: String = "0"
-    var mAbdoCorrected: String = "0"
+    var mAbdoCorrected: Double = 0.0
 
     inner class LocalBinder : Binder() {
         fun getService(): BluetoothConnection = this@BluetoothConnection
@@ -91,6 +92,7 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         }
     }
 
+    @SuppressLint("MissingPermission") //TODO: why did this come up? was no problem before ??
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         //connect to the Hexoskin
         try {
@@ -201,7 +203,7 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                         mHexoskinAPI!!.hexoskin_sample_conversion(HexoskinDataType.RESP_CIRCUIT_TEMPERATURE, value)
                     mCorrector.addRespTemperature(time, mHexoskinAPI!!.currentSessionStartTime, converted.toDouble())
                 }
-                HexoskinDataType.STEP -> mSteps = "$value"
+                HexoskinDataType.STEP -> mSteps = value
                 HexoskinDataType.HEART_RATE -> mHr = "$value"
                 HexoskinDataType.BREATHING_RATE -> mBr = "$value"
                 HexoskinDataType.CADENCE -> mCadence = "$value"
@@ -236,7 +238,7 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
 
                     if (adjustedTimestamp >= 0) {
                         val correction = mCorrector.getCorrectedRespiration(adjustedTimestamp)
-                        mAbdoCorrected = correction.abdominal.toString()
+                        mAbdoCorrected = correction.abdominal
                     }
                 }
                 mThorRaw = values[0][0].toString()
