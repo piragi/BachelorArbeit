@@ -45,14 +45,16 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     private var mHexoskinAPI: HexoskinAPI? = null
 
     //Values
-    var mSteps: Int = 0
-    private var mHr: String = "0"
-    private var mBr: String = "0"
-    private var mCadence: String = "0"
-    private var mMv: String = "0"
-    private var mAct: String = "0"
-    var mThorRaw: String = "0"
+    private var mSteps: Int = 0
+    private var mHr: Int = 0
+    private var mBr: Int = 0
+    private var mCadence: Int = 0
+    private var mMv: Int = 0
+    private var mAct: Int = 0
+    private var mThorRaw: Int = 0
+    private var mAbdoRaw: Int = 0
     var mAbdoCorrected: Double = 0.0
+    var mThorCorrected: Double = 0.0
 
     inner class LocalBinder : Binder() {
         fun getService(): BluetoothConnection = this@BluetoothConnection
@@ -188,10 +190,6 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         }
     }
 
-    override fun onDestroy() {
-        Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show()
-    }
-
     override fun onData(type: HexoskinDataType?, time: Long, value: Int, status: EnumSet<HexoskinDataStatus>?) {
         //Corrector
         type?.let {
@@ -206,11 +204,11 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
 
                 //TODO: rewrite to get data types
                 HexoskinDataType.STEP -> mSteps = value
-                HexoskinDataType.HEART_RATE -> mHr = "$value"
-                HexoskinDataType.BREATHING_RATE -> mBr = "$value"
-                HexoskinDataType.CADENCE -> mCadence = "$value"
-                HexoskinDataType.MINUTE_VENTILATION -> mMv = "$value"
-                HexoskinDataType.ACTIVITY -> mAct = "$value"
+                HexoskinDataType.HEART_RATE -> mHr = value
+                HexoskinDataType.BREATHING_RATE -> mBr = value
+                HexoskinDataType.CADENCE -> mCadence = value
+                HexoskinDataType.MINUTE_VENTILATION -> mMv = value
+                HexoskinDataType.ACTIVITY -> mAct = value
                 else -> return
             }
         }
@@ -241,9 +239,11 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                     if (adjustedTimestamp >= 0) {
                         val correction = mCorrector.getCorrectedRespiration(adjustedTimestamp)
                         mAbdoCorrected = correction.abdominal
+                        mThorCorrected = correction.thorasic
                     }
                 }
-                mThorRaw = values[0][0].toString()
+                mThorRaw = values[0][0]
+                mAbdoRaw = values[1][0]
             }
         }
         return
@@ -263,6 +263,17 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         } catch (e: IOException) {
             e.printStackTrace()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        disconnected()
+
+        // Corrector has to be uninitialized
+        mCorrector.uninit()
+
+        Toast.makeText(this, "disconnected", Toast.LENGTH_SHORT).show()
+
     }
 
 }
