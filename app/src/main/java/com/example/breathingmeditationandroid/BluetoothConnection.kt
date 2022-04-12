@@ -203,6 +203,8 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                         mHexoskinAPI!!.hexoskin_sample_conversion(HexoskinDataType.RESP_CIRCUIT_TEMPERATURE, value)
                     mCorrector.addRespTemperature(time, mHexoskinAPI!!.currentSessionStartTime, converted.toDouble())
                 }
+
+                //TODO: rewrite to get data types
                 HexoskinDataType.STEP -> mSteps = value
                 HexoskinDataType.HEART_RATE -> mHr = "$value"
                 HexoskinDataType.BREATHING_RATE -> mBr = "$value"
