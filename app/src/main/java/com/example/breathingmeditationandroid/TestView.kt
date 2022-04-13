@@ -1,7 +1,6 @@
 package com.example.breathingmeditationandroid
 
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.bluetooth.BluetoothDevice
 import android.content.ComponentName
 import android.content.Context
@@ -9,21 +8,16 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.util.DisplayMetrics
-import android.util.Log
 import android.view.View
 import android.widget.ImageView
-import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.core.animation.doOnEnd
 import kotlin.concurrent.thread
+import kotlin.system.exitProcess
 
 class TestView : ComponentActivity() {
 
     //View
-    private lateinit var textSteps: TextView
-    private lateinit var textAbdominalCorrected: TextView
-    private lateinit var textThorasicRaw: TextView
     private lateinit var player: ImageView
     private lateinit var bg1: ImageView
     private lateinit var bg2: ImageView
@@ -76,7 +70,7 @@ class TestView : ComponentActivity() {
     }
 
     fun updateView() {
-        runOnUiThread() {
+        runOnUiThread {
             var endBg1 = -1920f
             var endBg2 = 0f
             val bg1Animation = ObjectAnimator.ofFloat(bg1, "translationX", bg1.x, endBg1).apply {
@@ -99,28 +93,32 @@ class TestView : ComponentActivity() {
         thread(start = true, isDaemon = true) {
 
             while (true) {
-            val offset = (((mService.mAbdoCorrected)+2)*100).toFloat()
-            val steps:Float = (200f/300f)
-            val calculate = offset/steps + 200f
 
-            /*Log.i("calculate", "$calculate")
-            Log.i("offset", "$offset")
-            Log.i("steps", "$steps")
-            Log.i("player", "${player.y}")*/
-            val posPlayer = player.y
+                //if(mService.filteredAbdo > 0.0) {
+                    val combined = (((mService.mAbdoCorrected)+2)*100).toFloat()
+                    val steps:Float = (200f/300f)
+                    val calculate = combined/steps + 100f
+
+                    val posPlayer = player.y
                     runOnUiThread {
 
                         with(mService) {
-                                ObjectAnimator.ofFloat(player, "translationY", posPlayer, calculate).apply {
+                            ObjectAnimator.ofFloat(player, "translationY", posPlayer, calculate)
+                                .apply {
                                     duration = 0
                                     start()
                                 }
                         }
                     }
-
-                Thread.sleep(10)
+                //}
+                Thread.sleep(1)
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        exitProcess(0)
     }
 
 }

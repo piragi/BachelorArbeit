@@ -1,17 +1,16 @@
 package com.example.breathingmeditationandroid
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -22,16 +21,17 @@ class StartupActivity : AppCompatActivity() {
 
     private val mDevices = ArrayList<BluetoothDevice>()
 
+    @SuppressLint("MissingPermission") //TODO: supressed permissions
     override fun onCreate(savedInstanceState: Bundle?) {
         //Instance State
         super.onCreate(savedInstanceState)
 
         //View erstellen
         setContentView(R.layout.activity_device_list)
-        val _recyclerView: RecyclerView = findViewById(R.id.my_recycler_view)
-        _recyclerView.setHasFixedSize(true)
-        val _layoutManager: RecyclerView.LayoutManager = LinearLayoutManager(this)
-        _recyclerView.layoutManager = _layoutManager
+        val recyclerView: RecyclerView = findViewById(R.id.my_recycler_view)
+        recyclerView.setHasFixedSize(true)
+        val layoutManager: RecyclerView.LayoutManager = LinearLayoutManager(this)
+        recyclerView.layoutManager = layoutManager
 
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.BLUETOOTH), 0)
 
@@ -45,8 +45,8 @@ class StartupActivity : AppCompatActivity() {
             }
         }
 
-        val _adapter = DevicesAdapter()
-        _recyclerView.adapter = _adapter
+        val adapter = DevicesAdapter()
+        recyclerView.adapter = adapter
 
     }
 
@@ -61,23 +61,23 @@ class StartupActivity : AppCompatActivity() {
             return DeviceViewHolder(v)
         }
 
+        @SuppressLint("MissingPermission") //TODO: Supressed permission
         override fun onBindViewHolder(holder: DevicesAdapter.DeviceViewHolder, position: Int) {
             val device: BluetoothDevice = mDevices[position]
-            holder._textView.text = device.name
-            holder._device = device
+            holder.textView.text = device.name
+            holder.device = device
         }
 
-        inner class DeviceViewHolder : RecyclerView.ViewHolder {
+        inner class DeviceViewHolder(v: View) : RecyclerView.ViewHolder(v) {
 
-            lateinit var _device: BluetoothDevice
-            var _textView: TextView
+            lateinit var device: BluetoothDevice
+            var textView: TextView = v.findViewById(R.id.row_item) as TextView
 
-            constructor(v: View) : super(v) {
-                _textView = v.findViewById(R.id.row_item) as TextView
+            init {
                 val container = v.findViewById<LinearLayout>(R.id.container)
                 container.setOnClickListener {
                     Intent(applicationContext, TestView::class.java).also { intent ->
-                        intent.putExtra("Device", _device)
+                        intent.putExtra("Device", device)
                         startActivity(intent)
                     }
                 }

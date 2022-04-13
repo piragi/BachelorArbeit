@@ -10,10 +10,14 @@ import android.util.Log
 import android.widget.Toast
 import com.hexoskin.hsapi_android.*
 import com.hexoskin.resp_drift_correction.Corrector
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 
 //inspired by: https://developer.android.com/guide/components/services
@@ -23,10 +27,6 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     private val binder: LocalBinder = LocalBinder()
 
     private val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-
-    //service
-    private var serviceLoop: Looper? = null
-    private var serviceHandler: ServiceHandler? = null
 
     //Bluetooth
     private var mDevice: BluetoothDevice? = null
@@ -56,6 +56,11 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     var mAbdoCorrected: Double = 0.0
     var mThorCorrected: Double = 0.0
 
+    var arrayOfThor = ArrayList<Double>(0)
+    var filteredAbdo = 0.0
+
+
+
     inner class LocalBinder : Binder() {
         fun getService(): BluetoothConnection = this@BluetoothConnection
     }
@@ -65,85 +70,62 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     }
 
 
-    private inner class ServiceHandler(looper: Looper) : Handler(looper) {
-        override fun handleMessage(msg: Message) {
-            //we get a message from the thread
-            try {
-                //sending the received data to the activity we are viewing rn
-                //thread has to loop till quit signal and send data to the activity we are in
-
-            } catch (e: InterruptedException) {
-                //Restore interrupt status
-                Thread.currentThread().interrupt()
-            }
-
-            // Stop the service using the startId, so that we don't stop
-            // the service in the middle of handling another job
-            //stopSelf(msg.arg1)
-        }
-
-    }
-
     override fun onCreate() {
-        //Start up Thread running the service
-        HandlerThread("ServiceStartArguments", Process.THREAD_PRIORITY_BACKGROUND).apply {
-            start()
-
-            serviceLoop = looper
-            serviceHandler = ServiceHandler(looper)
-        }
+        super.onCreate()
+        disconnected()
+        mCorrector.uninit()
     }
 
     @SuppressLint("MissingPermission") //TODO: why did this come up? was no problem before ??
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        //connect to the Hexoskin
-        try {
-            mDevice = intent?.extras?.getParcelable("Device")
-            mCorrector.init()
-            disconnected()
-            mSocket = mDevice?.createRfcommSocketToServiceRecord(uuid)
-            mSocket?.connect()
-            mInput = mSocket?.inputStream
-            mOutput = mSocket?.outputStream
+        //TODO: remove helperThis
+        //TODO: optimize coroutine
+        val helperThis = this
+            GlobalScope.launch(Dispatchers.Default) {
+                //connect to the Hexoskin
+                try {
+                    mDevice = intent?.extras?.getParcelable("Device")
+                    mCorrector.init()
+                    disconnected()
 
-            listenBluetoothIncomingData()
+                    mSocket = mDevice?.createRfcommSocketToServiceRecord(uuid)
+                    mSocket?.connect()
 
-            mHexoskinAPI = HexoskinAPI(this, this, this)
-            mHexoskinAPI!!.Init()
+                    mInput = mSocket?.inputStream
+                    mOutput = mSocket?.outputStream
 
-            mHexoskinAPI!!.enableBluetoothTransmission()
-            mHexoskinAPI!!.setRealTimeMode(true, false, true, true, true)
+                    listenBluetoothIncomingData()
 
-            //The hexoskin only keeps bluetooth transmission for 1 minute. After that it disable
-            //the bluetooth transmission. This is for Hexoskin device to continue to transmit data
-            mKeepAliveTimer = Timer()
-            mKeepAliveTimer!!.scheduleAtFixedRate(object : TimerTask() {
-                override fun run() {
-                    mHexoskinAPI?.let {
-                        mHexoskinAPI!!.enableBluetoothTransmission()
-                    }
+                    mHexoskinAPI = HexoskinAPI(helperThis, helperThis, helperThis)
+                    mHexoskinAPI!!.Init()
+
+                    mHexoskinAPI!!.enableBluetoothTransmission()
+                    mHexoskinAPI!!.setRealTimeMode(true, false, true, true, true)
+
+                    //The hexoskin only keeps bluetooth transmission for 1 minute. After that it disable
+                    //the bluetooth transmission. This is for Hexoskin device to continue to transmit data
+                    mKeepAliveTimer = Timer()
+                    mKeepAliveTimer!!.scheduleAtFixedRate(object : TimerTask() {
+                        override fun run() {
+                            mHexoskinAPI?.let {
+                                mHexoskinAPI!!.enableBluetoothTransmission()
+                            }
+                        }
+                    }, 0, (45 * 1000).toLong())
+
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    Log.i("crash:", "bluetoothconnection")
                 }
-            }, 0, (45 * 1000).toLong())
-
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Toast.makeText(this, "Unable to connect, try again", Toast.LENGTH_LONG).show()
-        }
-
-        //For each start request send a message to start a job and deliver the start ID
-        //so we know which request we're stopping when we finish the job
-        serviceHandler?.obtainMessage()?.also { msg ->
-            msg.arg1 = startId
-            serviceHandler?.sendMessage(msg)
-        }
-
+            }
         // If we get killed, after returning from here, restart
+
         return START_STICKY
     }
 
     private fun listenBluetoothIncomingData() {
 
-        //disconnected()
+        //TODO: thread crashes when getting to landscape, nullpointerException
         thread(start = true) {
             val buffer = ByteArray(512)
             while (!Thread.interrupted()) {
@@ -202,7 +184,6 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                     mCorrector.addRespTemperature(time, mHexoskinAPI!!.currentSessionStartTime, converted.toDouble())
                 }
 
-                //TODO: rewrite to get data types
                 HexoskinDataType.STEP -> mSteps = value
                 HexoskinDataType.HEART_RATE -> mHr = value
                 HexoskinDataType.BREATHING_RATE -> mBr = value
@@ -240,6 +221,8 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                         val correction = mCorrector.getCorrectedRespiration(adjustedTimestamp)
                         mAbdoCorrected = correction.abdominal
                         mThorCorrected = correction.thorasic
+                        //filteredAbdo = filterStepsFromBreathing()
+                        //Log.i("filtered", "$filteredAbdo")
                     }
                 }
                 mThorRaw = values[0][0]
@@ -265,6 +248,11 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         }
     }
 
+    fun filterStepsFromBreathing() : Double {
+        //TODO: smoothing data
+        return 0.0
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         disconnected()
@@ -277,3 +265,4 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     }
 
 }
+
