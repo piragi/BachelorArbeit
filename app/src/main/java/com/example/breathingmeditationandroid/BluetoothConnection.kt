@@ -17,7 +17,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 
 //inspired by: https://developer.android.com/guide/components/services
@@ -25,41 +24,20 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
 
     //Binder for clients
     private val binder: LocalBinder = LocalBinder()
-
     private val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-
     //Bluetooth
     private var mDevice: BluetoothDevice? = null
     private var mSocket: BluetoothSocket? = null
-    private var mOutput: OutputStream? = null
-    private var mInput: InputStream? = null
-
-    //Reader
-    private var mReader: Thread? = null
-
     //Corrector
     private var mCorrector: Corrector = Corrector()
-
     //Hexoskin specifics
     private var mKeepAliveTimer: Timer? = null
     private var mHexoskinAPI: HexoskinAPI? = null
-
     //Values
-    private var mSteps: Int = 0
-    private var mHr: Int = 0
-    private var mBr: Int = 0
-    private var mCadence: Int = 0
-    private var mMv: Int = 0
-    private var mAct: Int = 0
     private var mThorRaw: Int = 0
     private var mAbdoRaw: Int = 0
     var mAbdoCorrected: Double = 0.0
     var mThorCorrected: Double = 0.0
-
-    var arrayOfThor = ArrayList<Double>(0)
-    var filteredAbdo = 0.0
-
-
 
     inner class LocalBinder : Binder() {
         fun getService(): BluetoothConnection = this@BluetoothConnection
@@ -91,14 +69,10 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                     mSocket = mDevice?.createRfcommSocketToServiceRecord(uuid)
                     mSocket?.connect()
 
-                    mInput = mSocket?.inputStream
-                    mOutput = mSocket?.outputStream
-
                     listenBluetoothIncomingData()
 
                     mHexoskinAPI = HexoskinAPI(helperThis, helperThis, helperThis)
                     mHexoskinAPI!!.Init()
-
                     mHexoskinAPI!!.enableBluetoothTransmission()
                     mHexoskinAPI!!.setRealTimeMode(true, false, true, true, true)
 
@@ -126,11 +100,11 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     private fun listenBluetoothIncomingData() {
 
         //TODO: thread crashes when getting to landscape, nullpointerException
-        thread(start = true) {
+        thread(start = true, name = "listenBluetoothIncomingData") {
             val buffer = ByteArray(512)
             while (!Thread.interrupted()) {
                 try {
-                    val length = mInput!!.read(buffer, 0, 512)
+                    val length = mSocket!!.inputStream!!.read(buffer, 0, 512)
                     if (length < 1) continue
                     val data = buffer.copyOfRange(0, length)
                     mHexoskinAPI!!.decode(data)
@@ -154,17 +128,12 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         }
 
         try {
-            mInput?.close()
-            mOutput?.close()
+            mSocket!!.inputStream!!.close()
+            mSocket!!.outputStream!!.close()
             mKeepAliveTimer?.cancel()
             mKeepAliveTimer?.purge()
         } catch (e1: IOException) {
             e1.printStackTrace()
-        }
-
-        mReader?.let {
-            mReader!!.interrupt()
-            mReader = null
         }
         mHexoskinAPI?.let {
             mHexoskinAPI!!.Uninit()
@@ -183,18 +152,9 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                         mHexoskinAPI!!.hexoskin_sample_conversion(HexoskinDataType.RESP_CIRCUIT_TEMPERATURE, value)
                     mCorrector.addRespTemperature(time, mHexoskinAPI!!.currentSessionStartTime, converted.toDouble())
                 }
-
-                HexoskinDataType.STEP -> mSteps = value
-                HexoskinDataType.HEART_RATE -> mHr = value
-                HexoskinDataType.BREATHING_RATE -> mBr = value
-                HexoskinDataType.CADENCE -> mCadence = value
-                HexoskinDataType.MINUTE_VENTILATION -> mMv = value
-                HexoskinDataType.ACTIVITY -> mAct = value
                 else -> return
             }
         }
-
-
     }
 
     override fun onRawData(type: HexoskinDataType?, time: Long, values: Array<out IntArray>?) {
@@ -221,8 +181,6 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                         val correction = mCorrector.getCorrectedRespiration(adjustedTimestamp)
                         mAbdoCorrected = correction.abdominal
                         mThorCorrected = correction.thorasic
-                        //filteredAbdo = filterStepsFromBreathing()
-                        //Log.i("filtered", "$filteredAbdo")
                     }
                 }
                 mThorRaw = values[0][0]
@@ -242,15 +200,10 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
 
     override fun write(cmd: ByteArray?) {
         try {
-            mOutput?.write(cmd)
+            mSocket!!.outputStream!!.write(cmd)
         } catch (e: IOException) {
             e.printStackTrace()
         }
-    }
-
-    fun filterStepsFromBreathing() : Double {
-        //TODO: smoothing data
-        return 0.0
     }
 
     override fun onDestroy() {

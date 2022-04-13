@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
@@ -21,7 +22,6 @@ class TestView : ComponentActivity() {
     private lateinit var player: ImageView
     private lateinit var bg1: ImageView
     private lateinit var bg2: ImageView
-
 
     //Bluetooth Connection
     private var mDevice: BluetoothDevice? = null
@@ -40,6 +40,8 @@ class TestView : ComponentActivity() {
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
+            mService.stopService(intent)
+            mBound = false
             return
         }
     }
@@ -57,8 +59,6 @@ class TestView : ComponentActivity() {
         player.x = 800f
         player.y = 300f
 
-
-
         //setup and start bluetooth service
         mDevice = intent?.extras?.getParcelable("Device")
 
@@ -70,6 +70,7 @@ class TestView : ComponentActivity() {
     }
 
     fun updateView() {
+        //TODO: smoothen background animations
         runOnUiThread {
             var endBg1 = -1920f
             var endBg2 = 0f
@@ -91,27 +92,23 @@ class TestView : ComponentActivity() {
         }
 
         thread(start = true, isDaemon = true) {
-
             while (true) {
-
-                //if(mService.filteredAbdo > 0.0) {
-                    val combined = (((mService.mAbdoCorrected)+2)*100).toFloat()
+                    val combined = (((mService.mThorCorrected*0.8)+(mService.mAbdoCorrected*0.2))*100).toFloat()
                     val steps:Float = (200f/300f)
-                    val calculate = combined/steps + 100f
+                    val calculate = combined/steps + 300f
+
+                    /*Log.i("1-abdo:", "${mService.mAbdoCorrected}")
+                    Log.i("2-thor:", "${mService.mThorCorrected}")*/
 
                     val posPlayer = player.y
                     runOnUiThread {
-
-                        with(mService) {
                             ObjectAnimator.ofFloat(player, "translationY", posPlayer, calculate)
                                 .apply {
                                     duration = 0
                                     start()
                                 }
                         }
-                    }
-                //}
-                Thread.sleep(1)
+                Thread.sleep(50)
             }
         }
     }
