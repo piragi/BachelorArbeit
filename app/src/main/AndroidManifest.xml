@@ -14,7 +14,8 @@
             android:roundIcon="@mipmap/ic_launcher"
             android:supportsRtl="true"
             android:theme="@style/Theme.AppCompat.Light">
-        <activity android:name=".StartupActivity">
+        <activity android:name=".StartupActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -23,7 +24,8 @@
         </activity>
         <activity android:name=".TestView">
         </activity>
-        <service android:name=".BluetoothConnection"></service>
+
+        <service android:name=".BluetoothConnection" />
     </application>
 
 </manifest>

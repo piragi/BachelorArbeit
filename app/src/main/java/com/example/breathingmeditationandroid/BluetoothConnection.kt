@@ -101,11 +101,12 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
             val buffer = ByteArray(512)
             while (!Thread.interrupted()) {
                 try {
-                    val length = mSocket!!.inputStream!!.read(buffer, 0, 512)
-                    if (length < 1) continue
-                    val data = buffer.copyOfRange(0, length)
-                    mHexoskinAPI!!.decode(data)
-
+                    val length = mSocket?.inputStream?.read(buffer, 0, 512)
+                    if (length != null) {
+                        if (length < 1) continue
+                        val data = buffer.copyOfRange(0, length)
+                        mHexoskinAPI!!.decode(data)
+                    }
                 } catch (e: IOException) {
                     e.printStackTrace()
                     break
@@ -206,10 +207,9 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     override fun onDestroy() {
         super.onDestroy()
         disconnected()
-        // Corrector has to be uninitialized
         mCorrector.uninit()
+        stopSelf()
         Toast.makeText(this, "disconnected", Toast.LENGTH_SHORT).show()
-
     }
 
 }

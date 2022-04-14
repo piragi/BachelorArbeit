@@ -5,24 +5,22 @@
     android:layout_height="match_parent"
     tools:showIn="@layout/activity_device">
 
-
         <ImageView
             android:id="@+id/player"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
             android:contentDescription="@string/todo"
             android:src="@android:drawable/ic_media_play" />
 
         <ImageView
             android:id="@+id/bg1"
-            android:layout_width="1920px"
-            android:layout_height="1080px"
+            android:layout_width="1920dp"
+            android:layout_height="1080dp"
             android:src="@drawable/bg1" />
 
         <ImageView
             android:id="@+id/bg2"
-            android:layout_width="1920px"
-            android:layout_height="1080px"
+            android:layout_width="1920dp"
+            android:layout_height="1080dp"
             android:src="@drawable/bg1" />
 </RelativeLayout>

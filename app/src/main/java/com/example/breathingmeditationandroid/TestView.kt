@@ -9,17 +9,10 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.util.Log
 import android.view.View
-import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
-import androidx.compose.animation.core.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.core.animation.doOnEnd
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
@@ -41,7 +34,7 @@ class TestView : ComponentActivity() {
             mService = binder.getService()
             mBound = true
 
-            updateView()
+            animatePlayer()
         }
         override fun onServiceDisconnected(name: ComponentName?) {
             mService.stopService(intent)
@@ -60,7 +53,7 @@ class TestView : ComponentActivity() {
         bg2 = findViewById<View>(R.id.bg2) as ImageView
         bg2.x = 1920f
         player.x = 800f
-        player.y = 300f
+        player.y = 600f
         animateBackground()
 
         //setup and start bluetooth service
@@ -75,9 +68,9 @@ class TestView : ComponentActivity() {
 
     private fun animateBackground() {
 
-        //TODO: smoothen background animations
-        var animator = ValueAnimator.ofFloat(0.0f, 1.0f)
-        with (animator) {
+        val backgroundAnimator = ValueAnimator.ofFloat(0.0f, 1.0f)
+
+        with (backgroundAnimator) {
             repeatCount = ValueAnimator.INFINITE
             interpolator = LinearInterpolator()
             duration = 2000L
@@ -88,24 +81,16 @@ class TestView : ComponentActivity() {
                     bg1.translationX = translationX
                     bg2.translationX = translationX - width
             }
-
             start()
         }
     }
 
-
-
-    fun updateView() {
-
-
+    fun animatePlayer() {
         thread(start = true, isDaemon = true) {
             while (true) {
                     val combined = (((mService.mThorCorrected*0.8)+(mService.mAbdoCorrected*0.2))*100).toFloat()
-                    val steps:Float = (200f/300f)
-                    val calculate = combined/steps + 300f
-
-                    /*Log.i("1-abdo:", "${mService.mAbdoCorrected}")
-                    Log.i("2-thor:", "${mService.mThorCorrected}")*/
+                    val steps:Float = (1000f/300f)
+                    val calculate = combined/steps
 
                     val posPlayer = player.y
                     runOnUiThread {
@@ -115,25 +100,15 @@ class TestView : ComponentActivity() {
                                     start()
                                 }
                         }
-                Thread.sleep(50)
+                Thread.sleep(20)
             }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        stopService(Intent(applicationContext, BluetoothConnection::class.java))
         exitProcess(0)
     }
 
-}
-
-@Composable
-fun composableBackground(bg1: ImageView) {
-    val infiniteTransition = rememberInfiniteTransition()
-    val scale1 = infiniteTransition.animateFloat(
-        0.0f,
-        1.0f,
-        infiniteRepeatable(tween(2000), RepeatMode.Restart)
-    )
-    bg1.animate().translationY(scale1.value*bg1.width)
 }
