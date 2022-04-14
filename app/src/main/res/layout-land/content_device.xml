@@ -15,13 +15,13 @@
 
         <ImageView
             android:id="@+id/bg1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="1920px"
+            android:layout_height="1080px"
             android:src="@drawable/bg1" />
 
         <ImageView
             android:id="@+id/bg2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="1920px"
+            android:layout_height="1080px"
             android:src="@drawable/bg1" />
 </RelativeLayout>

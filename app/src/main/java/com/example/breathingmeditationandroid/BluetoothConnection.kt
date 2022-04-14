@@ -14,8 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -93,7 +91,6 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                 }
             }
         // If we get killed, after returning from here, restart
-
         return START_STICKY
     }
 
@@ -128,8 +125,8 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         }
 
         try {
-            mSocket!!.inputStream!!.close()
-            mSocket!!.outputStream!!.close()
+            mSocket?.inputStream?.close()
+            mSocket?.outputStream?.close()
             mKeepAliveTimer?.cancel()
             mKeepAliveTimer?.purge()
         } catch (e1: IOException) {
@@ -209,10 +206,8 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     override fun onDestroy() {
         super.onDestroy()
         disconnected()
-
         // Corrector has to be uninitialized
         mCorrector.uninit()
-
         Toast.makeText(this, "disconnected", Toast.LENGTH_SHORT).show()
 
     }

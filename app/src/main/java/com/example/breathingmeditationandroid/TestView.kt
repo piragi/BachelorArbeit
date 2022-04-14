@@ -1,6 +1,7 @@
 package com.example.breathingmeditationandroid
 
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.bluetooth.BluetoothDevice
 import android.content.ComponentName
 import android.content.Context
@@ -10,8 +11,14 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.LinearInterpolator
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.core.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.core.animation.doOnEnd
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
@@ -22,10 +29,8 @@ class TestView : ComponentActivity() {
     private lateinit var player: ImageView
     private lateinit var bg1: ImageView
     private lateinit var bg2: ImageView
-
     //Bluetooth Connection
     private var mDevice: BluetoothDevice? = null
-
     //Binding service
     private lateinit var mService: BluetoothConnection
     private var mBound = false
@@ -38,7 +43,6 @@ class TestView : ComponentActivity() {
 
             updateView()
         }
-
         override fun onServiceDisconnected(name: ComponentName?) {
             mService.stopService(intent)
             mBound = false
@@ -49,15 +53,15 @@ class TestView : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //setup View
+        //setup view
         setContentView(R.layout.activity_device)
         player = findViewById<View>(R.id.player) as ImageView
         bg1 = findViewById<View>(R.id.bg1) as ImageView
         bg2 = findViewById<View>(R.id.bg2) as ImageView
         bg2.x = 1920f
-
         player.x = 800f
         player.y = 300f
+        animateBackground()
 
         //setup and start bluetooth service
         mDevice = intent?.extras?.getParcelable("Device")
@@ -69,27 +73,30 @@ class TestView : ComponentActivity() {
         }
     }
 
-    fun updateView() {
+    private fun animateBackground() {
+
         //TODO: smoothen background animations
-        runOnUiThread {
-            var endBg1 = -1920f
-            var endBg2 = 0f
-            val bg1Animation = ObjectAnimator.ofFloat(bg1, "translationX", bg1.x, endBg1).apply {
-                duration=2000
-                start()
+        var animator = ValueAnimator.ofFloat(0.0f, 1.0f)
+        with (animator) {
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = LinearInterpolator()
+            duration = 2000L
+            addUpdateListener {
+                    val progress = this.animatedValue as Float
+                    val width = bg1.width
+                    val translationX = width * progress
+                    bg1.translationX = translationX
+                    bg2.translationX = translationX - width
             }
-            val bg2Animation = ObjectAnimator.ofFloat(bg2, "translationX", bg2.x, endBg2).apply {
-                duration=2000
-                start()
-            }
-            bg2Animation.doOnEnd {
-                bg1.x = 1920f
-                endBg1 = 0f
-                bg1Animation.start()
-                endBg2 = -1920f
-                bg2Animation.start()
-            }
+
+            start()
         }
+    }
+
+
+
+    fun updateView() {
+
 
         thread(start = true, isDaemon = true) {
             while (true) {
@@ -118,4 +125,15 @@ class TestView : ComponentActivity() {
         exitProcess(0)
     }
 
+}
+
+@Composable
+fun composableBackground(bg1: ImageView) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val scale1 = infiniteTransition.animateFloat(
+        0.0f,
+        1.0f,
+        infiniteRepeatable(tween(2000), RepeatMode.Restart)
+    )
+    bg1.animate().translationY(scale1.value*bg1.width)
 }
