@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 31
 
     defaultConfig {
         applicationId "com.example.breathingmeditationandroid"
         minSdkVersion 21
-        targetSdkVersion 32
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0"
         vectorDrawables.useSupportLibrary = true
