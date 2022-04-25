@@ -15,6 +15,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 
 //inspired by: https://developer.android.com/guide/components/services
@@ -36,6 +37,9 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     private var mAbdoRaw: Int = 0
     var mAbdoCorrected: Double = 0.0
     var mThorCorrected: Double = 0.0
+
+
+
 
     inner class LocalBinder : Binder() {
         fun getService(): BluetoothConnection = this@BluetoothConnection
@@ -186,6 +190,50 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
             }
         }
         return
+    }
+
+    fun smoothData(buffer: ArrayList<Double>) : Double {
+        val divider:Int = buffer.size/3
+        var pastMedian: Double
+        var currentMedian: Double = 0.0
+        var futureMedian: Double
+
+        if (buffer.isEmpty()) {
+            return 0.0
+        }
+
+        if (buffer.size % 3 == 0) { //TODO: why are immuatables such a pain :(
+            pastMedian = calculateMedian(buffer.subList(0, divider-1))
+            Log.i("pastMedian", "$pastMedian")
+            currentMedian = calculateMedian(buffer.subList(divider, 2*divider-1))
+            Log.i("currentMedian", "$currentMedian")
+            futureMedian = calculateMedian(buffer.subList(2*divider, 3*divider-1))
+            Log.i("futureMedian", "$futureMedian")
+        } else if (buffer.size % 3 == 1) {
+            pastMedian = calculateMedian(buffer.subList(0, divider-1))
+            Log.i("pastMedian", "$pastMedian")
+            currentMedian = calculateMedian(buffer.subList(divider, 2*divider))
+            Log.i("currentMedian", "$currentMedian")
+            futureMedian = calculateMedian(buffer.subList(2*divider+1, 3*divider))
+            Log.i("futureMedian", "$futureMedian")
+        } else if (buffer.size % 3 == 2) {
+            pastMedian = calculateMedian(buffer.subList(0, divider-1))
+            Log.i("pastMedian", "$pastMedian")
+            currentMedian = calculateMedian(buffer.subList(divider, 2*divider+1))
+            Log.i("currentMedian", "$currentMedian")
+            futureMedian = calculateMedian(buffer.subList(2*divider+2, 3*divider+2))
+            Log.i("futureMedian", "$futureMedian")
+        }
+        return calculateMedian(buffer)
+    }
+
+    private fun calculateMedian(buffer: MutableList<Double>) : Double {
+        buffer.sort()
+        return if(buffer.size % 2 == 0) {
+            buffer[buffer.size/2-1] + buffer[(buffer.size/2)] / 2
+        } else {
+            buffer[buffer.size/2]
+        }
     }
 
     override fun onLog(logLevel: Int, logTxt: String) {

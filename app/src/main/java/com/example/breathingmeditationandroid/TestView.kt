@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.View
 import android.view.animation.LinearInterpolator
 import android.widget.ImageView
@@ -86,21 +87,38 @@ class TestView : ComponentActivity() {
     }
 
     fun animatePlayer() {
+        var bufferAbdo: ArrayList<Double> = ArrayList()
+        var bufferThor: ArrayList<Double> = ArrayList()
         thread(start = true, isDaemon = true) {
             while (true) {
+
+                bufferAbdo.add(mService.mAbdoCorrected)
+                bufferThor.add(mService.mThorCorrected)
+
+                if(bufferAbdo.size >= 7) {
+                    //Log.i("buffer:", "${mService.bufferAbdo}")
+                    val medianAbdo = mService.smoothData(bufferAbdo)
+                    //Log.i("buffer", "${mService.bufferThor}")
+                    val medianThor = mService.smoothData(bufferThor)
+
                     val combined = (((mService.mThorCorrected*0.8)+(mService.mAbdoCorrected*0.2))*100).toFloat()
+                    val combinedBuffer = (((medianThor*0.8)+(medianAbdo*0.2))*200).toFloat()
                     val steps:Float = (1000f/300f)
-                    val calculate = combined/steps
+                    val calculate = combinedBuffer/steps + 300f
 
                     val posPlayer = player.y
                     runOnUiThread {
-                            ObjectAnimator.ofFloat(player, "translationY", posPlayer, calculate)
-                                .apply {
-                                    duration = 0
-                                    start()
-                                }
-                        }
-                Thread.sleep(20)
+                        ObjectAnimator.ofFloat(player, "translationY", posPlayer, calculate)
+                            .apply {
+                                duration = 0
+                                start()
+                            }
+                    }
+                    bufferThor.clear()
+                    bufferAbdo.clear()
+                }
+
+                //Thread.sleep(20)
             }
         }
     }
