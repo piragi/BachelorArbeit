@@ -14,6 +14,10 @@ import android.view.View
 import android.view.animation.LinearInterpolator
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
@@ -35,6 +39,7 @@ class TestView : ComponentActivity() {
             mService = binder.getService()
             mBound = true
 
+            //TODO: move this out of here
             animatePlayer()
         }
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -87,39 +92,40 @@ class TestView : ComponentActivity() {
     }
 
     fun animatePlayer() {
+        thread(start = true, isDaemon = true) {
+            while(true) {
+                val smoothedPosition = smoothPlayerPosition()
+                movePlayer(smoothedPosition.toFloat())
+            }
+        }
+    }
+
+    private fun smoothPlayerPosition() : Double {
         var bufferAbdo: ArrayList<Double> = ArrayList()
         var bufferThor: ArrayList<Double> = ArrayList()
-        thread(start = true, isDaemon = true) {
-            while (true) {
 
-                bufferAbdo.add(mService.mAbdoCorrected)
-                bufferThor.add(mService.mThorCorrected)
+        while (bufferAbdo.size <= 7 && bufferThor.size <= 7) {
+            bufferAbdo.add(mService.mAbdoCorrected)
+            bufferThor.add(mService.mThorCorrected)
+        }
 
-                if(bufferAbdo.size >= 7) {
-                    //Log.i("buffer:", "${mService.bufferAbdo}")
-                    val medianAbdo = mService.smoothData(bufferAbdo)
-                    //Log.i("buffer", "${mService.bufferThor}")
-                    val medianThor = mService.smoothData(bufferThor)
+        val medianAbdo = mService.smoothData(bufferAbdo)
+        val medianThor = mService.smoothData(bufferThor)
+        bufferThor.clear()
+        bufferAbdo.clear()
+        val combinedBuffer = (((medianThor*0.8)+(medianAbdo*0.2))*200)
+        val steps = (1000.0/300.0)
+        return combinedBuffer/steps + 300.0
+    }
 
-                    val combined = (((mService.mThorCorrected*0.8)+(mService.mAbdoCorrected*0.2))*100).toFloat()
-                    val combinedBuffer = (((medianThor*0.8)+(medianAbdo*0.2))*200).toFloat()
-                    val steps:Float = (1000f/300f)
-                    val calculate = combinedBuffer/steps + 300f
-
-                    val posPlayer = player.y
-                    runOnUiThread {
-                        ObjectAnimator.ofFloat(player, "translationY", posPlayer, calculate)
-                            .apply {
-                                duration = 0
-                                start()
-                            }
-                    }
-                    bufferThor.clear()
-                    bufferAbdo.clear()
+    private fun movePlayer(calculate: Float) {
+        val posPlayer = player.y
+        runOnUiThread {
+            ObjectAnimator.ofFloat(player, "translationY", posPlayer, calculate)
+                .apply {
+                    duration = 0
+                    start()
                 }
-
-                //Thread.sleep(20)
-            }
         }
     }
 
