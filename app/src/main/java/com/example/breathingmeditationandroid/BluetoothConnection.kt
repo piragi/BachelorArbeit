@@ -38,6 +38,9 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     var mAbdoCorrected: Double = 0.0
     var mThorCorrected: Double = 0.0
 
+    var mInspiration: Int = 0
+    var mExpiration: Int = 0
+
 
 
 
@@ -147,8 +150,16 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         //Corrector
         type?.let {
             when (type) {
-                HexoskinDataType.INSPIRATION -> mCorrector.addInspiration(time, mHexoskinAPI!!.currentSessionStartTime)
-                HexoskinDataType.EXPIRATION -> mCorrector.addExpiration(time, mHexoskinAPI!!.currentSessionStartTime)
+                HexoskinDataType.INSPIRATION -> {
+                    mCorrector.addInspiration(time, mHexoskinAPI!!.currentSessionStartTime)
+                    mExpiration = 0
+                    mInspiration = value
+                }
+                HexoskinDataType.EXPIRATION -> {
+                    mCorrector.addExpiration(time, mHexoskinAPI!!.currentSessionStartTime)
+                    mInspiration = 0
+                    mExpiration = value
+                }
                 HexoskinDataType.RESP_CIRCUIT_TEMPERATURE -> {
                     val converted: Float =
                         mHexoskinAPI!!.hexoskin_sample_conversion(HexoskinDataType.RESP_CIRCUIT_TEMPERATURE, value)
@@ -202,7 +213,7 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
             return 0.0
         }
 
-        if (buffer.size % 3 == 0) { //TODO: why are immuatables such a pain :(
+        /*if (buffer.size % 3 == 0) { //TODO: why are immuatables such a pain :(
             pastMedian = calculateMedian(buffer.subList(0, divider-1))
             Log.i("pastMedian", "$pastMedian")
             currentMedian = calculateMedian(buffer.subList(divider, 2*divider-1))
@@ -223,14 +234,14 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
             Log.i("currentMedian", "$currentMedian")
             futureMedian = calculateMedian(buffer.subList(2*divider+2, 3*divider+2))
             Log.i("futureMedian", "$futureMedian")
-        }
+        }*/
         return calculateMedian(buffer)
     }
 
-    private fun calculateMedian(buffer: MutableList<Double>) : Double {
+    fun calculateMedian(buffer: MutableList<Double>) : Double {
         buffer.sort()
         return if(buffer.size % 2 == 0) {
-            buffer[buffer.size/2-1] + buffer[(buffer.size/2)] / 2
+            (buffer[buffer.size/2-1] + buffer[(buffer.size/2)]) / 2
         } else {
             buffer[buffer.size/2]
         }
