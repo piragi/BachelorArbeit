@@ -2,5 +2,7 @@
     <string name="app_name">BachelorArbeit</string>
     <string name="title_activity_device_list">Devices List</string>
     <string name="title_activity_device">Device</string>
+    <string name="settings">SETTINGS</string>
     <string name="todo">TODO</string>
+    <string name="play">PLAY</string>
 </resources>

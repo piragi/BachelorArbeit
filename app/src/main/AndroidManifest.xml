@@ -13,6 +13,8 @@
             android:icon="@mipmap/ic_launcher"
             android:roundIcon="@mipmap/ic_launcher"
             android:supportsRtl="true"
+            android:hardwareAccelerated="false"
+            android:largeHeap="true"
             android:theme="@style/Theme.AppCompat.Light">
         <activity android:name=".StartupActivity"
             android:exported="true">
@@ -24,7 +26,8 @@
         </activity>
         <activity android:name=".TestView">
         </activity>
-
+        <activity android:name=".HomeScreenActivity">
+        </activity>
         <service android:name=".BluetoothConnection" />
     </application>
 

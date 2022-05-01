@@ -31,6 +31,4 @@ class WindDrawable(context: Context) : SurfaceView(context) {
         }
     }
 
-
-
 }
