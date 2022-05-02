@@ -206,7 +206,7 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     fun smoothData(buffer: ArrayList<Double>) : Double {
         val divider:Int = buffer.size/3
         var pastMedian: Double
-        var currentMedian: Double = 0.0
+        var currentMedian = 0.0
         var futureMedian: Double
 
         if (buffer.isEmpty()) {

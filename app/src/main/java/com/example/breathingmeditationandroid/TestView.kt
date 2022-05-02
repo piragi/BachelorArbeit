@@ -9,18 +9,14 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.animation.LinearInterpolator
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlin.concurrent.thread
+import kotlin.math.absoluteValue
 import kotlin.system.exitProcess
 
 class TestView : ComponentActivity() {
@@ -44,9 +40,9 @@ class TestView : ComponentActivity() {
             mBound = true
 
             //TODO: move this out of here
-            //val calibratedValues = calibrateBreathing()
-            //Log.i("calibrated to:", "$calibratedValues")
-            animatePlayer()
+            val calibratedValues = calibrateBreathing()
+            Log.i("calibrated to:", "$calibratedValues")
+            animatePlayer(calibratedValues)
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -73,6 +69,12 @@ class TestView : ComponentActivity() {
         //setup and start bluetooth service
         mDevice = intent?.extras?.getParcelable("Device")
 
+        Toast.makeText(
+            applicationContext,
+            "Calibration started, Inhale/Exhale 5 times",
+            Toast.LENGTH_LONG
+        ).show()
+
         Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
             intent.putExtra("Device", mDevice)
@@ -98,20 +100,35 @@ class TestView : ComponentActivity() {
         }
     }
 
-    fun animatePlayer() {
+    fun animatePlayer(calibratedValue: Pair<Pair<Double,Double>, Pair<Double,Double>>) {
         thread(start = true, isDaemon = true) {
             while (true) {
                 val smoothedPosition = smoothPlayerPosition()
+                val relativePosition = calculateRelativePosition(calibratedValue, smoothedPosition)
                 //Log.i("smoothedPosition:", "$smoothedPosition")
-                movePlayer(smoothedPosition.toFloat())
+                movePlayer(relativePosition.toFloat())
 
             }
         }
     }
 
-    private fun smoothPlayerPosition(): Double {
-        var bufferAbdo: ArrayList<Double> = ArrayList()
-        var bufferThor: ArrayList<Double> = ArrayList()
+    private fun calculateRelativePosition(calibratedValue: Pair<Pair<Double,Double>, Pair<Double,Double>>, smoothedValue: Pair<Double, Double>) : Double {
+        //TODO: was ist besser lesbar, mit den ganzen vals oder ohne?
+        val medianAbdo = smoothedValue.first
+        val medianThor = smoothedValue.second
+        val calibrationAbdo = calibratedValue.first
+        val calibrationThor = calibratedValue.second
+        val absoluteDifference = ((calibrationAbdo.first + calibrationThor.first) - (calibrationThor.second + calibrationAbdo.second)).absoluteValue
+
+        val combinedBuffer = (((medianThor * 0.6) + (medianAbdo * 0.4)) * 300)
+        val steps = (absoluteDifference / 300.0)
+
+        return combinedBuffer / steps + 300.0
+    }
+
+    private fun smoothPlayerPosition(): Pair<Double, Double> {
+        val bufferAbdo: ArrayList<Double> = ArrayList()
+        val bufferThor: ArrayList<Double> = ArrayList()
 
         while (bufferAbdo.size <= 4 || bufferThor.size <= 6) {
             if (bufferAbdo.isEmpty() || !bufferAbdo[bufferAbdo.size - 1].equals(mService.mAbdoCorrected)) {
@@ -128,12 +145,10 @@ class TestView : ComponentActivity() {
         Log.i("medianThor", "$medianThor")
         Log.i("bufferThor", "$bufferThor")
 
-
         bufferThor.clear()
         bufferAbdo.clear()
-        val combinedBuffer = (((medianThor * 0.6) + (medianAbdo * 0.4)) * 300)
-        val steps = (1000.0 / 300.0)
-        return combinedBuffer / steps + 300.0
+
+        return Pair(medianAbdo, medianThor)
     }
 
     private fun movePlayer(calculate: Float) {
@@ -151,56 +166,58 @@ class TestView : ComponentActivity() {
     //TODO: als Coroutine dann kann sich der screen schön bewegen dazwischen
     private fun calibrateBreathing(): Pair<Pair<Double, Double>, Pair<Double, Double>> {
 
-        var minimaAbdo: ArrayList<Double> = ArrayList()
-        var maximaAbdo: ArrayList<Double> = ArrayList()
-        var minimaThor: ArrayList<Double> = ArrayList()
-        var maximaThor: ArrayList<Double> = ArrayList()
+        val minimaAbdo: ArrayList<Double> = ArrayList()
+        val maximaAbdo: ArrayList<Double> = ArrayList()
+        val minimaThor: ArrayList<Double> = ArrayList()
+        val maximaThor: ArrayList<Double> = ArrayList()
         //TODO: lokal mit k?!?!
-        var lokalMinimaAbdo = 0.0
-        var lokalMaximaAbdo = 0.0
-        var lokalMinimaThor = 0.0
-        var lokalMaximaThor = 0.0
+        var lokalMinima = 0.0
+        var lokalMaxima = 0.0
 
-
-        Toast.makeText(
-            applicationContext,
-            "Calibration started, Inhale/Exhale 5 times",
-            Toast.LENGTH_LONG
-        )
-
-
-
+        Log.i("Calibration:", "Abdo")
+        //first abdo
         repeat(4) {
             while (mService.mExpiration == 0) {
-                if (!lokalMinimaAbdo.equals(0.0) && !lokalMinimaThor.equals(0.0)) {
-                    minimaAbdo.add(lokalMinimaAbdo)
-                    minimaThor.add(lokalMinimaThor)
-
-                    lokalMinimaAbdo = 0.0
-                    lokalMinimaThor = 0.0
+                if (!lokalMinima.equals(0.0)) {
+                    minimaAbdo.add(lokalMinima)
+                    lokalMinima = 0.0
                 }
-                if (mService.mThorCorrected > lokalMaximaThor) {
-                    lokalMaximaThor = mService.mThorCorrected
-
-                }
-                if (mService.mAbdoCorrected > lokalMinimaAbdo) {
-                    lokalMaximaAbdo = mService.mAbdoCorrected
+                if (mService.mAbdoCorrected > lokalMinima) {
+                    lokalMaxima = mService.mAbdoCorrected
                 }
             }
 
             while (mService.mInspiration == 0) {
-                if (!lokalMaximaAbdo.equals(0.0) && !lokalMaximaThor.equals(0.0)) {
-                    maximaAbdo.add(lokalMaximaAbdo)
-                    maximaThor.add(lokalMaximaThor)
+                if (!lokalMaxima.equals(0.0)) {
+                    maximaAbdo.add(lokalMaxima)
+                    lokalMaxima = 0.0
+                }
+                if (mService.mAbdoCorrected < lokalMinima) {
+                    lokalMinima = mService.mAbdoCorrected
+                }
+            }
+        }
+        Log.i("Calibration:", "thor")
+        //then thor
+        repeat(4) {
+            while (mService.mExpiration == 0) {
+                if (!lokalMinima.equals(0.0)) {
+                    minimaThor.add(lokalMinima)
+                    lokalMinima = 0.0
+                }
+                if (mService.mThorCorrected > lokalMaxima) {
+                    lokalMaxima = mService.mThorCorrected
 
-                    lokalMaximaAbdo = 0.0
-                    lokalMaximaThor = 0.0
                 }
-                if (mService.mThorCorrected < lokalMinimaThor) {
-                    lokalMinimaThor = mService.mThorCorrected
+            }
+
+            while (mService.mInspiration == 0) {
+                if (!lokalMaxima.equals(0.0)) {
+                    maximaThor.add(lokalMaxima)
+                    lokalMaxima = 0.0
                 }
-                if (mService.mAbdoCorrected < lokalMinimaAbdo) {
-                    lokalMinimaAbdo = mService.mAbdoCorrected
+                if (mService.mThorCorrected < lokalMinima) {
+                    lokalMinima = mService.mThorCorrected
                 }
             }
         }
@@ -208,8 +225,8 @@ class TestView : ComponentActivity() {
         Log.i("arrayAbdoMax:", "$maximaAbdo")
 
         return Pair(
-            Pair(mService.calculateMedian(maximaAbdo), mService.calculateMedian(maximaThor)),
-            Pair(mService.calculateMedian(minimaAbdo), mService.calculateMedian(minimaThor))
+            Pair(mService.calculateMedian(maximaAbdo)*1.2, mService.calculateMedian(minimaThor)*1.2),
+            Pair(mService.calculateMedian(maximaThor)*0.8, mService.calculateMedian(minimaThor)*0.8)
         )
 
     }
