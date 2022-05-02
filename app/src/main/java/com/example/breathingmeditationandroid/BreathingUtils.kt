@@ -21,7 +21,7 @@ class BreathingUtils(mService: BluetoothConnection) {
 
         Log.i("Calibration:", "Abdo")
         //first abdo
-        repeat(4) {
+        repeat(1) {
             while (mService.mExpiration == 0) {
                 if (!lokalMinima.equals(0.0)) {
                     minimaAbdo.add(lokalMinima)
@@ -44,7 +44,7 @@ class BreathingUtils(mService: BluetoothConnection) {
         }
         Log.i("Calibration:", "thor")
         //then thor
-        repeat(4) {
+        repeat(1) {
             while (mService.mExpiration == 0) {
                 if (!lokalMinima.equals(0.0)) {
                     minimaThor.add(lokalMinima)
@@ -84,10 +84,12 @@ class BreathingUtils(mService: BluetoothConnection) {
         val calibrationThor = calibratedValue.second
         val absoluteDifference = ((calibrationAbdo.first + calibrationThor.first) - (calibrationThor.second + calibrationAbdo.second)).absoluteValue
 
-        val combinedBuffer = (((medianThor * 0.6) + (medianAbdo * 0.4)) * 300)
-        val steps = (absoluteDifference / 300.0)
+        val combinedBuffer = (((medianThor * 0.6) + (medianAbdo * 0.4)))
+        val steps = (absoluteDifference / 250.0)
+        /*Log.i("combinedBuffer", "${combinedBuffer}")
+        Log.i("steps", "$steps")*/
 
-        return combinedBuffer / steps + 300.0
+        return combinedBuffer / steps + 430.0
     }
 
     fun smoothPlayerPosition(): Pair<Double, Double> {
@@ -104,10 +106,10 @@ class BreathingUtils(mService: BluetoothConnection) {
         }
         val medianAbdo = mService.smoothData(bufferAbdo)
         val medianThor = mService.smoothData(bufferThor)
-        Log.i("medianAbdo", "$medianAbdo")
+/*        Log.i("medianAbdo", "$medianAbdo")
         Log.i("bufferAbdo", "$bufferAbdo")
         Log.i("medianThor", "$medianThor")
-        Log.i("bufferThor", "$bufferThor")
+        Log.i("bufferThor", "$bufferThor")*/
 
         bufferThor.clear()
         bufferAbdo.clear()

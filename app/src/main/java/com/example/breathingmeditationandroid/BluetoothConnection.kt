@@ -240,10 +240,12 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
 
     fun calculateMedian(buffer: MutableList<Double>) : Double {
         buffer.sort()
-        return if(buffer.size % 2 == 0) {
-            (buffer[buffer.size/2-1] + buffer[(buffer.size/2)]) / 2
+        return if (buffer.isEmpty()) {
+            0.0
+        } else if(buffer.size % 2 == 0) {
+                (buffer[buffer.size/2-1] + buffer[(buffer.size/2)]) / 2
         } else {
-            buffer[buffer.size/2]
+                buffer[buffer.size/2]
         }
     }
 

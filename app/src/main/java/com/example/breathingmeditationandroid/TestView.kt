@@ -11,12 +11,13 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.View
+import android.view.animation.AccelerateInterpolator
 import android.view.animation.LinearInterpolator
+import android.view.animation.TranslateAnimation
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.activity.ComponentActivity
+import kotlinx.coroutines.runBlocking
 import kotlin.concurrent.thread
-import kotlin.math.absoluteValue
 import kotlin.system.exitProcess
 
 class TestView : ComponentActivity() {
@@ -64,8 +65,9 @@ class TestView : ComponentActivity() {
         bg2 = findViewById<View>(R.id.bg2) as ImageView
         bg2.x = bg1.x + bg1.width
         bg2.y = 0f
-        player.x = 800f
-        player.y = 600f
+        player.x = 650f
+        player.y = 520f
+
         animateBackground()
 
         //setup and start bluetooth service
@@ -79,44 +81,57 @@ class TestView : ComponentActivity() {
     }
 
     private fun animateBackground() {
-        val backgroundAnimator = ValueAnimator.ofFloat(0.0f, 1.0f)
+        runOnUiThread() {
+            val backgroundAnimator = ValueAnimator.ofFloat(0.0f, 1.0f)
 
-        with(backgroundAnimator) {
-            repeatCount = ValueAnimator.INFINITE
-            interpolator = LinearInterpolator()
-            duration = 2000L
-            addUpdateListener {
-                val progress = this.animatedValue as Float
-                val width = bg1.width
-                val translationX = width * progress
-                bg1.translationX = translationX
-                bg2.translationX = translationX - width
+            with(backgroundAnimator) {
+                repeatCount = ValueAnimator.INFINITE
+                interpolator = LinearInterpolator()
+                duration = 2000L
+                addUpdateListener {
+                    val progress = this.animatedValue as Float
+                    val width = bg1.width
+                    val translationX = width * (1-progress)
+                    bg1.translationX = translationX
+                    bg2.translationX = translationX - width
+                }
+                start()
             }
-            start()
         }
     }
 
     fun animatePlayer(calibratedValue: Pair<Pair<Double,Double>, Pair<Double,Double>>) {
+        var playerAnimator = ObjectAnimator()
         thread(start = true, isDaemon = true) {
             while (true) {
                 val smoothedPosition = breathingUtils.smoothPlayerPosition()
                 val relativePosition = breathingUtils.calculateRelativePosition(calibratedValue, smoothedPosition)
-                Log.i("smoothedPosition:", "$smoothedPosition")
-                movePlayer(relativePosition.toFloat())
+                if (playerAnimator.isRunning) {
+                    runOnUiThread() {
+                        playerAnimator.cancel()
+                    }
+                }
+                playerAnimator = movePlayer(relativePosition.toFloat())
 
             }
         }
     }
 
-    private fun movePlayer(calculate: Float) {
-        val posPlayer = player.y
-        runOnUiThread {
-            ObjectAnimator.ofFloat(player, "translationY", posPlayer, calculate)
-                .apply {
-                    duration = 0
-                    start()
+    private fun movePlayer( calculate: Float) : ObjectAnimator {
+        val playerAnimator = ObjectAnimator.ofFloat(player, "translationY", player.y, calculate)
+            .apply {
+                interpolator = LinearInterpolator()
+                duration = 4
+                addUpdateListener {
+                    player.y = animatedValue as Float
                 }
+            }
+
+        runOnUiThread {
+            playerAnimator.start()
         }
+
+        return playerAnimator
     }
 
     override fun onDestroy() {

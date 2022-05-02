@@ -22,7 +22,8 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".TestView">
+        <activity android:name=".TestView"
+            android:hardwareAccelerated="true">
         </activity>
 
         <service android:name=".BluetoothConnection" />
