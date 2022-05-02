@@ -1,73 +1,100 @@
 package com.example.breathingmeditationandroid
 
-import android.animation.ValueAnimator
-import androidx.appcompat.app.AppCompatActivity
+import android.bluetooth.BluetoothDevice
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
-import android.service.controls.ControlsProviderService.TAG
+import android.os.IBinder
 import android.util.Log
-import android.view.View
+import android.view.MotionEvent
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
+import android.view.animation.AccelerateInterpolator
 import androidx.activity.ComponentActivity
+import androidx.core.content.ContextCompat
 import com.bullfrog.particle.IParticleManager
 import com.bullfrog.particle.Particles
-import com.bullfrog.particle.animation.ParticleAnimation
-import com.bullfrog.particle.particle.configuration.Rotation
-import com.bullfrog.particle.particle.configuration.Shape
-import kotlin.math.*
-import kotlin.random.Random
-import com.bullfrog.particle.path.IPathGenerator
-import com.bullfrog.particle.path.LinearPathGenerator
+import com.plattysoft.leonids.ParticleSystem
+import kotlin.concurrent.thread
 
 class HomeScreenActivity : ComponentActivity() {
 
     private lateinit var container: ViewGroup
-
     private var particleManager: IParticleManager? = null
+    private lateinit var particlesMain: ParticleSystem
+    private lateinit var particlesSupprt: ParticleSystem
+    private var mDevice: BluetoothDevice? = null
+    private lateinit var mService: BluetoothConnection
+    private var mBound = false
+    private val startingValueX = 100
+    private val startingValueY = 800
+
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as BluetoothConnection.LocalBinder
+            mService = binder.getService()
+            mBound = true
+            animateLeaves()
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            mService.stopService(intent)
+            mBound = false
+            return
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.home_screen)
         container = findViewById(R.id.home_screen)
-
-        particleManager = Particles.with(this, container) // container is the parent ViewGroup for particles
-        particleManager!!.color(0xFFF000)// color sampling from button
-            .particleNum(200)// how many particles
-            .anchor(850, 200)// use button as the anchor of the animation
-            .shape(Shape.CIRCLE)// circle particle
-            .radius(2, 6)// random circle radius from 2 to 6
-            .anim(ParticleAnimation.EXPLOSION)// using explosion animation
-            .start()
-
-        // particleManager!!.start()
-    }
-
-    private fun createPathGenerator(): IPathGenerator {
-        return object : LinearPathGenerator() {
-            val cos = Random.nextDouble(-1.0, 1.0)
-            val sin = Random.nextDouble(-1.0, 1.0)
-
-            override fun getCurrentCoord(
-                progress: Float,
-                duration: Long,
-                outCoord: IntArray
-            ): Unit {
-                val originalX = distance * progress
-                val originalY = 100 * sin(originalX / 50)
-                val x = originalX * cos - originalY * sin
-                val y = originalX * sin + originalY * cos
-                outCoord[0] = (0.01 * x * originalY).toInt()
-                outCoord[1] = -(0.0001 * y.pow(2) * originalX).toInt()
-            }
+        particleManager = Particles.with(this, container)
+        mDevice = intent?.extras?.getParcelable("Device")
+        Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
+            bindService(intent, connection, Context.BIND_AUTO_CREATE)
+            intent.putExtra("Device", mDevice)
+            startService(intent)
         }
     }
 
-    private fun createAnimator(): ValueAnimator {
-        val animator = ValueAnimator.ofInt(0, 1)
-        animator.repeatCount = -1
-        animator.repeatMode = ValueAnimator.REVERSE
-        animator.duration = 4000L
-        return animator
+    private fun animateLeaves() {
+        // y = a * x + b
+        // Create a particle system and start emiting
+        var x = startingValueX
+        var y = startingValueY
+        particlesMain = ParticleSystem(this, 10, R.drawable.leaf2, 1000)
+        particlesMain.setScaleRange(0.7f, 1.3f)
+            .setSpeedRange(0.05f, 0.1f)
+            .setRotationSpeedRange(50f, 120f)
+            .setFadeOut(300, AccelerateInterpolator())
+            .emit(x, y, 10)
+        particlesSupprt = ParticleSystem(this, 10, R.drawable.leaf3, 800)
+        particlesSupprt.setScaleRange(0.7f, 1.3f)
+            .setSpeedRange(0.05f, 0.1f)
+            .setRotationSpeedRange(10f, 100f)
+            .setFadeOut(300, AccelerateInterpolator())
+            .emit(x, y, 10)
+        thread (start = true, isDaemon = true) {
+            while (true) {
+                val combined = (((mService.mThorCorrected * 0.8) + (mService.mAbdoCorrected * 0.2)) * 100)
+                // Log.i("thorValue", mService.mThorCorrected.toString())
+                // Log.i("abdoValue", mService.mAbdoCorrected.toString())
+                if (x < 2000 && y < 900) {
+                    x = x.times(combined).plus(100).toInt()
+                    Log.i("xValue", x.toString())
+                    y = (y.minus(100)).div(combined).toInt()
+                    Log.i("yValue", y.toString())
+                    particlesMain.updateEmitPoint(x, y)
+                    particlesSupprt.updateEmitPoint(x, y)
+                } else {
+                    x = x.times(combined).minus(100).toInt()
+                    y = (y.plus(100)).div(combined).toInt()
+                    particlesMain.updateEmitPoint(x, y)
+                    particlesSupprt.updateEmitPoint(x, y)
+                }
+                Thread.sleep(20)
+            }
+        }
     }
 }
