@@ -32,6 +32,7 @@ class TestView : ComponentActivity() {
     //Binding service
     private lateinit var mService: BluetoothConnection
     private var mBound = false
+    private lateinit var breathingUtils: BreathingUtils
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -40,7 +41,8 @@ class TestView : ComponentActivity() {
             mBound = true
 
             //TODO: move this out of here
-            val calibratedValues = calibrateBreathing()
+            breathingUtils = BreathingUtils(mService)
+            val calibratedValues = breathingUtils.calibrateBreathing()
             Log.i("calibrated to:", "$calibratedValues")
             animatePlayer(calibratedValues)
         }
@@ -68,12 +70,6 @@ class TestView : ComponentActivity() {
 
         //setup and start bluetooth service
         mDevice = intent?.extras?.getParcelable("Device")
-
-        Toast.makeText(
-            applicationContext,
-            "Calibration started, Inhale/Exhale 5 times",
-            Toast.LENGTH_LONG
-        ).show()
 
         Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
@@ -103,52 +99,13 @@ class TestView : ComponentActivity() {
     fun animatePlayer(calibratedValue: Pair<Pair<Double,Double>, Pair<Double,Double>>) {
         thread(start = true, isDaemon = true) {
             while (true) {
-                val smoothedPosition = smoothPlayerPosition()
-                val relativePosition = calculateRelativePosition(calibratedValue, smoothedPosition)
-                //Log.i("smoothedPosition:", "$smoothedPosition")
+                val smoothedPosition = breathingUtils.smoothPlayerPosition()
+                val relativePosition = breathingUtils.calculateRelativePosition(calibratedValue, smoothedPosition)
+                Log.i("smoothedPosition:", "$smoothedPosition")
                 movePlayer(relativePosition.toFloat())
 
             }
         }
-    }
-
-    private fun calculateRelativePosition(calibratedValue: Pair<Pair<Double,Double>, Pair<Double,Double>>, smoothedValue: Pair<Double, Double>) : Double {
-        //TODO: was ist besser lesbar, mit den ganzen vals oder ohne?
-        val medianAbdo = smoothedValue.first
-        val medianThor = smoothedValue.second
-        val calibrationAbdo = calibratedValue.first
-        val calibrationThor = calibratedValue.second
-        val absoluteDifference = ((calibrationAbdo.first + calibrationThor.first) - (calibrationThor.second + calibrationAbdo.second)).absoluteValue
-
-        val combinedBuffer = (((medianThor * 0.6) + (medianAbdo * 0.4)) * 300)
-        val steps = (absoluteDifference / 300.0)
-
-        return combinedBuffer / steps + 300.0
-    }
-
-    private fun smoothPlayerPosition(): Pair<Double, Double> {
-        val bufferAbdo: ArrayList<Double> = ArrayList()
-        val bufferThor: ArrayList<Double> = ArrayList()
-
-        while (bufferAbdo.size <= 4 || bufferThor.size <= 6) {
-            if (bufferAbdo.isEmpty() || !bufferAbdo[bufferAbdo.size - 1].equals(mService.mAbdoCorrected)) {
-                bufferAbdo.add(mService.mAbdoCorrected)
-            }
-            if (bufferThor.isEmpty() || bufferThor[bufferThor.size - 1] != mService.mThorCorrected) {
-                bufferThor.add(mService.mThorCorrected)
-            }
-        }
-        val medianAbdo = mService.smoothData(bufferAbdo)
-        val medianThor = mService.smoothData(bufferThor)
-        Log.i("medianAbdo", "$medianAbdo")
-        Log.i("bufferAbdo", "$bufferAbdo")
-        Log.i("medianThor", "$medianThor")
-        Log.i("bufferThor", "$bufferThor")
-
-        bufferThor.clear()
-        bufferAbdo.clear()
-
-        return Pair(medianAbdo, medianThor)
     }
 
     private fun movePlayer(calculate: Float) {
@@ -160,75 +117,6 @@ class TestView : ComponentActivity() {
                     start()
                 }
         }
-    }
-
-    //TODO: muss doch smarter gehen
-    //TODO: als Coroutine dann kann sich der screen schön bewegen dazwischen
-    private fun calibrateBreathing(): Pair<Pair<Double, Double>, Pair<Double, Double>> {
-
-        val minimaAbdo: ArrayList<Double> = ArrayList()
-        val maximaAbdo: ArrayList<Double> = ArrayList()
-        val minimaThor: ArrayList<Double> = ArrayList()
-        val maximaThor: ArrayList<Double> = ArrayList()
-        //TODO: lokal mit k?!?!
-        var lokalMinima = 0.0
-        var lokalMaxima = 0.0
-
-        Log.i("Calibration:", "Abdo")
-        //first abdo
-        repeat(4) {
-            while (mService.mExpiration == 0) {
-                if (!lokalMinima.equals(0.0)) {
-                    minimaAbdo.add(lokalMinima)
-                    lokalMinima = 0.0
-                }
-                if (mService.mAbdoCorrected > lokalMinima) {
-                    lokalMaxima = mService.mAbdoCorrected
-                }
-            }
-
-            while (mService.mInspiration == 0) {
-                if (!lokalMaxima.equals(0.0)) {
-                    maximaAbdo.add(lokalMaxima)
-                    lokalMaxima = 0.0
-                }
-                if (mService.mAbdoCorrected < lokalMinima) {
-                    lokalMinima = mService.mAbdoCorrected
-                }
-            }
-        }
-        Log.i("Calibration:", "thor")
-        //then thor
-        repeat(4) {
-            while (mService.mExpiration == 0) {
-                if (!lokalMinima.equals(0.0)) {
-                    minimaThor.add(lokalMinima)
-                    lokalMinima = 0.0
-                }
-                if (mService.mThorCorrected > lokalMaxima) {
-                    lokalMaxima = mService.mThorCorrected
-
-                }
-            }
-
-            while (mService.mInspiration == 0) {
-                if (!lokalMaxima.equals(0.0)) {
-                    maximaThor.add(lokalMaxima)
-                    lokalMaxima = 0.0
-                }
-                if (mService.mThorCorrected < lokalMinima) {
-                    lokalMinima = mService.mThorCorrected
-                }
-            }
-        }
-
-        Log.i("arrayAbdoMax:", "$maximaAbdo")
-
-        return Pair(
-            Pair(mService.calculateMedian(maximaAbdo)*1.2, mService.calculateMedian(minimaThor)*1.2),
-            Pair(mService.calculateMedian(maximaThor)*0.8, mService.calculateMedian(minimaThor)*0.8)
-        )
-
     }
 
     override fun onDestroy() {
