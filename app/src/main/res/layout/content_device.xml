@@ -14,13 +14,13 @@
 
         <ImageView
             android:id="@+id/bg1"
-            android:layout_width="1920dp"
-            android:layout_height="1080dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:src="@drawable/bg1" />
 
         <ImageView
             android:id="@+id/bg2"
-            android:layout_width="1920dp"
-            android:layout_height="1080dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:src="@drawable/bg1" />
 </RelativeLayout>
