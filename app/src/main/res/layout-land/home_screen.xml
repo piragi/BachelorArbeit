@@ -1,11 +1,11 @@
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                                   xmlns:app="http://schemas.android.com/apk/res-auto"
-                                                   xmlns:tools="http://schemas.android.com/tools"
-                                                   android:layout_width="match_parent"
-                                                   android:layout_height="match_parent"
-                                                   android:id="@+id/home_screen"
-                                                   tools:context=".HomeScreenActivity"
-                                                   tools:showIn="@layout/home_screen" android:orientation="horizontal">
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/home_screen"
+    tools:context=".HomeScreenActivity" android:orientation="horizontal">
 
     <ImageView
         android:id="@+id/background"
@@ -22,38 +22,37 @@
         android:id="@+id/imageView"
         android:layout_width="150dp" android:layout_height="90dp"
         android:layout_alignParentBottom="true"
+        android:layout_marginRight="50dp"
         android:layout_marginStart="80dp" android:layout_marginBottom="48dp"
         android:alpha="0.7"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="2:1"
         app:layout_constraintHorizontal_bias="0.951"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" app:layout_constraintStart_toEndOf="@+id/imageView3"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/imageView3"
         app:layout_constraintTop_toTopOf="parent" app:layout_constraintVertical_bias="0.256"
         app:srcCompat="@drawable/bubble_unselected"/>
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/imageView2"
         android:layout_width="150dp" android:layout_height="90dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerInParent="true"
         android:layout_marginBottom="435dp"
+        android:layout_marginLeft="50dp"
         android:alpha="0.7"
         app:layout_constraintBottom_toBottomOf="@+id/background"
-        app:layout_constraintHorizontal_bias="0.065"
+        app:layout_constraintHorizontal_bias="0.69"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" app:srcCompat="@drawable/bubble_unselected"/>
+        app:layout_constraintRight_toLeftOf="@+id/imageView3" app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.99" app:srcCompat="@drawable/bubble_unselected"/>
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/imageView3"
         android:layout_width="150dp" android:layout_height="90dp" android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true" android:layout_marginStart="100dp"
+        android:layout_alignParentEnd="true" android:layout_marginStart="88dp"
         android:layout_marginTop="71dp"
         android:alpha="0.7"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/options"
-        app:layout_constraintHorizontal_bias="0.499" app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" app:layout_constraintStart_toEndOf="@+id/imageView2"
-        app:layout_constraintTop_toTopOf="parent" app:layout_constraintVertical_bias="0.356"
+        app:layout_constraintHorizontal_bias="0.0" app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/imageView" app:layout_constraintStart_toEndOf="@+id/imageView2"
+        app:layout_constraintTop_toTopOf="parent" app:layout_constraintVertical_bias="0.344"
         app:srcCompat="@drawable/bubble_unselected"/>
     <TextView
         android:id="@+id/settings"
@@ -71,24 +70,6 @@
         app:layout_constraintLeft_toLeftOf="@+id/imageView2" app:layout_constraintRight_toRightOf="@+id/imageView2"
         app:layout_constraintStart_toStartOf="@+id/imageView2" app:layout_constraintTop_toTopOf="@+id/imageView2"
     />
-    <TextView
-        android:id="@+id/options"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_centerVertical="true"
-        android:layout_marginStart="310dp"
-        android:layout_marginBottom="161dp"
-        android:fontFamily="sans-serif"
-        android:lineSpacingExtra="8sp"
-        android:textAlignment="center"
-        android:textColor="#FDFDFD"
-        android:textSize="24sp" android:textStyle="bold" android:typeface="normal"
-        app:layout_constraintDimensionRatio="2:1"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
     <TextView
         android:id="@+id/play"
         android:layout_width="wrap_content"
