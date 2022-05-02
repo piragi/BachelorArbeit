@@ -8,15 +8,14 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
-import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import androidx.activity.ComponentActivity
-import androidx.core.content.ContextCompat
 import com.bullfrog.particle.IParticleManager
 import com.bullfrog.particle.Particles
 import com.plattysoft.leonids.ParticleSystem
 import kotlin.concurrent.thread
+import kotlin.math.floor
 
 class HomeScreenActivity : ComponentActivity() {
 
@@ -27,13 +26,17 @@ class HomeScreenActivity : ComponentActivity() {
     private var mDevice: BluetoothDevice? = null
     private lateinit var mService: BluetoothConnection
     private var mBound = false
-    private val startingValueX = 100
-    private val startingValueY = 800
+    private lateinit var breathingUtils: BreathingUtils
+    private val xBorderLeft = 100
+    private val xBorderRight = 2000
+    private val yBorderTop = 300
+    private val yBorderBottom = 800
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as BluetoothConnection.LocalBinder
             mService = binder.getService()
+            breathingUtils = BreathingUtils(mService)
             mBound = true
             animateLeaves()
         }
@@ -59,42 +62,98 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun animateLeaves() {
-        // y = a * x + b
-        // Create a particle system and start emiting
-        var x = startingValueX
-        var y = startingValueY
         particlesMain = ParticleSystem(this, 10, R.drawable.leaf2, 1000)
         particlesMain.setScaleRange(0.7f, 1.3f)
             .setSpeedRange(0.05f, 0.1f)
             .setRotationSpeedRange(50f, 120f)
             .setFadeOut(300, AccelerateInterpolator())
-            .emit(x, y, 10)
+            .emit(xBorderLeft, yBorderBottom, 10)
         particlesSupprt = ParticleSystem(this, 10, R.drawable.leaf3, 800)
         particlesSupprt.setScaleRange(0.7f, 1.3f)
             .setSpeedRange(0.05f, 0.1f)
             .setRotationSpeedRange(10f, 100f)
             .setFadeOut(300, AccelerateInterpolator())
-            .emit(x, y, 10)
-        thread (start = true, isDaemon = true) {
+            .emit(xBorderLeft, yBorderBottom, 10)
+
+        thread(start = true, isDaemon = true) {
+            var xNew = xBorderLeft.toDouble()
+            var yNew = yBorderBottom.toDouble()
+            var prevAbdo = mService.mAbdoCorrected
+            var prevThor = mService.mThorCorrected
             while (true) {
-                val combined = (((mService.mThorCorrected * 0.8) + (mService.mAbdoCorrected * 0.2)) * 100)
-                // Log.i("thorValue", mService.mThorCorrected.toString())
-                // Log.i("abdoValue", mService.mAbdoCorrected.toString())
-                if (x < 2000 && y < 900) {
-                    x = x.times(combined).plus(100).toInt()
-                    Log.i("xValue", x.toString())
-                    y = (y.minus(100)).div(combined).toInt()
-                    Log.i("yValue", y.toString())
-                    particlesMain.updateEmitPoint(x, y)
-                    particlesSupprt.updateEmitPoint(x, y)
-                } else {
-                    x = x.times(combined).minus(100).toInt()
-                    y = (y.plus(100)).div(combined).toInt()
-                    particlesMain.updateEmitPoint(x, y)
-                    particlesSupprt.updateEmitPoint(x, y)
+                if (detectInspiration(
+                        Pair(prevAbdo, prevThor),
+                        Pair(mService.mAbdoCorrected, mService.mThorCorrected)
+                    )
+                ) {
+                    xNew = calcNewXValue(xNew, '+')
+                    yNew = calcNewYValue(yNew, '-')
+                    moveLeavesUp(xNew, yNew, particlesMain)
+                    moveLeavesUp(xNew, yNew, particlesSupprt)
                 }
-                Thread.sleep(20)
+                if (detectRespiration(
+                        Pair(prevAbdo, prevThor),
+                        Pair(mService.mAbdoCorrected, mService.mThorCorrected)
+                    )
+                ) {
+                    xNew = calcNewXValue(xNew, '-')
+                    yNew = calcNewYValue(yNew, '+')
+                    moveLeavesDown(xNew, yNew, particlesMain)
+                    moveLeavesDown(xNew, yNew, particlesSupprt)
+                }
+                prevAbdo = mService.mAbdoCorrected
+                prevThor = mService.mThorCorrected
+                Thread.sleep(100)
             }
         }
+    }
+
+    //TODO funktioniert ned wirklich
+    private fun moveLeavesUp(xValue: Double, yValue: Double, particleSystem: ParticleSystem) {
+        val x = floor(xValue)
+        val y = floor(yValue)
+        if (x < xBorderRight && y < yBorderTop)
+            particleSystem.updateEmitPoint(x.toInt(), y.toInt())
+        else if (x > xBorderRight && y < yBorderTop)
+            particleSystem.updateEmitPoint(xBorderRight, y.toInt())
+        else if (x < xBorderRight && y > yBorderTop)
+            particleSystem.updateEmitPoint(x.toInt(), yBorderTop)
+        else particleSystem.updateEmitPoint(xBorderRight, yBorderTop)
+    }
+
+    private fun moveLeavesDown(xValue: Double, yValue: Double, particleSystem: ParticleSystem) {
+        val x = floor(xValue)
+        val y = floor(yValue)
+        if (x > xBorderLeft && y > yBorderBottom)
+            particleSystem.updateEmitPoint(x.toInt(), y.toInt())
+        else if (x < xBorderLeft && y > yBorderBottom)
+            particleSystem.updateEmitPoint(xBorderLeft, y.toInt())
+        else if (x > xBorderLeft && y < yBorderBottom)
+            particleSystem.updateEmitPoint(x.toInt(), yBorderBottom)
+        else particleSystem.updateEmitPoint(xBorderLeft, yBorderBottom)
+    }
+
+    private fun detectRespiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
+        return curr.first < prev.first && curr.second < prev.second
+    }
+
+    private fun detectInspiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
+        return curr.first > prev.first && curr.second > prev.second
+    }
+
+    private fun calcNewXValue(xNew: Double, operator: Char): Double {
+        when (operator) {
+            '+' -> return xNew.plus(mService.mThorCorrected.plus(5).plus(mService.mAbdoCorrected.plus(3)).times(5))
+            '-' -> return xNew.minus(mService.mThorCorrected.plus(5).plus(mService.mAbdoCorrected.plus(3)).times(5))
+        }
+        return 0.0
+    }
+
+    private fun calcNewYValue(yNew: Double, operator: Char): Double {
+        when (operator) {
+            '+' -> return yNew.plus((mService.mThorCorrected.plus(5).plus(mService.mAbdoCorrected.plus(3))).times(2))
+            '-' -> return yNew.minus((mService.mThorCorrected.plus(5).plus(mService.mAbdoCorrected.plus(1))).times(2))
+        }
+        return 0.0
     }
 }
