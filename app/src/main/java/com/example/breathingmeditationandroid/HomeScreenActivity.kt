@@ -65,22 +65,26 @@ class HomeScreenActivity : ComponentActivity() {
         }
     }
 
-    private fun animateLeaves() {
-        var prevInspiration = false
-        var prevRespiration = false
-
+    private fun initializeParticleSystems() {
         particlesMain = ParticleSystem(this, 10, R.drawable.leaf2, 1000)
         particlesMain.setScaleRange(0.7f, 1.3f)
             .setSpeedRange(0.05f, 0.1f)
             .setRotationSpeedRange(50f, 120f)
-            .setFadeOut(300, AccelerateInterpolator())
+            .setFadeOut(500, AccelerateInterpolator())
             .emit(xBorderLeft, yBorderBottom, 10)
-        particlesSupprt = ParticleSystem(this, 10, R.drawable.leaf3, 800)
+        particlesSupprt = ParticleSystem(this, 2, R.drawable.leaf1, 500)
         particlesSupprt.setScaleRange(0.7f, 1.3f)
             .setSpeedRange(0.05f, 0.1f)
-            .setRotationSpeedRange(10f, 100f)
-            .setFadeOut(300, AccelerateInterpolator())
+            .setRotationSpeedRange(5f, 50f)
+            .setFadeOut(250, AccelerateInterpolator())
             .emit(xBorderLeft, yBorderBottom, 10)
+    }
+
+    private fun animateLeaves() {
+        var prevInspiration = false
+        var prevRespiration = false
+
+        initializeParticleSystems()
 
         thread(start = true, isDaemon = true) {
             var prevAbdo = smoothValue().first
@@ -119,7 +123,6 @@ class HomeScreenActivity : ComponentActivity() {
                     prevInspiration = false
                     currX = calcNewXValue(currX, '-')
                     currY = calcNewYValue(currY, '+')
-                    Log.i("xyValues:", "X: $currX ; Y: $currY")
                     moveLeavesDown(currX, currY, particlesMain)
                     moveLeavesDown(currX, currY, particlesSupprt)
                 }
@@ -130,7 +133,6 @@ class HomeScreenActivity : ComponentActivity() {
         }
     }
 
-    //TODO funktioniert ned wirklich
     private fun moveLeavesUp(xValue: Double, yValue: Double, particleSystem: ParticleSystem) {
         val x = floor(xValue)
         val y = floor(yValue)
@@ -177,16 +179,16 @@ class HomeScreenActivity : ComponentActivity() {
 
     private fun calcNewXValue(xNew: Double, operator: Char): Double {
         when (operator) {
-            '+' -> return xNew.plus(smoothValue().second.plus(5).plus(smoothValue().first.plus(3)).times(5))
-            '-' -> return xNew.minus(smoothValue().second.plus(5).plus(smoothValue().first.plus(3)).times(5))
+            '+' -> return xNew.plus(((smoothValue().second.plus(10)).div((smoothValue().first).plus(10))).times(50))
+            '-' -> return xNew.minus(((smoothValue().second.plus(10)).div((smoothValue().first).plus(10))).times(50))
         }
         return 0.0
     }
 
     private fun calcNewYValue(yNew: Double, operator: Char): Double {
         when (operator) {
-            '+' -> return yNew.plus((smoothValue().second.plus(5).plus(smoothValue().first.plus(3))).times(2))
-            '-' -> return yNew.minus((smoothValue().second.plus(5).plus(smoothValue().first.plus(1))).times(2))
+            '+' -> return yNew.plus(((smoothValue().second.plus(10)).div((smoothValue().first).plus(10))).times(15))
+            '-' -> return yNew.minus(((smoothValue().second.plus(10)).div((smoothValue().first).plus(10))).times(15))
         }
         return 0.0
     }
