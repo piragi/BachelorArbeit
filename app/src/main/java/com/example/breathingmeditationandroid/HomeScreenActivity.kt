@@ -10,9 +10,8 @@ import android.os.IBinder
 import android.util.Log
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
+import android.widget.ImageView
 import androidx.activity.ComponentActivity
-import com.bullfrog.particle.IParticleManager
-import com.bullfrog.particle.Particles
 import com.plattysoft.leonids.ParticleSystem
 import kotlin.concurrent.thread
 import kotlin.math.floor
@@ -20,7 +19,6 @@ import kotlin.math.floor
 class HomeScreenActivity : ComponentActivity() {
 
     private lateinit var container: ViewGroup
-    private var particleManager: IParticleManager? = null
     private lateinit var particlesMain: ParticleSystem
     private lateinit var particlesSupprt: ParticleSystem
     private var mDevice: BluetoothDevice? = null
@@ -33,6 +31,9 @@ class HomeScreenActivity : ComponentActivity() {
     private val yBorderBottom = 800
     private var currX: Double = 0.0
     private var currY: Double = 0.0
+    private lateinit var bubble1: ImageView
+    private lateinit var bubble2: ImageView
+    private lateinit var bubble3: ImageView
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -54,7 +55,9 @@ class HomeScreenActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.home_screen)
         container = findViewById(R.id.home_screen)
-        particleManager = Particles.with(this, container)
+        bubble1 = findViewById(R.id.imageViewSettings)
+        bubble2 = findViewById(R.id.imageViewCalibrate)
+        bubble3 = findViewById(R.id.imageViewPlay)
         mDevice = intent?.extras?.getParcelable("Device")
         currX = xBorderLeft.toDouble()
         currY = yBorderBottom.toDouble()
@@ -81,11 +84,18 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun animateLeaves() {
-        var prevInspiration = false
-        var prevRespiration = false
+        //TODO weg aus der methode
+        val coordinatesBubble1 = IntArray(2)
+        val coordinatesBubble2 = IntArray(2)
+        val coordinatesBubble3 = IntArray(2)
 
+        bubble1.getLocationOnScreen(coordinatesBubble1)
+        bubble2.getLocationOnScreen(coordinatesBubble2)
+        bubble3.getLocationOnScreen(coordinatesBubble3)
         initializeParticleSystems()
-
+        Log.i("coordinates", "bubble1: ${coordinatesBubble1[0]}, ${coordinatesBubble1[1]}")
+        Log.i("coordinates", "bubble2: ${coordinatesBubble2[0]}, ${coordinatesBubble2[1]}")
+        Log.i("coordinates", "bubble3: ${coordinatesBubble3[0]}, ${coordinatesBubble3[1]}")
         thread(start = true, isDaemon = true) {
             var prevAbdo = smoothValue().first
             var prevThor = smoothValue().second
@@ -95,36 +105,22 @@ class HomeScreenActivity : ComponentActivity() {
                         Pair(smoothValue().first, smoothValue().second)
                     )
                 ) {
-                    if (prevRespiration) {
-                        resetEmitterInspiration(particlesMain)
-                        resetEmitterInspiration(particlesSupprt)
-                        currX = xBorderLeft.toDouble()
-                        currY = yBorderBottom.toDouble()
-                    }
-                    prevInspiration = true
-                    prevRespiration = false
                     currX = calcNewXValue(currX, '+')
                     currY = calcNewYValue(currY, '-')
                     moveLeavesUp(currX, currY, particlesMain)
                     moveLeavesUp(currX, currY, particlesSupprt)
+                    detectSelections(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
                 }
                 if (detectRespiration(
                         Pair(prevAbdo, prevThor),
                         Pair(smoothValue().first, smoothValue().second)
                     )
                 ) {
-                    if (prevInspiration) {
-                        resetEmitterRespiration(particlesMain)
-                        resetEmitterRespiration(particlesSupprt)
-                        currX = xBorderRight.toDouble()
-                        currY = yBorderTop.toDouble()
-                    }
-                    prevRespiration = true
-                    prevInspiration = false
                     currX = calcNewXValue(currX, '-')
                     currY = calcNewYValue(currY, '+')
                     moveLeavesDown(currX, currY, particlesMain)
                     moveLeavesDown(currX, currY, particlesSupprt)
+                    detectSelections(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
                 }
                 prevAbdo = smoothValue().first
                 prevThor = smoothValue().second
@@ -178,27 +174,25 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun calcNewXValue(xNew: Double, operator: Char): Double {
+        val smoothedValues = smoothValue()
         when (operator) {
-            '+' -> return xNew.plus(((smoothValue().second.plus(10)).div((smoothValue().first).plus(10))).times(50))
-            '-' -> return xNew.minus(((smoothValue().second.plus(10)).div((smoothValue().first).plus(10))).times(50))
+            '+' -> return xNew.plus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 50.0))
+            '-' -> return xNew.minus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 50.0))
         }
         return 0.0
+    }
+
+    private fun calcCombinedValue(abdo: Double, thor: Double, factor: Double): Double {
+        return ((thor.plus(10)).div((abdo).plus(10))).times(factor)
     }
 
     private fun calcNewYValue(yNew: Double, operator: Char): Double {
+        val smoothedValues = smoothValue()
         when (operator) {
-            '+' -> return yNew.plus(((smoothValue().second.plus(10)).div((smoothValue().first).plus(10))).times(15))
-            '-' -> return yNew.minus(((smoothValue().second.plus(10)).div((smoothValue().first).plus(10))).times(15))
+            '+' -> return yNew.plus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 15.0))
+            '-' -> return yNew.minus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 15.0))
         }
         return 0.0
-    }
-
-    private fun resetEmitterRespiration(particleSystem: ParticleSystem) {
-        particleSystem.updateEmitPoint(xBorderRight, yBorderTop)
-    }
-
-    private fun resetEmitterInspiration(particleSystem: ParticleSystem) {
-        particleSystem.updateEmitPoint(xBorderLeft, yBorderBottom)
     }
 
     private fun smoothValue(): Pair<Double, Double> {
@@ -213,5 +207,26 @@ class HomeScreenActivity : ComponentActivity() {
         val medianThor = (list[list.size.div(2)].first.plus(list[list.size.div(2).plus(1)].first)).div(2)
         val medianAbdo = (list[list.size.div(2)].second.plus(list[list.size.div(2).plus(1)].second)).div(2)
         return Pair(medianAbdo, medianThor)
+    }
+
+    private fun detectSelections(
+        coordinatesBubble1: IntArray,
+        coordinatesBubble2: IntArray,
+        coordinatesBubble3: IntArray
+    ) {
+        runOnUiThread {
+            if (currX in coordinatesBubble1[0].minus(200).toDouble()..coordinatesBubble1[0].plus(200).toDouble()
+            ) {
+                bubble1.alpha = 1.0f
+            } else bubble1.alpha = 0.7f
+            if (currX in coordinatesBubble2[0].minus(200).toDouble()..coordinatesBubble2[0].plus(200).toDouble()
+            ) {
+                bubble2.alpha = 1.0f
+            } else bubble2.alpha = 0.7f
+            if (currX in coordinatesBubble3[0].minus(200).toDouble()..coordinatesBubble3[0].plus(200).toDouble()
+            ) {
+                bubble3.alpha = 1.0f
+            } else bubble3.alpha = 0.7f
+        }
     }
 }
