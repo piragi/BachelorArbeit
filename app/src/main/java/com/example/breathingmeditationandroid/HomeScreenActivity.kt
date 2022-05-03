@@ -31,6 +31,8 @@ class HomeScreenActivity : ComponentActivity() {
     private val xBorderRight = 2000
     private val yBorderTop = 300
     private val yBorderBottom = 800
+    private var currX: Double = 0.0
+    private var currY: Double = 0.0
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -54,6 +56,8 @@ class HomeScreenActivity : ComponentActivity() {
         container = findViewById(R.id.home_screen)
         particleManager = Particles.with(this, container)
         mDevice = intent?.extras?.getParcelable("Device")
+        currX = xBorderLeft.toDouble()
+        currY = yBorderBottom.toDouble()
         Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
             intent.putExtra("Device", mDevice)
@@ -62,6 +66,9 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun animateLeaves() {
+        var prevInspiration = false
+        var prevRespiration = false
+
         particlesMain = ParticleSystem(this, 10, R.drawable.leaf2, 1000)
         particlesMain.setScaleRange(0.7f, 1.3f)
             .setSpeedRange(0.05f, 0.1f)
@@ -76,34 +83,49 @@ class HomeScreenActivity : ComponentActivity() {
             .emit(xBorderLeft, yBorderBottom, 10)
 
         thread(start = true, isDaemon = true) {
-            var xNew = xBorderLeft.toDouble()
-            var yNew = yBorderBottom.toDouble()
-            var prevAbdo = mService.mAbdoCorrected
-            var prevThor = mService.mThorCorrected
+            var prevAbdo = smoothValue().first
+            var prevThor = smoothValue().second
             while (true) {
                 if (detectInspiration(
                         Pair(prevAbdo, prevThor),
-                        Pair(mService.mAbdoCorrected, mService.mThorCorrected)
+                        Pair(smoothValue().first, smoothValue().second)
                     )
                 ) {
-                    xNew = calcNewXValue(xNew, '+')
-                    yNew = calcNewYValue(yNew, '-')
-                    moveLeavesUp(xNew, yNew, particlesMain)
-                    moveLeavesUp(xNew, yNew, particlesSupprt)
+                    if (prevRespiration) {
+                        resetEmitterInspiration(particlesMain)
+                        resetEmitterInspiration(particlesSupprt)
+                        currX = xBorderLeft.toDouble()
+                        currY = yBorderBottom.toDouble()
+                    }
+                    prevInspiration = true
+                    prevRespiration = false
+                    currX = calcNewXValue(currX, '+')
+                    currY = calcNewYValue(currY, '-')
+                    moveLeavesUp(currX, currY, particlesMain)
+                    moveLeavesUp(currX, currY, particlesSupprt)
                 }
                 if (detectRespiration(
                         Pair(prevAbdo, prevThor),
-                        Pair(mService.mAbdoCorrected, mService.mThorCorrected)
+                        Pair(smoothValue().first, smoothValue().second)
                     )
                 ) {
-                    xNew = calcNewXValue(xNew, '-')
-                    yNew = calcNewYValue(yNew, '+')
-                    moveLeavesDown(xNew, yNew, particlesMain)
-                    moveLeavesDown(xNew, yNew, particlesSupprt)
+                    if (prevInspiration) {
+                        resetEmitterRespiration(particlesMain)
+                        resetEmitterRespiration(particlesSupprt)
+                        currX = xBorderRight.toDouble()
+                        currY = yBorderTop.toDouble()
+                    }
+                    prevRespiration = true
+                    prevInspiration = false
+                    currX = calcNewXValue(currX, '-')
+                    currY = calcNewYValue(currY, '+')
+                    Log.i("xyValues:", "X: $currX ; Y: $currY")
+                    moveLeavesDown(currX, currY, particlesMain)
+                    moveLeavesDown(currX, currY, particlesSupprt)
                 }
-                prevAbdo = mService.mAbdoCorrected
-                prevThor = mService.mThorCorrected
-                Thread.sleep(100)
+                prevAbdo = smoothValue().first
+                prevThor = smoothValue().second
+                Thread.sleep(50)
             }
         }
     }
@@ -112,25 +134,37 @@ class HomeScreenActivity : ComponentActivity() {
     private fun moveLeavesUp(xValue: Double, yValue: Double, particleSystem: ParticleSystem) {
         val x = floor(xValue)
         val y = floor(yValue)
-        if (x < xBorderRight && y < yBorderTop)
+        if (x <= xBorderRight && y >= yBorderTop)
             particleSystem.updateEmitPoint(x.toInt(), y.toInt())
-        else if (x > xBorderRight && y < yBorderTop)
+        else if (x > xBorderRight && y >= yBorderTop) {
             particleSystem.updateEmitPoint(xBorderRight, y.toInt())
-        else if (x < xBorderRight && y > yBorderTop)
+            currX = xBorderRight.toDouble()
+        } else if (x <= xBorderRight && y < yBorderTop) {
             particleSystem.updateEmitPoint(x.toInt(), yBorderTop)
-        else particleSystem.updateEmitPoint(xBorderRight, yBorderTop)
+            currY = yBorderTop.toDouble()
+        } else {
+            particleSystem.updateEmitPoint(xBorderRight, yBorderTop)
+            currX = xBorderRight.toDouble()
+            currY = yBorderTop.toDouble()
+        }
     }
 
     private fun moveLeavesDown(xValue: Double, yValue: Double, particleSystem: ParticleSystem) {
         val x = floor(xValue)
         val y = floor(yValue)
-        if (x > xBorderLeft && y > yBorderBottom)
+        if (x >= xBorderLeft && y <= yBorderBottom)
             particleSystem.updateEmitPoint(x.toInt(), y.toInt())
-        else if (x < xBorderLeft && y > yBorderBottom)
+        else if (x < xBorderLeft && y <= yBorderBottom) {
             particleSystem.updateEmitPoint(xBorderLeft, y.toInt())
-        else if (x > xBorderLeft && y < yBorderBottom)
+            currX = xBorderLeft.toDouble()
+        } else if (x >= xBorderLeft && y > yBorderBottom) {
             particleSystem.updateEmitPoint(x.toInt(), yBorderBottom)
-        else particleSystem.updateEmitPoint(xBorderLeft, yBorderBottom)
+            currY = yBorderBottom.toDouble()
+        } else {
+            particleSystem.updateEmitPoint(xBorderLeft, yBorderBottom)
+            currX = xBorderLeft.toDouble()
+            currY = yBorderBottom.toDouble()
+        }
     }
 
     private fun detectRespiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
@@ -143,17 +177,39 @@ class HomeScreenActivity : ComponentActivity() {
 
     private fun calcNewXValue(xNew: Double, operator: Char): Double {
         when (operator) {
-            '+' -> return xNew.plus(mService.mThorCorrected.plus(5).plus(mService.mAbdoCorrected.plus(3)).times(5))
-            '-' -> return xNew.minus(mService.mThorCorrected.plus(5).plus(mService.mAbdoCorrected.plus(3)).times(5))
+            '+' -> return xNew.plus(smoothValue().second.plus(5).plus(smoothValue().first.plus(3)).times(5))
+            '-' -> return xNew.minus(smoothValue().second.plus(5).plus(smoothValue().first.plus(3)).times(5))
         }
         return 0.0
     }
 
     private fun calcNewYValue(yNew: Double, operator: Char): Double {
         when (operator) {
-            '+' -> return yNew.plus((mService.mThorCorrected.plus(5).plus(mService.mAbdoCorrected.plus(3))).times(2))
-            '-' -> return yNew.minus((mService.mThorCorrected.plus(5).plus(mService.mAbdoCorrected.plus(1))).times(2))
+            '+' -> return yNew.plus((smoothValue().second.plus(5).plus(smoothValue().first.plus(3))).times(2))
+            '-' -> return yNew.minus((smoothValue().second.plus(5).plus(smoothValue().first.plus(1))).times(2))
         }
         return 0.0
+    }
+
+    private fun resetEmitterRespiration(particleSystem: ParticleSystem) {
+        particleSystem.updateEmitPoint(xBorderRight, yBorderTop)
+    }
+
+    private fun resetEmitterInspiration(particleSystem: ParticleSystem) {
+        particleSystem.updateEmitPoint(xBorderLeft, yBorderBottom)
+    }
+
+    private fun smoothValue(): Pair<Double, Double> {
+        val valueList = mutableListOf(Pair(mService.mAbdoCorrected, mService.mThorCorrected))
+        while (valueList.size <= 6) {
+            valueList.add(Pair(mService.mAbdoCorrected, mService.mThorCorrected))
+        }
+        return calculateMedian(valueList)
+    }
+
+    private fun calculateMedian(list: MutableList<Pair<Double, Double>>): Pair<Double, Double> {
+        val medianThor = (list[list.size.div(2)].first.plus(list[list.size.div(2).plus(1)].first)).div(2)
+        val medianAbdo = (list[list.size.div(2)].second.plus(list[list.size.div(2).plus(1)].second)).div(2)
+        return Pair(medianAbdo, medianThor)
     }
 }
