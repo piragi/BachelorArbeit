@@ -85,17 +85,11 @@ class HomeScreenActivity : ComponentActivity() {
 
     private fun animateLeaves() {
         //TODO weg aus der methode
-        val coordinatesBubble1 = IntArray(2)
-        val coordinatesBubble2 = IntArray(2)
-        val coordinatesBubble3 = IntArray(2)
+        val coordinatesBubble1 = Pair(bubble1.left, bubble1.right)
+        val coordinatesBubble2 = Pair(bubble2.left, bubble2.right)
+        val coordinatesBubble3 = Pair(bubble3.left, bubble3.right)
 
-        bubble1.getLocationOnScreen(coordinatesBubble1)
-        bubble2.getLocationOnScreen(coordinatesBubble2)
-        bubble3.getLocationOnScreen(coordinatesBubble3)
         initializeParticleSystems()
-        Log.i("coordinates", "bubble1: ${coordinatesBubble1[0]}, ${coordinatesBubble1[1]}")
-        Log.i("coordinates", "bubble2: ${coordinatesBubble2[0]}, ${coordinatesBubble2[1]}")
-        Log.i("coordinates", "bubble3: ${coordinatesBubble3[0]}, ${coordinatesBubble3[1]}")
         thread(start = true, isDaemon = true) {
             var prevAbdo = smoothValue().first
             var prevThor = smoothValue().second
@@ -210,21 +204,19 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun detectSelections(
-        coordinatesBubble1: IntArray,
-        coordinatesBubble2: IntArray,
-        coordinatesBubble3: IntArray
+        coordinatesBubble1: Pair<Int, Int>,
+        coordinatesBubble2: Pair<Int, Int>,
+        coordinatesBubble3: Pair<Int, Int>
     ) {
+        //TODO add Y value
         runOnUiThread {
-            if (currX in coordinatesBubble1[0].minus(200).toDouble()..coordinatesBubble1[0].plus(200).toDouble()
-            ) {
+            if (currX in coordinatesBubble1.first.toDouble()..coordinatesBubble1.second.toDouble()) {
                 bubble1.alpha = 1.0f
             } else bubble1.alpha = 0.7f
-            if (currX in coordinatesBubble2[0].minus(200).toDouble()..coordinatesBubble2[0].plus(200).toDouble()
-            ) {
+            if (currX in coordinatesBubble2.first.toDouble()..coordinatesBubble2.second.toDouble()) {
                 bubble2.alpha = 1.0f
             } else bubble2.alpha = 0.7f
-            if (currX in coordinatesBubble3[0].minus(200).toDouble()..coordinatesBubble3[0].plus(200).toDouble()
-            ) {
+            if (currX in coordinatesBubble3.first.toDouble()..coordinatesBubble3.second.toDouble()) {
                 bubble3.alpha = 1.0f
             } else bubble3.alpha = 0.7f
         }
