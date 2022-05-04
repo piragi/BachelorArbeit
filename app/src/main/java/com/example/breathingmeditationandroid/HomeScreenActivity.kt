@@ -34,6 +34,7 @@ class HomeScreenActivity : ComponentActivity() {
     private lateinit var bubble1: ImageView
     private lateinit var bubble2: ImageView
     private lateinit var bubble3: ImageView
+    private lateinit var holdBreathGesture: HoldBreathGesture
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -41,6 +42,8 @@ class HomeScreenActivity : ComponentActivity() {
             mService = binder.getService()
             breathingUtils = BreathingUtils(mService)
             mBound = true
+            holdBreathGesture = HoldBreathGesture(mService)
+            holdBreathGesture.detect()
             animateLeaves()
         }
 
@@ -91,12 +94,12 @@ class HomeScreenActivity : ComponentActivity() {
 
         initializeParticleSystems()
         thread(start = true, isDaemon = true) {
-            var prevAbdo = smoothValue().first
-            var prevThor = smoothValue().second
+            var prevAbdo = breathingUtils.smoothValue().first
+            var prevThor = breathingUtils.smoothValue().second
             while (true) {
                 if (detectInspiration(
                         Pair(prevAbdo, prevThor),
-                        Pair(smoothValue().first, smoothValue().second)
+                        Pair(breathingUtils.smoothValue().first, breathingUtils.smoothValue().second)
                     )
                 ) {
                     currX = calcNewXValue(currX, '+')
@@ -107,7 +110,7 @@ class HomeScreenActivity : ComponentActivity() {
                 }
                 if (detectRespiration(
                         Pair(prevAbdo, prevThor),
-                        Pair(smoothValue().first, smoothValue().second)
+                        Pair(breathingUtils.smoothValue().first, breathingUtils.smoothValue().second)
                     )
                 ) {
                     currX = calcNewXValue(currX, '-')
@@ -116,8 +119,8 @@ class HomeScreenActivity : ComponentActivity() {
                     moveLeavesDown(currX, currY, particlesSupprt)
                     detectSelections(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
                 }
-                prevAbdo = smoothValue().first
-                prevThor = smoothValue().second
+                prevAbdo = breathingUtils.smoothValue().first
+                prevThor = breathingUtils.smoothValue().second
                 Thread.sleep(50)
             }
         }
@@ -168,7 +171,7 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun calcNewXValue(xNew: Double, operator: Char): Double {
-        val smoothedValues = smoothValue()
+        val smoothedValues = breathingUtils.smoothValue()
         when (operator) {
             '+' -> return xNew.plus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 50.0))
             '-' -> return xNew.minus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 50.0))
@@ -181,26 +184,12 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun calcNewYValue(yNew: Double, operator: Char): Double {
-        val smoothedValues = smoothValue()
+        val smoothedValues = breathingUtils.smoothValue()
         when (operator) {
             '+' -> return yNew.plus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 15.0))
             '-' -> return yNew.minus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 15.0))
         }
         return 0.0
-    }
-
-    private fun smoothValue(): Pair<Double, Double> {
-        val valueList = mutableListOf(Pair(mService.mAbdoCorrected, mService.mThorCorrected))
-        while (valueList.size <= 6) {
-            valueList.add(Pair(mService.mAbdoCorrected, mService.mThorCorrected))
-        }
-        return calculateMedian(valueList)
-    }
-
-    private fun calculateMedian(list: MutableList<Pair<Double, Double>>): Pair<Double, Double> {
-        val medianThor = (list[list.size.div(2)].first.plus(list[list.size.div(2).plus(1)].first)).div(2)
-        val medianAbdo = (list[list.size.div(2)].second.plus(list[list.size.div(2).plus(1)].second)).div(2)
-        return Pair(medianAbdo, medianThor)
     }
 
     private fun detectSelections(
@@ -212,6 +201,9 @@ class HomeScreenActivity : ComponentActivity() {
         runOnUiThread {
             if (currX in coordinatesBubble1.first.toDouble()..coordinatesBubble1.second.toDouble()) {
                 bubble1.alpha = 1.0f
+                if (holdBreathGesture.getHold()) {
+                    bubble1.alpha = 0.0f
+                }
             } else bubble1.alpha = 0.7f
             if (currX in coordinatesBubble2.first.toDouble()..coordinatesBubble2.second.toDouble()) {
                 bubble2.alpha = 1.0f
