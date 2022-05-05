@@ -25,6 +25,9 @@
         <activity android:name=".TestView"
             android:hardwareAccelerated="true">
         </activity>
+        <activity android:name=".GameScreen"
+            android:hardwareAccelerated="true">
+        </activity>
 
         <service android:name=".BluetoothConnection" />
     </application>

@@ -1,6 +1,7 @@
 package com.example.breathingmeditationandroid
 
 import android.util.Log
+import androidx.fragment.app.Fragment
 import kotlin.math.absoluteValue
 
 class BreathingUtils(mService: BluetoothConnection) {
@@ -70,14 +71,13 @@ class BreathingUtils(mService: BluetoothConnection) {
             }
         }
 
-        calibratedAbdo = Pair(mService.calculateMedian(maximaAbdo)*1.2, mService.calculateMedian(minimaAbdo)*0.8)
-        calibratedThor = Pair(mService.calculateMedian(maximaThor)*1.2, mService.calculateMedian(minimaThor)*0.8)
+        calibratedAbdo = Pair(mService.calculateMedian(maximaAbdo)*1.2, mService.calculateMedian(minimaAbdo)*1.2)
+        calibratedThor = Pair(mService.calculateMedian(maximaThor)*1.2, mService.calculateMedian(minimaThor)*1.2)
 
         return Pair(
             calibratedAbdo,
             calibratedThor
         )
-
     }
 
     fun calculateRelativePosition(calibratedValue: Pair<Pair<Double,Double>, Pair<Double,Double>>, smoothedValue: Pair<Double, Double>) : Double {
@@ -115,10 +115,13 @@ class BreathingUtils(mService: BluetoothConnection) {
         return Pair(medianAbdo, medianThor)
     }
 
-    fun deepBreath() : Boolean {
+    fun deepBreathDetected() {
+        while(mService.mAbdoCorrected < calibratedAbdo.second * 0.95
+            || mService.mThorCorrected < calibratedThor.second * 0.95) {
+            Thread.sleep(2)
+        }
 
-        //er muss den calibrated value irgendwie erreichen
-        //wenn der Exhale detected wird
-        return false
+        while(mService.mExpiration == 0) {
+        }
     }
 }
