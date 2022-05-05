@@ -112,7 +112,6 @@ class TestView : ComponentActivity() {
                     }
                 }
                 playerAnimator = movePlayer(relativePosition.toFloat())
-
             }
         }
     }
@@ -130,7 +129,6 @@ class TestView : ComponentActivity() {
         runOnUiThread {
             playerAnimator.start()
         }
-
         return playerAnimator
     }
 

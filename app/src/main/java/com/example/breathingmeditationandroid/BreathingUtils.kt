@@ -67,8 +67,6 @@ class BreathingUtils(mService: BluetoothConnection) {
             }
         }
 
-        Log.i("arrayAbdoMax:", "$maximaAbdo")
-
         return Pair(
             Pair(mService.calculateMedian(maximaAbdo)*1.2, mService.calculateMedian(minimaThor)*0.8),
             Pair(mService.calculateMedian(maximaThor)*1.2, mService.calculateMedian(minimaThor)*0.8)
@@ -86,8 +84,6 @@ class BreathingUtils(mService: BluetoothConnection) {
 
         val combinedBuffer = (((medianThor * 0.6) + (medianAbdo * 0.4)))
         val steps = (absoluteDifference / 250.0)
-        /*Log.i("combinedBuffer", "${combinedBuffer}")
-        Log.i("steps", "$steps")*/
 
         return combinedBuffer / steps + 430.0
     }
@@ -106,14 +102,16 @@ class BreathingUtils(mService: BluetoothConnection) {
         }
         val medianAbdo = mService.smoothData(bufferAbdo)
         val medianThor = mService.smoothData(bufferThor)
-/*        Log.i("medianAbdo", "$medianAbdo")
-        Log.i("bufferAbdo", "$bufferAbdo")
-        Log.i("medianThor", "$medianThor")
-        Log.i("bufferThor", "$bufferThor")*/
 
         bufferThor.clear()
         bufferAbdo.clear()
 
         return Pair(medianAbdo, medianThor)
+    }
+
+    fun stachato() : Boolean {
+        val buffer = ArrayList<Double>()
+
+        return false
     }
 }
