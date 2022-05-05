@@ -7,6 +7,9 @@ class BreathingUtils(mService: BluetoothConnection) {
 
     private val mService: BluetoothConnection = mService
 
+    lateinit var calibratedAbdo: Pair<Double, Double>
+    lateinit var calibratedThor: Pair<Double, Double>
+
     //TODO: muss doch smarter gehen
     //TODO: als Coroutine dann kann sich der screen schön bewegen dazwischen
     fun calibrateBreathing(): Pair<Pair<Double, Double>, Pair<Double, Double>> {
@@ -67,9 +70,12 @@ class BreathingUtils(mService: BluetoothConnection) {
             }
         }
 
+        calibratedAbdo = Pair(mService.calculateMedian(maximaAbdo)*1.2, mService.calculateMedian(minimaAbdo)*0.8)
+        calibratedThor = Pair(mService.calculateMedian(maximaThor)*1.2, mService.calculateMedian(minimaThor)*0.8)
+
         return Pair(
-            Pair(mService.calculateMedian(maximaAbdo)*1.2, mService.calculateMedian(minimaThor)*0.8),
-            Pair(mService.calculateMedian(maximaThor)*1.2, mService.calculateMedian(minimaThor)*0.8)
+            calibratedAbdo,
+            calibratedThor
         )
 
     }
@@ -109,9 +115,10 @@ class BreathingUtils(mService: BluetoothConnection) {
         return Pair(medianAbdo, medianThor)
     }
 
-    fun stachato() : Boolean {
-        val buffer = ArrayList<Double>()
+    fun deepBreath() : Boolean {
 
+        //er muss den calibrated value irgendwie erreichen
+        //wenn der Exhale detected wird
         return false
     }
 }

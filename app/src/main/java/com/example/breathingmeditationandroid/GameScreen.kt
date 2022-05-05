@@ -28,6 +28,9 @@ class GameScreen : ComponentActivity() {
             mService = binder.getService()
             mBound = true
 
+
+            breathingUtils = BreathingUtils(mService)
+
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -40,6 +43,9 @@ class GameScreen : ComponentActivity() {
     //View starten
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        //view
+        setContentView(R.layout.game_screen)
 
         //setup and start bluetooth service
         mDevice = intent?.extras?.getParcelable("Device")
