@@ -7,7 +7,8 @@
     <TextView
         android:id="@+id/textView"
         android:layout_width="111dp"
-        android:layout_height="51dp" android:text="ABOUT" android:textSize="34sp"
+        android:layout_height="51dp" android:text="@string/about" android:textSize="34sp"
+        android:textColor="#000000"
         app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

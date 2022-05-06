@@ -4,14 +4,16 @@ import android.util.Log
 import java.lang.System.currentTimeMillis
 import kotlin.concurrent.thread
 import kotlin.math.abs
+import kotlin.math.round
 
 class HoldBreathGesture(mService: BluetoothConnection) : IBreathingGesture {
     private val mService: BluetoothConnection
     private var breathingUtils: BreathingUtils
-    private var startTime: Long = 0
-    private var prevTime: Long = 0
+    var startTime: Long = 0
     var hold = false
-    private var values = arrayListOf<Pair<Double, Double>>()
+    var stop = true
+    var firstBorder = 0.0
+    var secondBorder = 0.0
 
     init {
         this.mService = mService
@@ -19,49 +21,34 @@ class HoldBreathGesture(mService: BluetoothConnection) : IBreathingGesture {
     }
 
     override fun detect() {
-        var steps = 0
+        var prevValue = breathingUtils.smoothPlayerPosition()
         thread(start = true, isDaemon = true) {
+            startTime = currentTimeMillis()
             while (true) {
-                if (startTime == 0.toLong()) {
-                    hold = false
-                    startTime = currentTimeMillis()
-                    prevTime = startTime
-                    values = arrayListOf()
-                }
-                val currTime = currentTimeMillis()
-                if (currTime.minus(startTime) < 3000) {
-                    val values = breathingUtils.smoothValue()
-                    if (steps.mod(100) == 0) {
-                        this.values.add(Pair(values.first.times(100), values.second.times(100)))
+                if (!stop) {
+                    val currTime = currentTimeMillis()
+                    val currValue = breathingUtils.smoothPlayerPosition()
+                    if (!checkPrevValue(
+                            Pair(prevValue.second.plus(10), prevValue.second.plus(10)),
+                            Pair(currValue.first.plus(10), currValue.second.plus(10))
+                        )
+                    ) {
+                        hold = false
+                        startTime = currentTimeMillis()
+                    } else if (currTime.minus(startTime) >= 3000) {
+                        hold = true
+                        startTime = currentTimeMillis()
                     }
-                    steps++
-                } else {
-                    hold = checkSimilarities()
-                    Log.i("hold:", "$hold")
-                    Thread.sleep(20)
-                    startTime = 0
-                    steps = 0
+                    prevValue = breathingUtils.smoothPlayerPosition()
                 }
             }
         }
     }
 
-    private fun checkSimilarities(): Boolean {
-        if (values.size > 0) {
-            val valuesFirst = values[0]
-            val valuesLast = values[values.size.minus(1)]
-            val firstLastAvgAbdo = (valuesFirst.first.plus(valuesLast.first)).div(2)
-            val firstLasAvgThor = (valuesFirst.second.plus(valuesLast.second)).div(2)
-            var abdoAvg = 0.0
-            var thorAvg = 0.0
-            for (pair in values) {
-                abdoAvg = abdoAvg.plus(pair.first)
-                thorAvg = thorAvg.plus(pair.second)
-            }
-            abdoAvg = abdoAvg.div(values.size)
-            thorAvg = thorAvg.div(values.size)
-            return abs(abdoAvg.minus(firstLastAvgAbdo)) < 10 && abs(thorAvg.minus(firstLasAvgThor)) < 5
-        }
-        return false
+    private fun checkPrevValue(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
+        Log.i("values:", "first: ${abs(prev.first.minus(curr.first))}")
+        Log.i("values:", "second: ${abs(prev.second.minus(curr.second))}")
+        // IDEE calibration und dabei "mittlere aenderung" messen und dann in die breathing gesture miteinbeziehen
+        return (round(abs(prev.first.minus(curr.first))) <= 1 && round(abs(prev.second.minus(curr.second))) <= 1)
     }
 }

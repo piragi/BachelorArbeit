@@ -138,4 +138,32 @@ class BreathingUtils(mService: BluetoothConnection) {
         while(mService.mExpiration == 0) {
         }
     }
+    fun detectRespiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
+        return curr.first < prev.first && curr.second < prev.second
+    }
+
+    fun detectInspiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
+        return curr.first > prev.first && curr.second > prev.second
+    }
+    fun startFromBeginning(prevAbdo: Double, prevThor: Double) {
+        // damit man nicht mitten in der atmung anfaengt
+        if (detectInspiration(
+                Pair(prevAbdo, prevThor),
+                Pair(smoothValue().first, smoothValue().second)
+            )
+        ) {
+            while (!detectRespiration(
+                    Pair(prevAbdo, prevThor),
+                    Pair(smoothValue().first, smoothValue().second)
+                )
+            )
+                continue
+        } else
+            while (!detectInspiration(
+                    Pair(prevAbdo, prevThor),
+                    Pair(smoothValue().first, smoothValue().second)
+                )
+            )
+                continue
+    }
 }

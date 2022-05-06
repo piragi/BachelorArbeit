@@ -6,4 +6,5 @@
     <string name="todo">TODO</string>
     <string name="play">PLAY</string>
     <string name="calibrate">CALIBRATE</string>
+    <string name="about">ABOUT</string>
 </resources>
