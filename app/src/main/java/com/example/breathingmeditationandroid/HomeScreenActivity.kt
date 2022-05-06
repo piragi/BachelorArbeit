@@ -13,6 +13,7 @@ import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import com.plattysoft.leonids.ParticleSystem
+import java.util.DoubleSummaryStatistics
 import kotlin.concurrent.thread
 import kotlin.math.floor
 
@@ -35,6 +36,8 @@ class HomeScreenActivity : ComponentActivity() {
     private lateinit var bubble2: ImageView
     private lateinit var bubble3: ImageView
     private lateinit var holdBreathGesture: HoldBreathGesture
+    private var prevAbdo: Double = 0.0
+    private var prevThor: Double = 0.0
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -43,6 +46,8 @@ class HomeScreenActivity : ComponentActivity() {
             breathingUtils = BreathingUtils(mService)
             mBound = true
             holdBreathGesture = HoldBreathGesture(mService)
+            prevAbdo = breathingUtils.smoothValue().first
+            prevThor = breathingUtils.smoothValue().second
             holdBreathGesture.detect()
             animateLeaves()
         }
@@ -94,8 +99,7 @@ class HomeScreenActivity : ComponentActivity() {
 
         initializeParticleSystems()
         thread(start = true, isDaemon = true) {
-            var prevAbdo = breathingUtils.smoothValue().first
-            var prevThor = breathingUtils.smoothValue().second
+            startFromBeginning()
             while (true) {
                 if (detectInspiration(
                         Pair(prevAbdo, prevThor),
@@ -173,8 +177,8 @@ class HomeScreenActivity : ComponentActivity() {
     private fun calcNewXValue(xNew: Double, operator: Char): Double {
         val smoothedValues = breathingUtils.smoothValue()
         when (operator) {
-            '+' -> return xNew.plus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 50.0))
-            '-' -> return xNew.minus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 50.0))
+            '+' -> return xNew.plus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 80.0))
+            '-' -> return xNew.minus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 80.0))
         }
         return 0.0
     }
@@ -186,8 +190,8 @@ class HomeScreenActivity : ComponentActivity() {
     private fun calcNewYValue(yNew: Double, operator: Char): Double {
         val smoothedValues = breathingUtils.smoothValue()
         when (operator) {
-            '+' -> return yNew.plus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 15.0))
-            '-' -> return yNew.minus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 15.0))
+            '+' -> return yNew.plus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 25.0))
+            '-' -> return yNew.minus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 25.0))
         }
         return 0.0
     }
@@ -198,19 +202,48 @@ class HomeScreenActivity : ComponentActivity() {
         coordinatesBubble3: Pair<Int, Int>
     ) {
         //TODO add Y value
-        runOnUiThread {
-            if (currX in coordinatesBubble1.first.toDouble()..coordinatesBubble1.second.toDouble()) {
-                bubble1.alpha = 1.0f
-                if (holdBreathGesture.getHold()) {
-                    bubble1.alpha = 0.0f
+        if (currX in coordinatesBubble1.first.toDouble()..coordinatesBubble1.second.toDouble()) {
+            setAlpha(bubble1, 1.0f)
+            if (holdBreathGesture.hold) {
+                Thread.sleep(50)
+                Intent(this, AboutScreen::class.java).also { intent ->
+                    startActivity(intent)
                 }
-            } else bubble1.alpha = 0.7f
-            if (currX in coordinatesBubble2.first.toDouble()..coordinatesBubble2.second.toDouble()) {
-                bubble2.alpha = 1.0f
-            } else bubble2.alpha = 0.7f
-            if (currX in coordinatesBubble3.first.toDouble()..coordinatesBubble3.second.toDouble()) {
-                bubble3.alpha = 1.0f
-            } else bubble3.alpha = 0.7f
+            }
+            Log.i("hold:", "${holdBreathGesture.hold}")
+        } else setAlpha(bubble1, 0.7f)
+        if (currX in coordinatesBubble2.first.toDouble()..coordinatesBubble2.second.toDouble()) {
+            setAlpha(bubble2, 1.0f)
+        } else setAlpha(bubble2, 0.7f)
+        if (currX in coordinatesBubble3.first.toDouble()..coordinatesBubble3.second.toDouble()) {
+            setAlpha(bubble3, 1.0f)
+        } else setAlpha(bubble3, 0.7f)
+    }
+
+    private fun setAlpha(imageView: ImageView, value: Float) {
+        runOnUiThread {
+            imageView.alpha = value
         }
+    }
+
+    private fun startFromBeginning() {
+        if (detectInspiration(
+                Pair(prevAbdo, prevThor),
+                Pair(breathingUtils.smoothValue().first, breathingUtils.smoothValue().second)
+            )
+        ) {
+            while (!detectRespiration(
+                    Pair(prevAbdo, prevThor),
+                    Pair(breathingUtils.smoothValue().first, breathingUtils.smoothValue().second)
+                )
+            )
+                continue
+        } else
+            while (!detectInspiration(
+                    Pair(prevAbdo, prevThor),
+                    Pair(breathingUtils.smoothValue().first, breathingUtils.smoothValue().second)
+                )
+            )
+                continue
     }
 }

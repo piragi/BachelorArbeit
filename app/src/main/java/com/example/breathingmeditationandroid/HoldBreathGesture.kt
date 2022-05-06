@@ -10,16 +10,12 @@ class HoldBreathGesture(mService: BluetoothConnection) : IBreathingGesture {
     private var breathingUtils: BreathingUtils
     private var startTime: Long = 0
     private var prevTime: Long = 0
-    private var hold = false
+    var hold = false
     private var values = arrayListOf<Pair<Double, Double>>()
 
     init {
         this.mService = mService
         breathingUtils = BreathingUtils(mService)
-    }
-
-    fun getHold(): Boolean {
-        return hold
     }
 
     override fun detect() {
@@ -39,13 +35,12 @@ class HoldBreathGesture(mService: BluetoothConnection) : IBreathingGesture {
                         this.values.add(Pair(values.first.times(100), values.second.times(100)))
                     }
                     steps++
-                    Thread.sleep(10)
                 } else {
                     hold = checkSimilarities()
+                    Log.i("hold:", "$hold")
+                    Thread.sleep(20)
                     startTime = 0
                     steps = 0
-                    Thread.sleep(10)
-
                 }
             }
         }
