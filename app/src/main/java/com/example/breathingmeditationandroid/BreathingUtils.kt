@@ -1,11 +1,15 @@
 package com.example.breathingmeditationandroid
 
 import android.util.Log
+import androidx.fragment.app.Fragment
 import kotlin.math.absoluteValue
 
 class BreathingUtils(mService: BluetoothConnection) {
 
     private val mService: BluetoothConnection = mService
+
+    lateinit var calibratedAbdo: Pair<Double, Double>
+    lateinit var calibratedThor: Pair<Double, Double>
 
     //TODO: muss doch smarter gehen
     //TODO: als Coroutine dann kann sich der screen schön bewegen dazwischen
@@ -21,7 +25,7 @@ class BreathingUtils(mService: BluetoothConnection) {
 
         Log.i("Calibration:", "Abdo")
         //first abdo
-        repeat(4) {
+        repeat(1) {
             while (mService.mExpiration == 0) {
                 if (!lokalMinima.equals(0.0)) {
                     minimaAbdo.add(lokalMinima)
@@ -44,7 +48,7 @@ class BreathingUtils(mService: BluetoothConnection) {
         }
         Log.i("Calibration:", "thor")
         //then thor
-        repeat(4) {
+        repeat(1) {
             while (mService.mExpiration == 0) {
                 if (!lokalMinima.equals(0.0)) {
                     minimaThor.add(lokalMinima)
@@ -67,13 +71,13 @@ class BreathingUtils(mService: BluetoothConnection) {
             }
         }
 
-        Log.i("arrayAbdoMax:", "$maximaAbdo")
+        calibratedAbdo = Pair(mService.calculateMedian(maximaAbdo)*1.2, mService.calculateMedian(minimaAbdo)*1.2)
+        calibratedThor = Pair(mService.calculateMedian(maximaThor)*1.2, mService.calculateMedian(minimaThor)*1.2)
 
         return Pair(
-            Pair(mService.calculateMedian(maximaAbdo)*1.2, mService.calculateMedian(minimaThor)*0.8),
-            Pair(mService.calculateMedian(maximaThor)*1.2, mService.calculateMedian(minimaThor)*0.8)
+            calibratedAbdo,
+            calibratedThor
         )
-
     }
 
     fun calculateRelativePosition(calibratedValue: Pair<Pair<Double,Double>, Pair<Double,Double>>, smoothedValue: Pair<Double, Double>) : Double {
@@ -84,10 +88,10 @@ class BreathingUtils(mService: BluetoothConnection) {
         val calibrationThor = calibratedValue.second
         val absoluteDifference = ((calibrationAbdo.first + calibrationThor.first) - (calibrationThor.second + calibrationAbdo.second)).absoluteValue
 
-        val combinedBuffer = (((medianThor * 0.6) + (medianAbdo * 0.4)) * 300)
-        val steps = (absoluteDifference / 300.0)
+        val combinedBuffer = (((medianThor * 0.6) + (medianAbdo * 0.4)))
+        val steps = (absoluteDifference / 250.0)
 
-        return combinedBuffer / steps + 300.0
+        return combinedBuffer / steps + 430.0
     }
 
     fun smoothPlayerPosition(): Pair<Double, Double> {
@@ -104,10 +108,6 @@ class BreathingUtils(mService: BluetoothConnection) {
         }
         val medianAbdo = mService.smoothData(bufferAbdo)
         val medianThor = mService.smoothData(bufferThor)
-        Log.i("medianAbdo", "$medianAbdo")
-        Log.i("bufferAbdo", "$bufferAbdo")
-        Log.i("medianThor", "$medianThor")
-        Log.i("bufferThor", "$bufferThor")
 
         bufferThor.clear()
         bufferAbdo.clear()
@@ -127,5 +127,15 @@ class BreathingUtils(mService: BluetoothConnection) {
         val medianThor = (list[list.size.div(2)].first.plus(list[list.size.div(2).plus(1)].first)).div(2)
         val medianAbdo = (list[list.size.div(2)].second.plus(list[list.size.div(2).plus(1)].second)).div(2)
         return Pair(medianAbdo, medianThor)
+    }
+
+    fun deepBreathDetected() {
+        while(mService.mAbdoCorrected < calibratedAbdo.second * 0.95
+            || mService.mThorCorrected < calibratedThor.second * 0.95) {
+            Thread.sleep(2)
+        }
+
+        while(mService.mExpiration == 0) {
+        }
     }
 }

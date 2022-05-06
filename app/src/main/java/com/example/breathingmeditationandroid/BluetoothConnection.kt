@@ -204,46 +204,24 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     }
 
     fun smoothData(buffer: ArrayList<Double>) : Double {
-        val divider:Int = buffer.size/3
-        var pastMedian: Double
-        var currentMedian = 0.0
-        var futureMedian: Double
-
         if (buffer.isEmpty()) {
             return 0.0
         }
-
-        /*if (buffer.size % 3 == 0) { //TODO: why are immuatables such a pain :(
-            pastMedian = calculateMedian(buffer.subList(0, divider-1))
-            Log.i("pastMedian", "$pastMedian")
-            currentMedian = calculateMedian(buffer.subList(divider, 2*divider-1))
-            Log.i("currentMedian", "$currentMedian")
-            futureMedian = calculateMedian(buffer.subList(2*divider, 3*divider-1))
-            Log.i("futureMedian", "$futureMedian")
-        } else if (buffer.size % 3 == 1) {
-            pastMedian = calculateMedian(buffer.subList(0, divider-1))
-            Log.i("pastMedian", "$pastMedian")
-            currentMedian = calculateMedian(buffer.subList(divider, 2*divider))
-            Log.i("currentMedian", "$currentMedian")
-            futureMedian = calculateMedian(buffer.subList(2*divider+1, 3*divider))
-            Log.i("futureMedian", "$futureMedian")
-        } else if (buffer.size % 3 == 2) {
-            pastMedian = calculateMedian(buffer.subList(0, divider-1))
-            Log.i("pastMedian", "$pastMedian")
-            currentMedian = calculateMedian(buffer.subList(divider, 2*divider+1))
-            Log.i("currentMedian", "$currentMedian")
-            futureMedian = calculateMedian(buffer.subList(2*divider+2, 3*divider+2))
-            Log.i("futureMedian", "$futureMedian")
-        }*/
         return calculateMedian(buffer)
     }
 
     fun calculateMedian(buffer: MutableList<Double>) : Double {
         buffer.sort()
-        return if(buffer.size % 2 == 0) {
-            (buffer[buffer.size/2-1] + buffer[(buffer.size/2)]) / 2
-        } else {
-            buffer[buffer.size/2]
+        return when {
+            buffer.isEmpty() -> {
+                0.0
+            }
+            buffer.size % 2 == 0 -> {
+                (buffer[buffer.size/2-1] + buffer[(buffer.size/2)]) / 2
+            }
+            else -> {
+                buffer[buffer.size/2]
+            }
         }
     }
 
