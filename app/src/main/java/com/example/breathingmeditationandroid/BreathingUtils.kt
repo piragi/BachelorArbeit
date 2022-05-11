@@ -71,8 +71,8 @@ class BreathingUtils(mService: BluetoothConnection) {
             }
         }
 
-        calibratedAbdo = Pair(mService.calculateMedian(maximaAbdo)*1.2, mService.calculateMedian(minimaAbdo)*1.2)
-        calibratedThor = Pair(mService.calculateMedian(maximaThor)*1.2, mService.calculateMedian(minimaThor)*1.2)
+        calibratedAbdo = Pair(mService.calculateMedian(maximaAbdo) * 1.2, mService.calculateMedian(minimaAbdo) * 1.2)
+        calibratedThor = Pair(mService.calculateMedian(maximaThor) * 1.2, mService.calculateMedian(minimaThor) * 1.2)
 
         return Pair(
             calibratedAbdo,
@@ -80,13 +80,17 @@ class BreathingUtils(mService: BluetoothConnection) {
         )
     }
 
-    fun calculateRelativePosition(calibratedValue: Pair<Pair<Double,Double>, Pair<Double,Double>>, smoothedValue: Pair<Double, Double>) : Double {
+    fun calculateRelativePosition(
+        calibratedValue: Pair<Pair<Double, Double>, Pair<Double, Double>>,
+        smoothedValue: Pair<Double, Double>
+    ): Double {
         //TODO: was ist besser lesbar, mit den ganzen vals oder ohne?
         val medianAbdo = smoothedValue.first
         val medianThor = smoothedValue.second
         val calibrationAbdo = calibratedValue.first
         val calibrationThor = calibratedValue.second
-        val absoluteDifference = ((calibrationAbdo.first + calibrationThor.first) - (calibrationThor.second + calibrationAbdo.second)).absoluteValue
+        val absoluteDifference =
+            ((calibrationAbdo.first + calibrationThor.first) - (calibrationThor.second + calibrationAbdo.second)).absoluteValue
 
         val combinedBuffer = (((medianThor * 0.6) + (medianAbdo * 0.4)))
         val steps = (absoluteDifference / 250.0)
@@ -115,6 +119,47 @@ class BreathingUtils(mService: BluetoothConnection) {
         return Pair(medianAbdo, medianThor)
     }
 
+    fun deepBreathDetected() {
+        while (mService.mAbdoCorrected < calibratedAbdo.second * 0.95
+            || mService.mThorCorrected < calibratedThor.second * 0.95
+        ) {
+            Thread.sleep(2)
+        }
+
+        while (mService.mExpiration == 0) {
+        }
+    }
+
+    fun detectRespiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
+        return curr.first < prev.first && curr.second < prev.second
+    }
+
+    fun detectInspiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
+        return curr.first > prev.first && curr.second > prev.second
+    }
+
+    fun startFromBeginning(prevAbdo: Double, prevThor: Double) {
+        // damit man nicht mitten in der atmung anfaengt
+        if (detectInspiration(
+                Pair(prevAbdo, prevThor),
+                Pair(smoothPlayerPosition().first, smoothPlayerPosition().second)
+            )
+        ) {
+            while (!detectRespiration(
+                    Pair(prevAbdo, prevThor),
+                    Pair(smoothPlayerPosition().first, smoothPlayerPosition().second)
+                )
+            )
+                continue
+        } else
+            while (!detectInspiration(
+                    Pair(prevAbdo, prevThor),
+                    Pair(smoothPlayerPosition().first, smoothPlayerPosition().second)
+                )
+            )
+                continue
+    }
+
     fun smoothValue(): Pair<Double, Double> {
         val valueList = mutableListOf(Pair(mService.mAbdoCorrected, mService.mThorCorrected))
         while (valueList.size <= 6) {
@@ -127,43 +172,5 @@ class BreathingUtils(mService: BluetoothConnection) {
         val medianThor = (list[list.size.div(2)].first.plus(list[list.size.div(2).plus(1)].first)).div(2)
         val medianAbdo = (list[list.size.div(2)].second.plus(list[list.size.div(2).plus(1)].second)).div(2)
         return Pair(medianAbdo, medianThor)
-    }
-
-    fun deepBreathDetected() {
-        while(mService.mAbdoCorrected < calibratedAbdo.second * 0.95
-            || mService.mThorCorrected < calibratedThor.second * 0.95) {
-            Thread.sleep(2)
-        }
-
-        while(mService.mExpiration == 0) {
-        }
-    }
-    fun detectRespiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
-        return curr.first < prev.first && curr.second < prev.second
-    }
-
-    fun detectInspiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
-        return curr.first > prev.first && curr.second > prev.second
-    }
-    fun startFromBeginning(prevAbdo: Double, prevThor: Double) {
-        // damit man nicht mitten in der atmung anfaengt
-        if (detectInspiration(
-                Pair(prevAbdo, prevThor),
-                Pair(smoothValue().first, smoothValue().second)
-            )
-        ) {
-            while (!detectRespiration(
-                    Pair(prevAbdo, prevThor),
-                    Pair(smoothValue().first, smoothValue().second)
-                )
-            )
-                continue
-        } else
-            while (!detectInspiration(
-                    Pair(prevAbdo, prevThor),
-                    Pair(smoothValue().first, smoothValue().second)
-                )
-            )
-                continue
     }
 }

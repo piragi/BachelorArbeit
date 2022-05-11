@@ -12,8 +12,7 @@ class HoldBreathGesture(mService: BluetoothConnection) : IBreathingGesture {
     var startTime: Long = 0
     var hold = false
     var stop = true
-    var firstBorder = 0.0
-    var secondBorder = 0.0
+    var border = 0.0
 
     init {
         this.mService = mService
@@ -21,13 +20,11 @@ class HoldBreathGesture(mService: BluetoothConnection) : IBreathingGesture {
     }
 
     override fun detect() {
-        var prevValue = breathingUtils.smoothPlayerPosition()
         thread(start = true, isDaemon = true) {
-            startTime = currentTimeMillis()
+            var prevValue = breathingUtils.smoothValue()
             while (true) {
                 if (!stop) {
-                    val currTime = currentTimeMillis()
-                    val currValue = breathingUtils.smoothPlayerPosition()
+                    val currValue = breathingUtils.smoothValue()
                     if (!checkPrevValue(
                             Pair(prevValue.second.plus(10), prevValue.second.plus(10)),
                             Pair(currValue.first.plus(10), currValue.second.plus(10))
@@ -35,20 +32,22 @@ class HoldBreathGesture(mService: BluetoothConnection) : IBreathingGesture {
                     ) {
                         hold = false
                         startTime = currentTimeMillis()
-                    } else if (currTime.minus(startTime) >= 3000) {
+                    } else if (currentTimeMillis().minus(startTime) >= 4000) {
                         hold = true
                         startTime = currentTimeMillis()
                     }
-                    prevValue = breathingUtils.smoothPlayerPosition()
-                }
+                    Thread.sleep(20)
+                    prevValue = breathingUtils.smoothValue()
+                } else startTime = currentTimeMillis()
+
             }
         }
     }
 
     private fun checkPrevValue(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
-        Log.i("values:", "first: ${abs(prev.first.minus(curr.first))}")
-        Log.i("values:", "second: ${abs(prev.second.minus(curr.second))}")
+        // Log.i("values:", "first: ${abs(prev.first.minus(curr.first))}")
+        // Log.i("values:", "second: ${abs(prev.second.minus(curr.second))}")
         // IDEE calibration und dabei "mittlere aenderung" messen und dann in die breathing gesture miteinbeziehen
-        return (round(abs(prev.first.minus(curr.first))) <= 1 && round(abs(prev.second.minus(curr.second))) <= 1)
+        return (round(abs(prev.first.minus(curr.first))) <= border && round(abs(prev.second.minus(curr.second))) <= border)
     }
 }

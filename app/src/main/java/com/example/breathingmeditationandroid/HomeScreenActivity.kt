@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
+import androidx.core.view.size
 import com.plattysoft.leonids.ParticleSystem
 import java.lang.System.currentTimeMillis
 import kotlin.concurrent.thread
@@ -26,7 +27,7 @@ class HomeScreenActivity : ComponentActivity() {
     private lateinit var mService: BluetoothConnection
     private var mBound = false
     private lateinit var breathingUtils: BreathingUtils
-    private val xBorderLeft = 100
+    private val xBorderLeft = 100 //TODO relative to device
     private val xBorderRight = 2000
     private val yBorderTop = 300
     private val yBorderBottom = 800
@@ -34,12 +35,13 @@ class HomeScreenActivity : ComponentActivity() {
     private var currY: Double = 0.0
     private var prevX: Double = 0.0
     private var prevY: Double = 0.0
+    private var prevAbdo: Double = 0.0
+    private var prevThor: Double = 0.0
     private lateinit var bubble1: ImageView
     private lateinit var bubble2: ImageView
     private lateinit var bubble3: ImageView
     private lateinit var holdBreathGesture: HoldBreathGesture
-    private var prevAbdo: Double = 0.0
-    private var prevThor: Double = 0.0
+
     private var stop = false
 
     private val connection = object : ServiceConnection {
@@ -94,6 +96,7 @@ class HomeScreenActivity : ComponentActivity() {
             .setRotationSpeedRange(5f, 50f)
             .setFadeOut(250, AccelerateInterpolator())
             .emit(xBorderLeft, yBorderBottom, 10)
+        Log.i("init:", "particles initialized")
     }
 
     private fun animateLeaves() {
@@ -101,10 +104,9 @@ class HomeScreenActivity : ComponentActivity() {
         val coordinatesBubble1 = Pair(bubble1.left, bubble1.right)
         val coordinatesBubble2 = Pair(bubble2.left, bubble2.right)
         val coordinatesBubble3 = Pair(bubble3.left, bubble3.right)
-
         initializeParticleSystems()
+        breathingUtils.startFromBeginning(prevAbdo, prevThor)
         thread(start = true, isDaemon = true) {
-            breathingUtils.startFromBeginning(prevAbdo, prevThor)
             while (!stop) {
                 if (breathingUtils.detectInspiration(
                         Pair(prevAbdo, prevThor),
@@ -127,12 +129,13 @@ class HomeScreenActivity : ComponentActivity() {
                     moveLeavesDown(currX, currY, particlesMain)
                     moveLeavesDown(currX, currY, particlesSupprt)
                     detectSelections(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
+
                 }
                 prevAbdo = breathingUtils.smoothValue().first
                 prevThor = breathingUtils.smoothValue().second
                 prevX = currX
                 prevY = currY
-                Thread.sleep(50)
+                Thread.sleep(20)
             }
         }
     }
@@ -205,37 +208,44 @@ class HomeScreenActivity : ComponentActivity() {
             holdBreathGesture.stop = false
             if (prevX !in coordinatesBubble1.first.toDouble()..coordinatesBubble1.second.toDouble())
                 holdBreathGesture.startTime = currentTimeMillis()
-            setAlpha(bubble1, 1.0f)
+            setAlpha(bubble1, bubble2, bubble3, 1.0f, 0.7f, 0.7f)
             if (holdBreathGesture.hold) {
                 Intent(this, AboutScreen::class.java).also { intent ->
+                    unbindService(connection)
                     startActivity(intent)
                     stop = true
                 }
             }
-        } else setAlpha(bubble1, 0.7f)
-        if (currX in coordinatesBubble2.first.toDouble()..coordinatesBubble2.second.toDouble()) {
+        } else if (currX in coordinatesBubble2.first.toDouble()..coordinatesBubble2.second.toDouble()) {
             holdBreathGesture.stop = false
-            holdBreathGesture.firstBorder = 0.0
-            holdBreathGesture.secondBorder = 1.0
-            setAlpha(bubble2, 1.0f)
-        } else setAlpha(bubble2, 0.7f)
-        if (currX in coordinatesBubble3.first.toDouble()..coordinatesBubble3.second.toDouble()) {
-            setAlpha(bubble3, 1.0f)
+            holdBreathGesture.border = 1.0
+            setAlpha(bubble1, bubble2, bubble3, 0.7f, 1.0f, 0.7f)
+        } else if (currX in coordinatesBubble3.first.toDouble()..coordinatesBubble3.second.toDouble()) {
             holdBreathGesture.stop = false
-            holdBreathGesture.firstBorder = 3.0
-            holdBreathGesture.secondBorder = 0.0
+            holdBreathGesture.border = 3.0
             if (holdBreathGesture.hold) {
                 Intent(this, GameScreen::class.java).also { intent ->
+                    unbindService(connection)
                     startActivity(intent)
                     stop = true
                 }
             }
-        } else setAlpha(bubble3, 0.7f)
+            setAlpha(bubble1, bubble2, bubble3, 0.7f, 0.7f, 1.0f)
+        } else holdBreathGesture.stop = true
     }
 
-    private fun setAlpha(imageView: ImageView, value: Float) {
+    private fun setAlpha(
+        imageView1: ImageView,
+        imageView2: ImageView,
+        imageView3: ImageView,
+        val1: Float,
+        val2: Float,
+        val3: Float
+    ) {
         runOnUiThread {
-            imageView.alpha = value
+            imageView1.alpha = val1
+            imageView2.alpha = val2
+            imageView3.alpha = val3
         }
     }
 }
