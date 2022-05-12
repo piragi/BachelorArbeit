@@ -12,7 +12,7 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
-import androidx.core.view.size
+import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.plattysoft.leonids.ParticleSystem
 import java.lang.System.currentTimeMillis
 import kotlin.concurrent.thread

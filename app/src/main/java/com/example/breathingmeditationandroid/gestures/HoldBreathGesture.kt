@@ -1,6 +1,7 @@
-package com.example.breathingmeditationandroid
+package com.example.breathingmeditationandroid.gestures
 
-import android.util.Log
+import com.example.breathingmeditationandroid.BluetoothConnection
+import com.example.breathingmeditationandroid.BreathingUtils
 import java.lang.System.currentTimeMillis
 import kotlin.concurrent.thread
 import kotlin.math.abs

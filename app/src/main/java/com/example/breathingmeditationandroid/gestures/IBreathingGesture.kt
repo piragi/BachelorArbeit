@@ -1,4 +1,4 @@
-package com.example.breathingmeditationandroid
+package com.example.breathingmeditationandroid.gestures
 
 import java.util.concurrent.Future
 
