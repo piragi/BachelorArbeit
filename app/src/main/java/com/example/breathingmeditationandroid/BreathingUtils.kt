@@ -87,11 +87,13 @@ class BreathingUtils(mService: BluetoothConnection) {
     }
 
     fun smoothValue(): Pair<Double, Double> {
-        val valueList = mutableListOf(Pair(mService.mAbdoCorrected, mService.mThorCorrected))
-        while (valueList.size <= 6) {
-            valueList.add(Pair(mService.mAbdoCorrected, mService.mThorCorrected))
+        val valueListAbdo = arrayListOf(mService.mAbdoCorrected, mService.mThorCorrected)
+        val valueListThor = arrayListOf(mService.mThorCorrected)
+        while (valueListAbdo.size <= 6 && valueListThor.size <= 6) {
+            valueListAbdo.add(mService.mAbdoCorrected)
+            valueListThor.add(mService.mThorCorrected)
         }
-        return calculateMedian(valueList)
+        return Pair(mService.smoothData(valueListAbdo), mService.smoothData(valueListThor));
     }
 
     private fun calculateMedian(list: MutableList<Pair<Double, Double>>): Pair<Double, Double> {

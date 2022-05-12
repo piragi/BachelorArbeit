@@ -38,7 +38,6 @@ class GameScreen : ComponentActivity() {
 
 
             breathingUtils = BreathingUtils(mService)
-            breathingUtils.calibrateBreathing()
             startLevel()
 
         }

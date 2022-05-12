@@ -53,6 +53,9 @@ class HomeScreenActivity : ComponentActivity() {
             holdBreathGesture = HoldBreathGesture(mService)
             prevAbdo = breathingUtils.smoothValue().first
             prevThor = breathingUtils.smoothValue().second
+            Log.i("Calibration", "start")
+            Calibrator.calibrate(mService)
+            bubble2.alpha = 1.0f
             animateLeaves()
             holdBreathGesture.detect()
 

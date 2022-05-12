@@ -43,9 +43,14 @@ class TestView : ComponentActivity() {
 
             //TODO: move this out of here
             breathingUtils = BreathingUtils(mService)
-            val calibratedValues = breathingUtils.calibrateBreathing()
+            val calibratedValues = Calibrator.calibrate(mService)
             Log.i("calibrated to:", "$calibratedValues")
-            animatePlayer(calibratedValues)
+            animatePlayer(
+                Pair(
+                    Pair(Calibrator.calibratedAbdo.first, Calibrator.calibratedAbdo.second),
+                    Pair(Calibrator.calibratedThor.first, Calibrator.calibratedThor.second)
+                )
+            )
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -91,7 +96,7 @@ class TestView : ComponentActivity() {
                 addUpdateListener {
                     val progress = this.animatedValue as Float
                     val width = bg1.width
-                    val translationX = width * (1-progress)
+                    val translationX = width * (1 - progress)
                     bg1.translationX = translationX
                     bg2.translationX = translationX - width
                 }
@@ -100,7 +105,7 @@ class TestView : ComponentActivity() {
         }
     }
 
-    fun animatePlayer(calibratedValue: Pair<Pair<Double,Double>, Pair<Double,Double>>) {
+    fun animatePlayer(calibratedValue: Pair<Pair<Double, Double>, Pair<Double, Double>>) {
         var playerAnimator = ObjectAnimator()
         thread(start = true, isDaemon = true) {
             while (true) {
@@ -116,7 +121,7 @@ class TestView : ComponentActivity() {
         }
     }
 
-    private fun movePlayer( calculate: Float) : ObjectAnimator {
+    private fun movePlayer(calculate: Float): ObjectAnimator {
         val playerAnimator = ObjectAnimator.ofFloat(player, "translationY", player.y, calculate)
             .apply {
                 interpolator = LinearInterpolator()
