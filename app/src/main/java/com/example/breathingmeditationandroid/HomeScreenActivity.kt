@@ -35,8 +35,7 @@ class HomeScreenActivity : ComponentActivity() {
     private var currY: Double = 0.0
     private var prevX: Double = 0.0
     private var prevY: Double = 0.0
-    private var prevAbdo: Double = 0.0
-    private var prevThor: Double = 0.0
+    private var selectionDetected: Boolean = false
     private lateinit var bubble1: ImageView
     private lateinit var bubble2: ImageView
     private lateinit var bubble3: ImageView
@@ -51,11 +50,10 @@ class HomeScreenActivity : ComponentActivity() {
             breathingUtils = BreathingUtils(mService)
             mBound = true
             holdBreathGesture = HoldBreathGesture(mService)
-            prevAbdo = breathingUtils.smoothValue().first
-            prevThor = breathingUtils.smoothValue().second
             Log.i("Calibration", "start")
             Calibrator.calibrate(mService)
             bubble2.alpha = 1.0f
+            initializeParticleSystems()
             animateLeaves()
             holdBreathGesture.detect()
 
@@ -107,35 +105,58 @@ class HomeScreenActivity : ComponentActivity() {
         val coordinatesBubble1 = Pair(bubble1.left, bubble1.right)
         val coordinatesBubble2 = Pair(bubble2.left, bubble2.right)
         val coordinatesBubble3 = Pair(bubble3.left, bubble3.right)
-        initializeParticleSystems()
-        breathingUtils.startFromBeginning(prevAbdo, prevThor)
+        // detectSelections(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
         thread(start = true, isDaemon = true) {
+            breathingUtils.startFromBeginning()
             while (!stop) {
-                if (breathingUtils.detectInspiration(
-                        Pair(prevAbdo, prevThor),
-                        Pair(breathingUtils.smoothValue().first, breathingUtils.smoothValue().second)
+                var currValue: Pair<Double, Double> = breathingUtils.smoothValue()
+                // recalibrate()
+                Log.i("Breath:", "Ex: ${mService.mExpiration} In: ${mService.mInspiration}")
+                if (mService.mExpiration == 0) {
+                    val combinedValue = breathingUtils.calcCombinedValue(
+                        breathingUtils.smoothValue().first,
+                        breathingUtils.smoothValue().second
                     )
-                ) {
-                    currX = calcNewXValue(currX, '+')
-                    currY = calcNewYValue(currY, '-')
+                    if(combinedValue < 0)
+                        Log.i("combinedVal", "$combinedValue")
+                    val newX = (combinedValue).times(Calibrator.flowFactorX).plus(xBorderLeft)
+                    val newY = (combinedValue).times(Calibrator.flowFactorY).plus(yBorderBottom)
+
+                    currX = if (newX > xBorderRight || combinedValue < 0) xBorderRight.toDouble() else newX
+                    currY = if (newY > yBorderTop || combinedValue < 0) yBorderTop.toDouble() else newY
+
+                    // Log.i("CurrValues: ", "X: $currX, Y: $currY")
+                    // Log.i(
+                    //"CurrValues: ",
+                    //"combined: ${breathingUtils.calcCombinedValue(currValue.first, currValue.second)}"
+                    //)
                     moveLeavesUp(currX, currY, particlesMain)
                     moveLeavesUp(currX, currY, particlesSupprt)
-                    detectSelections(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
                 }
-                if (breathingUtils.detectRespiration(
-                        Pair(prevAbdo, prevThor),
-                        Pair(breathingUtils.smoothValue().first, breathingUtils.smoothValue().second)
+                if (mService.mInspiration == 0) {
+                    val combinedValue = breathingUtils.calcCombinedValue(
+                        breathingUtils.smoothValue().first,
+                        breathingUtils.smoothValue().second
                     )
-                ) {
-                    currX = calcNewXValue(currX, '-')
-                    currY = calcNewYValue(currY, '+')
+                    if(combinedValue < 0)
+                        Log.i("combinedVal", "$combinedValue")
+                    val newX = (combinedValue).times(Calibrator.flowFactorX).times(-1).plus(xBorderRight)
+                    val newY = (combinedValue).times(Calibrator.flowFactorY).times(-1).plus(yBorderTop)
+
+                    currX = if (newX < xBorderLeft || combinedValue < 0) xBorderLeft.toDouble() else newX
+                    currY = if (newY > yBorderBottom || combinedValue < 0) yBorderBottom.toDouble() else newY
+
+                    /* Log.i(
+                        "CurrValues: ",
+                        "combined: ${breathingUtils.calcCombinedValue(currValue.first, currValue.second)}"
+                    ) */
                     moveLeavesDown(currX, currY, particlesMain)
                     moveLeavesDown(currX, currY, particlesSupprt)
-                    detectSelections(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
-
                 }
-                prevAbdo = breathingUtils.smoothValue().first
-                prevThor = breathingUtils.smoothValue().second
+                Log.i("CurrValues: ", "X: $currX, Y: $currY")
+                selectionDetected =
+                    inBubble(coordinatesBubble1) || inBubble(coordinatesBubble2) || inBubble(coordinatesBubble3)
+                holdBreathGesture.stop = !selectionDetected
                 prevX = currX
                 prevY = currY
                 Thread.sleep(20)
@@ -179,26 +200,11 @@ class HomeScreenActivity : ComponentActivity() {
         }
     }
 
-    private fun calcNewXValue(xNew: Double, operator: Char): Double {
-        val smoothedValues = breathingUtils.smoothValue()
-        when (operator) {
-            '+' -> return xNew.plus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 50.0))
-            '-' -> return xNew.minus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 50.0))
-        }
-        return 0.0
-    }
-
-    private fun calcCombinedValue(abdo: Double, thor: Double, factor: Double): Double {
-        return ((thor.plus(10)).div((abdo).plus(10))).times(factor)
-    }
-
-    private fun calcNewYValue(yNew: Double, operator: Char): Double {
-        val smoothedValues = breathingUtils.smoothValue()
-        when (operator) {
-            '+' -> return yNew.plus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 15.0))
-            '-' -> return yNew.minus(calcCombinedValue(smoothedValues.second, smoothedValues.first, 15.0))
-        }
-        return 0.0
+    private fun recalibrate() {
+        Calibrator.calibrateFlow()
+        currX = xBorderLeft.toDouble()
+        currY = yBorderBottom.toDouble()
+        breathingUtils.startFromBeginning()
     }
 
     private fun detectSelections(
@@ -207,48 +213,53 @@ class HomeScreenActivity : ComponentActivity() {
         coordinatesBubble3: Pair<Int, Int>
     ) {
         //TODO add Y value
-        if (currX in coordinatesBubble1.first.toDouble()..coordinatesBubble1.second.toDouble()) {
-            holdBreathGesture.stop = false
-            if (prevX !in coordinatesBubble1.first.toDouble()..coordinatesBubble1.second.toDouble())
-                holdBreathGesture.startTime = currentTimeMillis()
-            setAlpha(bubble1, bubble2, bubble3, 1.0f, 0.7f, 0.7f)
-            if (holdBreathGesture.hold) {
-                Intent(this, AboutScreen::class.java).also { intent ->
-                    unbindService(connection)
-                    startActivity(intent)
-                    stop = true
+        thread(start = true, isDaemon = true) {
+            while (true) {
+                if (selectionDetected) {
+                    if (inBubble(coordinatesBubble1)) {
+                        setAlpha(bubble1, 1.0f)
+                        if (holdBreathGesture.hold) {
+                            Intent(this, AboutScreen::class.java).also { intent ->
+                                unbindService(connection)
+                                startActivity(intent)
+                                stop = true
+                            }
+                        }
+                    }
+                    if (inBubble(coordinatesBubble2)) {
+                        holdBreathGesture.border = 1.0
+                        setAlpha(bubble2, 1.0f)
+                    }
+                    if (inBubble(coordinatesBubble3)) {
+                        holdBreathGesture.border = 3.0
+                        if (holdBreathGesture.hold) {
+                            Intent(this, GameScreen::class.java).also { intent ->
+                                unbindService(connection)
+                                startActivity(intent)
+                                stop = true
+                            }
+                        }
+                        setAlpha(bubble3, 1.0f)
+                    }
+                } else {
+                    holdBreathGesture.stop = true
+                    setAlpha(bubble1, 0.7f)
+                    setAlpha(bubble2, 0.7f)
+                    setAlpha(bubble3, 0.7f)
+
                 }
+                Thread.sleep(10)
             }
-        } else if (currX in coordinatesBubble2.first.toDouble()..coordinatesBubble2.second.toDouble()) {
-            holdBreathGesture.stop = false
-            holdBreathGesture.border = 1.0
-            setAlpha(bubble1, bubble2, bubble3, 0.7f, 1.0f, 0.7f)
-        } else if (currX in coordinatesBubble3.first.toDouble()..coordinatesBubble3.second.toDouble()) {
-            holdBreathGesture.stop = false
-            holdBreathGesture.border = 3.0
-            if (holdBreathGesture.hold) {
-                Intent(this, GameScreen::class.java).also { intent ->
-                    unbindService(connection)
-                    startActivity(intent)
-                    stop = true
-                }
-            }
-            setAlpha(bubble1, bubble2, bubble3, 0.7f, 0.7f, 1.0f)
-        } else holdBreathGesture.stop = true
+        }
     }
 
-    private fun setAlpha(
-        imageView1: ImageView,
-        imageView2: ImageView,
-        imageView3: ImageView,
-        val1: Float,
-        val2: Float,
-        val3: Float
-    ) {
+    private fun inBubble(coordinatesBubble: Pair<Int, Int>): Boolean {
+        return currX in coordinatesBubble.first.toDouble()..coordinatesBubble.second.toDouble()
+    }
+
+    private fun setAlpha(imageView: ImageView, alpha: Float) {
         runOnUiThread {
-            imageView1.alpha = val1
-            imageView2.alpha = val2
-            imageView3.alpha = val3
+            imageView.alpha = alpha
         }
     }
 }

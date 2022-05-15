@@ -1,5 +1,6 @@
 package com.example.breathingmeditationandroid
 
+import android.util.Log
 import kotlin.math.absoluteValue
 
 class BreathingUtils(mService: BluetoothConnection) {
@@ -64,26 +65,17 @@ class BreathingUtils(mService: BluetoothConnection) {
         return curr.first > prev.first && curr.second > prev.second
     }
 
-    fun startFromBeginning(prevAbdo: Double, prevThor: Double) {
-        // damit man nicht mitten in der atmung anfaengt
-        if (detectInspiration(
-                Pair(prevAbdo, prevThor),
-                Pair(smoothPlayerPosition().first, smoothPlayerPosition().second)
-            )
-        ) {
-            while (!detectRespiration(
-                    Pair(prevAbdo, prevThor),
-                    Pair(smoothPlayerPosition().first, smoothPlayerPosition().second)
-                )
-            )
+    fun startFromBeginning() {
+        repeat(1) {
+            while (mService.mExpiration == 0) {
                 continue
-        } else
-            while (!detectInspiration(
-                    Pair(prevAbdo, prevThor),
-                    Pair(smoothPlayerPosition().first, smoothPlayerPosition().second)
-                )
-            )
+            }
+            Log.i("Calibration:", "inspiration done")
+            while (mService.mInspiration == 0) {
                 continue
+            }
+            Log.i("Calibration:", "expiration done")
+        }
     }
 
     fun smoothValue(): Pair<Double, Double> {
@@ -96,9 +88,10 @@ class BreathingUtils(mService: BluetoothConnection) {
         return Pair(mService.smoothData(valueListAbdo), mService.smoothData(valueListThor));
     }
 
-    private fun calculateMedian(list: MutableList<Pair<Double, Double>>): Pair<Double, Double> {
-        val medianThor = (list[list.size.div(2)].first.plus(list[list.size.div(2).plus(1)].first)).div(2)
-        val medianAbdo = (list[list.size.div(2)].second.plus(list[list.size.div(2).plus(1)].second)).div(2)
-        return Pair(medianAbdo, medianThor)
+    fun calcCombinedValue(valAbdo: Double, valThor: Double): Double {
+        Log.i("CurrValues:", "Abdo: $valAbdo Thor: $valThor")
+        Log.i("CurrValues:", "Before correction: ${valAbdo.plus(valThor)}")
+        Log.i("CurrValues:", "After correction: ${valAbdo.plus(valThor).plus(Calibrator.correction)}")
+        return (valAbdo.plus(valThor)).plus(Calibrator.correction)
     }
 }
