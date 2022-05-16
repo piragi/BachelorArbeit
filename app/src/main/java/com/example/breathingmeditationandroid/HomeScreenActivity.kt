@@ -14,8 +14,8 @@ import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.plattysoft.leonids.ParticleSystem
-import java.lang.System.currentTimeMillis
 import kotlin.concurrent.thread
+import kotlin.math.abs
 import kotlin.math.floor
 
 class HomeScreenActivity : ComponentActivity() {
@@ -35,6 +35,10 @@ class HomeScreenActivity : ComponentActivity() {
     private var currY: Double = 0.0
     private var prevX: Double = 0.0
     private var prevY: Double = 0.0
+
+    private var prevAbdo: Double = 0.0
+    private var prevThor: Double = 0.0
+
     private var selectionDetected: Boolean = false
     private lateinit var bubble1: ImageView
     private lateinit var bubble2: ImageView
@@ -105,106 +109,68 @@ class HomeScreenActivity : ComponentActivity() {
         val coordinatesBubble1 = Pair(bubble1.left, bubble1.right)
         val coordinatesBubble2 = Pair(bubble2.left, bubble2.right)
         val coordinatesBubble3 = Pair(bubble3.left, bubble3.right)
-        // detectSelections(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
+        detectSelections(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
+        val currVal = breathingUtils.smoothValue()
+        prevAbdo = currVal.first
+        prevThor = currVal.second
         thread(start = true, isDaemon = true) {
             breathingUtils.startFromBeginning()
             while (!stop) {
-                var currValue: Pair<Double, Double> = breathingUtils.smoothValue()
-                // recalibrate()
-                Log.i("Breath:", "Ex: ${mService.mExpiration} In: ${mService.mInspiration}")
-                if (mService.mExpiration == 0) {
-                    val combinedValue = breathingUtils.calcCombinedValue(
-                        breathingUtils.smoothValue().first,
-                        breathingUtils.smoothValue().second
-                    )
-                    if(combinedValue < 0)
-                        Log.i("combinedVal", "$combinedValue")
-                    val newX = (combinedValue).times(Calibrator.flowFactorX).plus(xBorderLeft)
-                    val newY = (combinedValue).times(Calibrator.flowFactorY).plus(yBorderBottom)
+                val currValue = breathingUtils.smoothValue()
+                val combinedValue = breathingUtils.calcCombinedValue(currValue.first, currValue.second)
 
-                    currX = if (newX > xBorderRight || combinedValue < 0) xBorderRight.toDouble() else newX
-                    currY = if (newY > yBorderTop || combinedValue < 0) yBorderTop.toDouble() else newY
+                currX = (combinedValue).times(Calibrator.flowFactorXUp).plus(xBorderLeft)
+                currY = (combinedValue).times(Calibrator.flowFactorYUp).plus(yBorderBottom)
 
-                    // Log.i("CurrValues: ", "X: $currX, Y: $currY")
-                    // Log.i(
-                    //"CurrValues: ",
-                    //"combined: ${breathingUtils.calcCombinedValue(currValue.first, currValue.second)}"
-                    //)
-                    moveLeavesUp(currX, currY, particlesMain)
-                    moveLeavesUp(currX, currY, particlesSupprt)
-                }
-                if (mService.mInspiration == 0) {
-                    val combinedValue = breathingUtils.calcCombinedValue(
-                        breathingUtils.smoothValue().first,
-                        breathingUtils.smoothValue().second
-                    )
-                    if(combinedValue < 0)
-                        Log.i("combinedVal", "$combinedValue")
-                    val newX = (combinedValue).times(Calibrator.flowFactorX).times(-1).plus(xBorderRight)
-                    val newY = (combinedValue).times(Calibrator.flowFactorY).times(-1).plus(yBorderTop)
+                moveLeaves(currX, currY, particlesMain)
+                moveLeaves(currX, currY, particlesSupprt)
 
-                    currX = if (newX < xBorderLeft || combinedValue < 0) xBorderLeft.toDouble() else newX
-                    currY = if (newY > yBorderBottom || combinedValue < 0) yBorderBottom.toDouble() else newY
-
-                    /* Log.i(
-                        "CurrValues: ",
-                        "combined: ${breathingUtils.calcCombinedValue(currValue.first, currValue.second)}"
-                    ) */
-                    moveLeavesDown(currX, currY, particlesMain)
-                    moveLeavesDown(currX, currY, particlesSupprt)
-                }
-                Log.i("CurrValues: ", "X: $currX, Y: $currY")
                 selectionDetected =
                     inBubble(coordinatesBubble1) || inBubble(coordinatesBubble2) || inBubble(coordinatesBubble3)
                 holdBreathGesture.stop = !selectionDetected
+
+                val prevValue = breathingUtils.smoothValue()
+
+                prevAbdo = prevValue.first
+                prevThor = prevValue.second
+
                 prevX = currX
                 prevY = currY
-                Thread.sleep(20)
+                Thread.sleep(5)
             }
         }
     }
 
-    private fun moveLeavesUp(xValue: Double, yValue: Double, particleSystem: ParticleSystem) {
+    private fun moveLeaves(xValue: Double, yValue: Double, particleSystem: ParticleSystem) {
         val x = floor(xValue)
         val y = floor(yValue)
-        if (x <= xBorderRight && y >= yBorderTop)
+        if (x in xBorderLeft.toDouble()..xBorderRight.toDouble() && y in yBorderTop.toDouble()..yBorderBottom.toDouble()) {
+            particleSystem.updateEmitPoint(prevX.toInt(), prevY.toInt())
+            particleSystem.updateEmitPoint((abs(prevX.minus(currX))).toInt(), (abs(prevY.minus(currY))).toInt())
             particleSystem.updateEmitPoint(x.toInt(), y.toInt())
-        else if (x > xBorderRight && y >= yBorderTop) {
-            particleSystem.updateEmitPoint(xBorderRight, y.toInt())
-            currX = xBorderRight.toDouble()
-        } else if (x <= xBorderRight && y < yBorderTop) {
-            particleSystem.updateEmitPoint(x.toInt(), yBorderTop)
-            currY = yBorderTop.toDouble()
-        } else {
-            particleSystem.updateEmitPoint(xBorderRight, yBorderTop)
-            currX = xBorderRight.toDouble()
-            currY = yBorderTop.toDouble()
+        } else if (y in yBorderTop.toDouble()..yBorderBottom.toDouble()) {
+            if (x < xBorderLeft.toDouble()) {
+                particleSystem.updateEmitPoint(xBorderLeft, prevY.toInt())
+                particleSystem.updateEmitPoint(xBorderLeft, (abs(prevY.minus(currY))).toInt())
+                particleSystem.updateEmitPoint(xBorderLeft, y.toInt())
+            }
+            if (x > xBorderRight.toDouble()) {
+                particleSystem.updateEmitPoint(xBorderRight, prevY.toInt())
+                particleSystem.updateEmitPoint(xBorderRight, (abs(prevY.minus(currY))).toInt())
+                particleSystem.updateEmitPoint(xBorderRight, y.toInt())
+            }
+        } else if (x in xBorderLeft.toDouble()..xBorderRight.toDouble()) {
+            if (y > yBorderBottom.toDouble()) {
+                particleSystem.updateEmitPoint(prevX.toInt(), prevY.toInt())
+                particleSystem.updateEmitPoint((abs(prevX.minus(currX))).toInt(), yBorderBottom)
+                particleSystem.updateEmitPoint(x.toInt(), yBorderBottom)
+            }
+            if (y < yBorderTop.toDouble()) {
+                particleSystem.updateEmitPoint(prevX.toInt(), prevY.toInt())
+                particleSystem.updateEmitPoint((abs(prevX.minus(currX))).toInt(), yBorderTop)
+                particleSystem.updateEmitPoint(x.toInt(), yBorderTop)
+            }
         }
-    }
-
-    private fun moveLeavesDown(xValue: Double, yValue: Double, particleSystem: ParticleSystem) {
-        val x = floor(xValue)
-        val y = floor(yValue)
-        if (x >= xBorderLeft && y <= yBorderBottom)
-            particleSystem.updateEmitPoint(x.toInt(), y.toInt())
-        else if (x < xBorderLeft && y <= yBorderBottom) {
-            particleSystem.updateEmitPoint(xBorderLeft, y.toInt())
-            currX = xBorderLeft.toDouble()
-        } else if (x >= xBorderLeft && y > yBorderBottom) {
-            particleSystem.updateEmitPoint(x.toInt(), yBorderBottom)
-            currY = yBorderBottom.toDouble()
-        } else {
-            particleSystem.updateEmitPoint(xBorderLeft, yBorderBottom)
-            currX = xBorderLeft.toDouble()
-            currY = yBorderBottom.toDouble()
-        }
-    }
-
-    private fun recalibrate() {
-        Calibrator.calibrateFlow()
-        currX = xBorderLeft.toDouble()
-        currY = yBorderBottom.toDouble()
-        breathingUtils.startFromBeginning()
     }
 
     private fun detectSelections(

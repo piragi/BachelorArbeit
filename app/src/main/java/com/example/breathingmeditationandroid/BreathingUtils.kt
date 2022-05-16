@@ -89,9 +89,17 @@ class BreathingUtils(mService: BluetoothConnection) {
     }
 
     fun calcCombinedValue(valAbdo: Double, valThor: Double): Double {
-        Log.i("CurrValues:", "Abdo: $valAbdo Thor: $valThor")
+        /* Log.i("CurrValues:", "Abdo: $valAbdo Thor: $valThor")
         Log.i("CurrValues:", "Before correction: ${valAbdo.plus(valThor)}")
-        Log.i("CurrValues:", "After correction: ${valAbdo.plus(valThor).plus(Calibrator.correction)}")
-        return (valAbdo.plus(valThor)).plus(Calibrator.correction)
+        Log.i("CurrValues:", "After correction: ${valAbdo.plus(valThor).plus(Calibrator.correction)}")*/
+        val combinedValue = (valAbdo.plus(valThor)).plus(Calibrator.correction)
+        return if (combinedValue >= 0)
+            combinedValue
+        else {
+            Calibrator.correction = 0 - combinedValue
+            0.0
+        }
     }
+
+
 }
