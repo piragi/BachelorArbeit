@@ -136,7 +136,6 @@ class HomeScreenActivity : ComponentActivity() {
 
                 prevX = currX
                 prevY = currY
-                Thread.sleep(5)
             }
         }
     }
@@ -145,28 +144,28 @@ class HomeScreenActivity : ComponentActivity() {
         val x = floor(xValue)
         val y = floor(yValue)
         if (x in xBorderLeft.toDouble()..xBorderRight.toDouble() && y in yBorderTop.toDouble()..yBorderBottom.toDouble()) {
-            particleSystem.updateEmitPoint(prevX.toInt(), prevY.toInt())
+            //particleSystem.updateEmitPoint(prevX.toInt(), prevY.toInt())
             particleSystem.updateEmitPoint((abs(prevX.minus(currX))).toInt(), (abs(prevY.minus(currY))).toInt())
             particleSystem.updateEmitPoint(x.toInt(), y.toInt())
         } else if (y in yBorderTop.toDouble()..yBorderBottom.toDouble()) {
             if (x < xBorderLeft.toDouble()) {
-                particleSystem.updateEmitPoint(xBorderLeft, prevY.toInt())
+                //particleSystem.updateEmitPoint(xBorderLeft, prevY.toInt())
                 particleSystem.updateEmitPoint(xBorderLeft, (abs(prevY.minus(currY))).toInt())
                 particleSystem.updateEmitPoint(xBorderLeft, y.toInt())
             }
             if (x > xBorderRight.toDouble()) {
-                particleSystem.updateEmitPoint(xBorderRight, prevY.toInt())
+                //particleSystem.updateEmitPoint(xBorderRight, prevY.toInt())
                 particleSystem.updateEmitPoint(xBorderRight, (abs(prevY.minus(currY))).toInt())
                 particleSystem.updateEmitPoint(xBorderRight, y.toInt())
             }
         } else if (x in xBorderLeft.toDouble()..xBorderRight.toDouble()) {
             if (y > yBorderBottom.toDouble()) {
-                particleSystem.updateEmitPoint(prevX.toInt(), prevY.toInt())
+                //particleSystem.updateEmitPoint(prevX.toInt(), prevY.toInt())
                 particleSystem.updateEmitPoint((abs(prevX.minus(currX))).toInt(), yBorderBottom)
                 particleSystem.updateEmitPoint(x.toInt(), yBorderBottom)
             }
             if (y < yBorderTop.toDouble()) {
-                particleSystem.updateEmitPoint(prevX.toInt(), prevY.toInt())
+                //particleSystem.updateEmitPoint(prevX.toInt(), prevY.toInt())
                 particleSystem.updateEmitPoint((abs(prevX.minus(currX))).toInt(), yBorderTop)
                 particleSystem.updateEmitPoint(x.toInt(), yBorderTop)
             }
@@ -178,7 +177,6 @@ class HomeScreenActivity : ComponentActivity() {
         coordinatesBubble2: Pair<Int, Int>,
         coordinatesBubble3: Pair<Int, Int>
     ) {
-        //TODO add Y value
         thread(start = true, isDaemon = true) {
             while (true) {
                 if (selectionDetected) {

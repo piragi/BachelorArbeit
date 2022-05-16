@@ -95,10 +95,7 @@ class BreathingUtils(mService: BluetoothConnection) {
         val combinedValue = (valAbdo.plus(valThor)).plus(Calibrator.correction)
         return if (combinedValue >= 0)
             combinedValue
-        else {
-            Calibrator.correction = 0 - combinedValue
-            0.0
-        }
+        else 0.0
     }
 
 
