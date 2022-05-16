@@ -5,22 +5,4 @@
     android:layout_height="match_parent"
     tools:showIn="@layout/activity_device">
 
-        <ImageView
-            android:id="@+id/player"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="@string/todo"
-            android:src="@android:drawable/ic_media_play" />
-
-        <ImageView
-            android:id="@+id/bg1"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:src="@drawable/bg1" />
-
-        <ImageView
-            android:id="@+id/bg2"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:src="@drawable/bg1" />
 </RelativeLayout>
