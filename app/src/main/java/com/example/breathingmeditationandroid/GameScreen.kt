@@ -10,13 +10,15 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.AnimationUtils
+import android.view.View.INVISIBLE
+import android.view.animation.*
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
+import com.plattysoft.leonids.ParticleSystem
 import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
+
 
 class GameScreen : ComponentActivity() {
 
@@ -38,6 +40,7 @@ class GameScreen : ComponentActivity() {
 
 
             breathingUtils = BreathingUtils(mService)
+            //breathingUtils.calibrateBreathing()
             startLevel()
 
         }
@@ -72,13 +75,48 @@ class GameScreen : ComponentActivity() {
     fun startLevel() {
         thread(start = true, isDaemon = true) {
             lifecycleScope.launch {
-                breathingUtils.deepBreathDetected()
+                //breathingUtils.deepBreathDetected()
                 deepBreathAnimation()
             }
         }
     }
 
     private fun deepBreathAnimation() {
+        val snowParticleSystem = ParticleSystem(this, 30, R.drawable.snowflake, 1000)
+            .setScaleRange(0.1f, 0.2f)
+            .setSpeedModuleAndAngleRange(0.07f, 0.16f, 200, 300)
+            .setRotationSpeedRange(90f, 180f)
+            .setAcceleration(0.00013f, 90)
+            .setFadeOut(200, AccelerateInterpolator())
+
+        val snowParticleSystem2 = ParticleSystem(this, 30, R.drawable.snowflake, 1000)
+            .setScaleRange(0.1f, 0.2f)
+            .setSpeedModuleAndAngleRange(0.07f, 0.16f, 200, 300)
+            .setRotationSpeedRange(90f, 180f)
+            .setAcceleration(0.00013f, 90)
+            .setFadeOut(200, AccelerateInterpolator())
+
+        val snowParticleSystem3 = ParticleSystem(this, 30, R.drawable.snowflake, 1000)
+            .setScaleRange(0.1f, 0.2f)
+            .setSpeedModuleAndAngleRange(0.07f, 0.16f, 200, 300)
+            .setRotationSpeedRange(90f, 180f)
+            .setAcceleration(0.00013f, 90)
+            .setFadeOut(200, AccelerateInterpolator())
+
+        val snowParticleSystem4 = ParticleSystem(this, 30, R.drawable.snowflake, 1000)
+            .setScaleRange(0.1f, 0.2f)
+            .setSpeedModuleAndAngleRange(0.07f, 0.16f, 200, 300)
+            .setRotationSpeedRange(90f, 180f)
+            .setAcceleration(0.00013f, 90)
+            .setFadeOut(200, AccelerateInterpolator())
+
+        val snowParticleSystem5 = ParticleSystem(this, 30, R.drawable.snowflake, 1000)
+            .setScaleRange(0.1f, 0.2f)
+            .setSpeedModuleAndAngleRange(0.07f, 0.16f, 200, 300)
+            .setRotationSpeedRange(90f, 180f)
+            .setAcceleration(0.00013f, 90)
+            .setFadeOut(200, AccelerateInterpolator())
+
         val fadeOut = AnimationUtils.loadAnimation(this, R.anim.fadeout)
         Log.i("we got here", "nice")
         snow.startAnimation(fadeOut)
