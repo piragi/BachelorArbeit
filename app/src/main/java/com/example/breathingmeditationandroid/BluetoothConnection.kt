@@ -19,19 +19,24 @@ import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 
 //inspired by: https://developer.android.com/guide/components/services
-class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener, HexoskinCommandWriter {
+class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener,
+    HexoskinCommandWriter {
 
     //Binder for clients
     private val binder: LocalBinder = LocalBinder()
     private val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+
     //Bluetooth
     private var mDevice: BluetoothDevice? = null
     private var mSocket: BluetoothSocket? = null
+
     //Corrector
     private var mCorrector: Corrector = Corrector()
+
     //Hexoskin specifics
     private var mKeepAliveTimer: Timer? = null
     private var mHexoskinAPI: HexoskinAPI? = null
+
     //Values
     private var mThorRaw: Int = 0
     private var mAbdoRaw: Int = 0
@@ -40,8 +45,6 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
 
     var mInspiration: Int = 0
     var mExpiration: Int = 0
-
-
 
 
     inner class LocalBinder : Binder() {
@@ -64,39 +67,39 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         //TODO: remove helperThis
         //TODO: optimize coroutine
         val helperThis = this
-            GlobalScope.launch(Dispatchers.Default) {
-                //connect to the Hexoskin
-                try {
-                    mDevice = intent?.extras?.getParcelable("Device")
-                    mCorrector.init()
-                    disconnected()
+        GlobalScope.launch(Dispatchers.Default) {
+            //connect to the Hexoskin
+            try {
+                mDevice = intent?.extras?.getParcelable("Device")
+                mCorrector.init()
+                disconnected()
 
-                    mSocket = mDevice?.createRfcommSocketToServiceRecord(uuid)
-                    mSocket?.connect()
+                mSocket = mDevice?.createRfcommSocketToServiceRecord(uuid)
+                mSocket?.connect()
 
-                    listenBluetoothIncomingData()
+                listenBluetoothIncomingData()
 
-                    mHexoskinAPI = HexoskinAPI(helperThis, helperThis, helperThis)
-                    mHexoskinAPI!!.Init()
-                    mHexoskinAPI!!.enableBluetoothTransmission()
-                    mHexoskinAPI!!.setRealTimeMode(true, false, true, true, true)
+                mHexoskinAPI = HexoskinAPI(helperThis, helperThis, helperThis)
+                mHexoskinAPI!!.Init()
+                mHexoskinAPI!!.enableBluetoothTransmission()
+                mHexoskinAPI!!.setRealTimeMode(true, false, true, true, true)
 
-                    //The hexoskin only keeps bluetooth transmission for 1 minute. After that it disable
-                    //the bluetooth transmission. This is for Hexoskin device to continue to transmit data
-                    mKeepAliveTimer = Timer()
-                    mKeepAliveTimer!!.scheduleAtFixedRate(object : TimerTask() {
-                        override fun run() {
-                            mHexoskinAPI?.let {
-                                mHexoskinAPI!!.enableBluetoothTransmission()
-                            }
+                //The hexoskin only keeps bluetooth transmission for 1 minute. After that it disable
+                //the bluetooth transmission. This is for Hexoskin device to continue to transmit data
+                mKeepAliveTimer = Timer()
+                mKeepAliveTimer!!.scheduleAtFixedRate(object : TimerTask() {
+                    override fun run() {
+                        mHexoskinAPI?.let {
+                            mHexoskinAPI!!.enableBluetoothTransmission()
                         }
-                    }, 0, (45 * 1000).toLong())
+                    }
+                }, 0, (45 * 1000).toLong())
 
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                    Log.i("crash:", "bluetoothconnection")
-                }
+            } catch (e: IOException) {
+                e.printStackTrace()
+                Log.i("crash:", "bluetoothconnection")
             }
+        }
         // If we get killed, after returning from here, restart
         return START_STICKY
     }
@@ -146,7 +149,12 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         }
     }
 
-    override fun onData(type: HexoskinDataType?, time: Long, value: Int, status: EnumSet<HexoskinDataStatus>?) {
+    override fun onData(
+        type: HexoskinDataType?,
+        time: Long,
+        value: Int,
+        status: EnumSet<HexoskinDataStatus>?
+    ) {
         //Corrector
         type?.let {
             when (type) {
@@ -162,8 +170,15 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                 }
                 HexoskinDataType.RESP_CIRCUIT_TEMPERATURE -> {
                     val converted: Float =
-                        mHexoskinAPI!!.hexoskin_sample_conversion(HexoskinDataType.RESP_CIRCUIT_TEMPERATURE, value)
-                    mCorrector.addRespTemperature(time, mHexoskinAPI!!.currentSessionStartTime, converted.toDouble())
+                        mHexoskinAPI!!.hexoskin_sample_conversion(
+                            HexoskinDataType.RESP_CIRCUIT_TEMPERATURE,
+                            value
+                        )
+                    mCorrector.addRespTemperature(
+                        time,
+                        mHexoskinAPI!!.currentSessionStartTime,
+                        converted.toDouble()
+                    )
                 }
                 else -> return
             }
@@ -188,7 +203,12 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
 
                     //adding respiration values
                     val adjustedTimestamp =
-                        mCorrector.addRespiration(time + i * 2, mHexoskinAPI!!.currentSessionStartTime, thor, abdo)
+                        mCorrector.addRespiration(
+                            time + i * 2,
+                            mHexoskinAPI!!.currentSessionStartTime,
+                            thor,
+                            abdo
+                        )
 
                     if (adjustedTimestamp >= 0) {
                         val correction = mCorrector.getCorrectedRespiration(adjustedTimestamp)
@@ -203,24 +223,24 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         return
     }
 
-    fun smoothData(buffer: ArrayList<Double>) : Double {
+    fun smoothData(buffer: ArrayList<Double>): Double {
         if (buffer.isEmpty()) {
             return 0.0
         }
         return calculateMedian(buffer)
     }
 
-    fun calculateMedian(buffer: MutableList<Double>) : Double {
+    fun calculateMedian(buffer: MutableList<Double>): Double {
         buffer.sort()
         return when {
             buffer.isEmpty() -> {
                 0.0
             }
             buffer.size % 2 == 0 -> {
-                (buffer[buffer.size/2-1] + buffer[(buffer.size/2)]) / 2
+                (buffer[buffer.size / 2 - 1] + buffer[(buffer.size / 2)]) / 2
             }
             else -> {
-                buffer[buffer.size/2]
+                buffer[buffer.size / 2]
             }
         }
     }

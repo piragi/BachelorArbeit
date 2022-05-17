@@ -48,6 +48,12 @@ class HoldBreathGesture(mService: BluetoothConnection) : IBreathingGesture {
         // Log.i("values:", "first: ${abs(prev.first.minus(curr.first))}")
         // Log.i("values:", "second: ${abs(prev.second.minus(curr.second))}")
         // IDEE calibration und dabei "mittlere aenderung" messen und dann in die breathing gesture miteinbeziehen
-        return (round(abs(prev.first.minus(curr.first))) <= border && round(abs(prev.second.minus(curr.second))) <= border)
+        return (round(abs(prev.first.minus(curr.first))) <= border && round(
+            abs(
+                prev.second.minus(
+                    curr.second
+                )
+            )
+        ) <= border)
     }
 }

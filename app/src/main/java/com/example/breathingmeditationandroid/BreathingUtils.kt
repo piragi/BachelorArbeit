@@ -1,7 +1,6 @@
 package com.example.breathingmeditationandroid
 
 import android.util.Log
-import androidx.fragment.app.Fragment
 import kotlin.math.absoluteValue
 
 class BreathingUtils(mService: BluetoothConnection) {
@@ -71,8 +70,14 @@ class BreathingUtils(mService: BluetoothConnection) {
             }
         }
 
-        calibratedAbdo = Pair(mService.calculateMedian(maximaAbdo) * 1.2, mService.calculateMedian(minimaAbdo) * 1.2)
-        calibratedThor = Pair(mService.calculateMedian(maximaThor) * 1.2, mService.calculateMedian(minimaThor) * 1.2)
+        calibratedAbdo = Pair(
+            mService.calculateMedian(maximaAbdo) * 1.2,
+            mService.calculateMedian(minimaAbdo) * 1.2
+        )
+        calibratedThor = Pair(
+            mService.calculateMedian(maximaThor) * 1.2,
+            mService.calculateMedian(minimaThor) * 1.2
+        )
 
         return Pair(
             calibratedAbdo,
@@ -120,8 +125,7 @@ class BreathingUtils(mService: BluetoothConnection) {
     }
 
     fun deepBellyBreathDetected() {
-        while (mService.mAbdoCorrected < calibratedAbdo.second * 0.95)
-        {
+        while (mService.mAbdoCorrected < calibratedAbdo.second * 0.95) {
             Thread.sleep(2)
         }
 
@@ -130,8 +134,7 @@ class BreathingUtils(mService: BluetoothConnection) {
     }
 
     fun deepChestBreathDetected() {
-        while (mService.mThorCorrected < calibratedThor.second * 0.95)
-        {
+        while (mService.mThorCorrected < calibratedThor.second * 0.95) {
             Thread.sleep(2)
         }
 
@@ -149,19 +152,24 @@ class BreathingUtils(mService: BluetoothConnection) {
         //staccato ->
 
         val bufferStaccato: ArrayList<Double> = ArrayList()
+        var staccatoDetetected = false
 
-        if(mService.mExpiration == 0 && mService.mThorCorrected > calibratedThor.second * 0.6) {
-            //everytime there is a updated value -> add to buffer
-            if(bufferStaccato.size == 3) {
-                bufferStaccato.removeAt(0)
-                bufferStaccato.add(mService.mThorCorrected)
-                if (bufferStaccato[2] >= bufferStaccato[0]*1.2) {
-                    Log.i("staccato", "detected")
+        while (!staccatoDetetected) {
+            if (mService.mExpiration == 0 && mService.mThorCorrected > calibratedThor.second * 0.6) {
+                //everytime there is a updated value -> add to buffer
+                if (bufferStaccato.size == 3) {
+                    bufferStaccato.removeAt(0)
+                    bufferStaccato.add(mService.mThorCorrected)
+                    if (bufferStaccato[2] >= bufferStaccato[0] * 1.2) {
+                        staccatoDetetected = true
+                        Log.i("staccato", "detected")
+                    }
+                } else {
+                    bufferStaccato.add(mService.mThorCorrected)
                 }
-            } else {
-                bufferStaccato.add(mService.mThorCorrected)
             }
         }
+
 
     }
 
@@ -204,8 +212,10 @@ class BreathingUtils(mService: BluetoothConnection) {
     }
 
     private fun calculateMedian(list: MutableList<Pair<Double, Double>>): Pair<Double, Double> {
-        val medianThor = (list[list.size.div(2)].first.plus(list[list.size.div(2).plus(1)].first)).div(2)
-        val medianAbdo = (list[list.size.div(2)].second.plus(list[list.size.div(2).plus(1)].second)).div(2)
+        val medianThor =
+            (list[list.size.div(2)].first.plus(list[list.size.div(2).plus(1)].first)).div(2)
+        val medianAbdo =
+            (list[list.size.div(2)].second.plus(list[list.size.div(2).plus(1)].second)).div(2)
         return Pair(medianAbdo, medianThor)
     }
 }
