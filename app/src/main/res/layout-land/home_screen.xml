@@ -1,0 +1,112 @@
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/home_screen"
+    tools:context=".HomeScreenActivity" android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/background"
+        android:layout_width="match_parent"
+        android:layout_height="1080dp"
+        android:layout_alignParentStart="true" android:layout_alignParentTop="true"
+        android:contentDescription="@string/todo" android:src="@drawable/background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="2:1"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent"/>
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imageViewPlay"
+        android:layout_width="150dp" android:layout_height="90dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="50dp"
+        android:layout_marginStart="80dp" android:layout_marginBottom="48dp"
+        android:alpha="0.7"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="2:1"
+        app:layout_constraintHorizontal_bias="0.951"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/imageViewCalibrate"
+        app:layout_constraintTop_toTopOf="parent" app:layout_constraintVertical_bias="0.256"
+        app:srcCompat="@drawable/bubble_unselected"/>
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imageViewSettings"
+        android:layout_width="150dp" android:layout_height="90dp"
+        android:layout_marginBottom="435dp"
+        android:layout_marginStart="50dp"
+        android:alpha="0.7"
+        app:layout_constraintBottom_toBottomOf="@+id/background"
+        app:layout_constraintHorizontal_bias="0.69"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/imageViewCalibrate" app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.99" app:srcCompat="@drawable/bubble_unselected"/>
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imageViewCalibrate"
+        android:layout_width="150dp" android:layout_height="90dp" android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true" android:layout_marginStart="88dp"
+        android:layout_marginTop="71dp"
+        android:alpha="0.7"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.0" app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/imageViewPlay" app:layout_constraintStart_toEndOf="@+id/imageViewSettings"
+        app:layout_constraintTop_toTopOf="parent" app:layout_constraintVertical_bias="0.344"
+        app:srcCompat="@drawable/bubble_unselected"/>
+    <TextView
+        android:id="@+id/about"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:fontFamily="sans-serif"
+        android:lineSpacingExtra="8sp"
+        android:text="@string/about" android:textAlignment="center" android:textColor="#FDFDFD"
+        android:textSize="24sp" android:textStyle="bold" android:typeface="normal"
+        app:layout_constraintBottom_toBottomOf="@+id/imageViewSettings"
+        app:layout_constraintDimensionRatio="2:1"
+        app:layout_constraintEnd_toEndOf="@+id/imageViewSettings"
+        app:layout_constraintLeft_toLeftOf="@+id/imageViewSettings" app:layout_constraintRight_toRightOf="@+id/imageViewSettings"
+        app:layout_constraintStart_toStartOf="@+id/imageViewSettings" app:layout_constraintTop_toTopOf="@+id/imageViewSettings"
+    />
+    <TextView
+        android:id="@+id/play"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:fontFamily="sans-serif"
+        android:lineSpacingExtra="8sp"
+        android:text="@string/play"
+        android:textAlignment="center"
+        android:textColor="#FDFDFD"
+        android:textSize="24sp"
+        android:textStyle="bold" android:typeface="normal"
+        app:layout_constraintBottom_toBottomOf="@+id/imageViewPlay"
+        app:layout_constraintDimensionRatio="2:1"
+        app:layout_constraintEnd_toEndOf="@+id/imageViewPlay"
+        app:layout_constraintHorizontal_bias="0.521" app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" app:layout_constraintStart_toStartOf="@+id/imageViewPlay"
+        app:layout_constraintTop_toTopOf="@+id/imageViewPlay" app:layout_constraintVertical_bias="0.465"/>
+
+
+    <TextView
+        android:id="@+id/calibrate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:fontFamily="sans-serif"
+        android:lineSpacingExtra="8sp"
+        android:text="@string/calibrate"
+        android:textAlignment="center"
+        android:textColor="#FDFDFD"
+        android:textSize="24sp"
+        android:textStyle="bold" android:typeface="normal"
+        app:layout_constraintBottom_toBottomOf="@+id/imageViewCalibrate"
+        app:layout_constraintDimensionRatio="2:1"
+        app:layout_constraintEnd_toEndOf="@+id/imageViewCalibrate"
+        app:layout_constraintHorizontal_bias="0.521" app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" app:layout_constraintStart_toStartOf="@+id/imageViewCalibrate"
+        app:layout_constraintTop_toTopOf="@+id/imageViewCalibrate" app:layout_constraintVertical_bias="0.465"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

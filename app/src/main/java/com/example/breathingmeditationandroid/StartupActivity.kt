@@ -76,7 +76,7 @@ class StartupActivity : AppCompatActivity() {
             init {
                 val container = v.findViewById<LinearLayout>(R.id.container)
                 container.setOnClickListener {
-                    Intent(applicationContext, GameScreen::class.java).also { intent ->
+                    Intent(applicationContext, HomeScreenActivity::class.java).also { intent ->
                         intent.putExtra("Device", device)
                         startActivity(intent)
                     }

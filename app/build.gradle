@@ -36,6 +36,11 @@ repositories {
     flatDir {
         dirs 'libs'
     }
+
+    maven {
+        url 'https://jitpack.io'
+    }
+    mavenCentral()
     jcenter()
 }
 
@@ -50,7 +55,8 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9'
     implementation 'com.plattysoft.leonids:LeonidsLib:1.3.2'
 
-
+    implementation 'com.github.ultimateHandsomeBoy666:Particle:0.1.2'
+    implementation 'com.plattysoft.leonids:LeonidsLib:1.3.2'
     testImplementation 'junit:junit:'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
