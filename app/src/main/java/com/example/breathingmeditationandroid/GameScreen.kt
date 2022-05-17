@@ -7,10 +7,12 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.util.Log
-import android.view.View
+import android.os.StrictMode
+import android.os.StrictMode.VmPolicy
 import android.view.View.INVISIBLE
-import android.view.animation.*
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
@@ -27,7 +29,10 @@ class GameScreen : ComponentActivity() {
     //Binding service
     private lateinit var mService: BluetoothConnection
     private var mBound = false
+
     private lateinit var breathingUtils: BreathingUtils
+    private lateinit var deepAbdoBreathGesture: DeepAbdoBreathGesture
+    private lateinit var staccatoBreathGesture: StaccatoBreathGesture
 
     private lateinit var snow: ImageView
 
@@ -39,8 +44,9 @@ class GameScreen : ComponentActivity() {
 
 
             breathingUtils = BreathingUtils(mService)
-            //breathingUtils.calibrateBreathing()
-            //startLevel()
+            deepAbdoBreathGesture = DeepAbdoBreathGesture(mService, breathingUtils)
+            staccatoBreathGesture = StaccatoBreathGesture(mService, breathingUtils)
+            startLevel()
 
         }
 
@@ -55,11 +61,12 @@ class GameScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
         //view
         setContentView(R.layout.game_screen)
-        snow = findViewById<View>(R.id.snow) as ImageView
+        //snow = findViewById<View>(R.id.snow) as ImageView
 
-        deepBellyBreathAnimation()
+        //deepBellyBreathAnimation()
 
         //setup and start bluetooth service
         mDevice = intent?.extras?.getParcelable("Device")
@@ -73,59 +80,56 @@ class GameScreen : ComponentActivity() {
 
     fun startLevel() {
         thread(start = true, isDaemon = true) {
-            lifecycleScope.launch {
-                //breathingUtils.deepBellyBreathDetected()
-                deepBellyBreathAnimation()
+            try {
+                lifecycleScope.launch {
+                    //breathingUtils.deepBellyBreathDetected()
+                    //deepBellyBreathAnimation()
+                    //deepAbdoBreathGesture.detect()
+                    breathingUtils.calibrateBreathing()
+                    staccatoBreathGesture.detect()
+                }
+            } catch (consumed: InterruptedException) {
+                Thread.currentThread().interrupt()
             }
+
         }
     }
 
     private fun deepBellyBreathAnimation() {
-        val snowParticleSystem = setSnowParticleSystem()
         val snowParticleSystem2 = setSnowParticleSystem()
         val snowParticleSystem3 = setSnowParticleSystem()
         val snowParticleSystem4 = setSnowParticleSystem()
         val snowParticleSystem5 = setSnowParticleSystem()
-        val snowParticleSystem6 = setSnowParticleSystem()
+        val snowParticleSystem = setSnowParticleSystem()
 
         val fadeOut = AnimationUtils.loadAnimation(this, R.anim.fadeout)
 
         fadeOut.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(animation: Animation) {
-                Log.i("info", "onStartOben")
-                //snowParticleSystem.emit(50,200, 0)
-                snowParticleSystem6.emit(50,200, 7)
+                snowParticleSystem.emit(50, 200, 7)
                 snowParticleSystem2.emit(600, 200, 7)
                 snowParticleSystem3.emit(1200, 200, 7)
                 snowParticleSystem4.emit(1500, 380, 7)
                 snowParticleSystem5.emit(1750, 150, 7)
-                Log.i("info", "onStartUnten")
-
             }
-            override fun onAnimationEnd(animation: Animation) {
 
-                fadeOut.cancel()
-                Log.i("info", "onEndOben")
-                //snowParticleSystem.stopEmitting()
+            override fun onAnimationEnd(animation: Animation) {
                 snowParticleSystem2.stopEmitting()
                 snowParticleSystem3.stopEmitting()
                 snowParticleSystem4.stopEmitting()
                 snowParticleSystem5.stopEmitting()
-                snowParticleSystem6.stopEmitting()
+                snowParticleSystem.stopEmitting()
                 snow.visibility = INVISIBLE
-                Log.i("info", "onEndUnten")
-
+                fadeOut.cancel()
             }
+
             override fun onAnimationRepeat(p0: Animation?) {}
         })
 
         snow.startAnimation(fadeOut)
-
-        //fadeOut.cancel()
-        //on Animation End make it invisible
     }
 
-    private fun setSnowParticleSystem() : ParticleSystem {
+    private fun setSnowParticleSystem(): ParticleSystem {
         return ParticleSystem(this, 30, R.drawable.snowflake, 200)
             .setScaleRange(0.1f, 0.2f)
             .setSpeedModuleAndAngleRange(0.07f, 0.16f, 200, 300)
