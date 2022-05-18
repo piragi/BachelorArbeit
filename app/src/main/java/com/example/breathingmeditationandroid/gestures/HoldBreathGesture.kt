@@ -7,15 +7,17 @@ import kotlin.concurrent.thread
 import kotlin.math.abs
 import kotlin.math.round
 
-class HoldBreathGesture(mService: BluetoothConnection) : IBreathingGesture {
+class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathingGesture {
     private val mService: BluetoothConnection
     private var breathingUtils: BreathingUtils
     var startTime: Long = 0
     var hold = false
-    var stop = true
+    var stop = false
     var border = 0.0
+    var time: Double
 
     init {
+        this.time = time
         this.mService = mService
         breathingUtils = BreathingUtils(mService)
     }
@@ -33,7 +35,7 @@ class HoldBreathGesture(mService: BluetoothConnection) : IBreathingGesture {
                     ) {
                         hold = false
                         startTime = currentTimeMillis()
-                    } else if (currentTimeMillis().minus(startTime) >= 4000) {
+                    } else if (currentTimeMillis().minus(startTime) >= time) {
                         hold = true
                         startTime = currentTimeMillis()
                     }

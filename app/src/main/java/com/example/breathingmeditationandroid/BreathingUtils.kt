@@ -1,6 +1,10 @@
 package com.example.breathingmeditationandroid
 
 import android.util.Log
+import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import java.lang.System.currentTimeMillis
 import kotlin.math.absoluteValue
 
 class BreathingUtils(mService: BluetoothConnection) {
@@ -97,6 +101,31 @@ class BreathingUtils(mService: BluetoothConnection) {
             combinedValue
         else 0.0
     }
+
+    fun detectFiveSecondInspiration(): Boolean {
+        var startTime = currentTimeMillis()
+        while (true) {
+            if (mService.mExpiration == 0 && currentTimeMillis().minus(startTime) >= 5000) {
+                return true
+            } else if (mService.mInspiration == 0) startTime = currentTimeMillis()
+        }
+    }
+
+    fun detectFiveSecondRespiration(): Boolean {
+        var startTime = currentTimeMillis()
+        while(true) {
+            if(mService.mInspiration == 0 && currentTimeMillis().minus(startTime) >= 5000) {
+                return true
+            } else if (mService.mExpiration == 0) startTime = currentTimeMillis()
+        }
+    }
+
+    suspend fun detectBreathHold(holdBreathGesture: HoldBreathGesture, time: Double) = coroutineScope {
+        launch {
+            holdBreathGesture.detect()
+        }
+    }
+
 
 
 }

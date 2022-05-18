@@ -53,7 +53,7 @@ class HomeScreenActivity : ComponentActivity() {
             mService = binder.getService()
             breathingUtils = BreathingUtils(mService)
             mBound = true
-            holdBreathGesture = HoldBreathGesture(mService)
+            holdBreathGesture = HoldBreathGesture(mService, 5000.0)
             Log.i("Calibration", "start")
             Calibrator.calibrate(mService)
             bubble2.alpha = 1.0f

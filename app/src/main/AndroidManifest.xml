@@ -24,10 +24,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".TestView"
-            android:hardwareAccelerated="true">
-        </activity>
         <activity android:name=".GameScreen">
+        </activity>
+        <activity android:name=".CalibrationScreenActivity">
         </activity>
         <activity android:name=".HomeScreenActivity">
         </activity>
