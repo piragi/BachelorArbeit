@@ -3,8 +3,6 @@ package com.example.breathingmeditationandroid
 import android.util.Log
 import java.lang.System.currentTimeMillis
 import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
 
 object Calibrator {
 
@@ -12,27 +10,24 @@ object Calibrator {
     var calibratedThor: Pair<Double, Double> = Pair(0.0, 0.0)
 
     // Buffers for how much difference there can be for holding breath
-    var holdBreathBufferInAbdo = 0.0
-    var holdBreathBufferInThor = 0.0
+    private var holdBreathBufferInAbdo = 0.0
+    private var holdBreathBufferInThor = 0.0
 
     //TODO check if this can be calculated from in and out buffer
-    var holdBreathBufferMiddleAbdo = 0.0
-    var holdBreathBufferMiddleThor = 0.0
+    private var holdBreathBufferMiddleAbdo = 0.0
+    private var holdBreathBufferMiddleThor = 0.0
 
-    var holdBreathBufferOutAbdo = 0.0
-    var holdBreathBufferOutThor = 0.0
+    private var holdBreathBufferOutAbdo = 0.0
+    private var holdBreathBufferOutThor = 0.0
 
-    var startingPositionAbdo = 0.0
+    /* var startingPositionAbdo = 0.0
     var startingPositionThor = 0.0
 
     var endPositionAbdo = 0.0
-    var endPositionThor = 0.0
+    var endPositionThor = 0.0*/
 
     var flowFactorXUp = 0.0
     var flowFactorYUp = 0.0
-
-    var flowFactorXDown = 0.0
-    var flowFactorYDown = 0.0
 
     var correction = 0.0
 
@@ -42,46 +37,10 @@ object Calibrator {
     fun calibrate(mService: BluetoothConnection) {
         this.mService = mService
         breathingUtils = BreathingUtils(Calibrator.mService)
-        calibrateFlow()
-        /* calibrateMinAndMax()
-        var calibratedInNum = 0
-        var calibratedOutNum = 0
-        var prevIn = false
-        var prevOut = false
-        val bufferAbdoOut = arrayListOf<Double>()
-        val bufferAbdoIn = arrayListOf<Double>()
-        val bufferThorOut = arrayListOf<Double>()
-        val bufferThorIn = arrayListOf<Double>()
-
-        repeat(2) {
-            while (!(calibratedInNum == 2 && calibratedOutNum == 2)) {
-                //lowest abdo
-                Log.i("Calibration", "BreathHold")
-                if (detectMaxRespiration() && calibratedOutNum < 2 && !prevOut) {
-                    Log.i("Calibration", "Respiration: Hold breath for 5 sec")
-                    val calibratedBreathHold = calibrateBreathHold()
-                    bufferAbdoOut.add(calibratedBreathHold.first)
-                    bufferThorOut.add(calibratedBreathHold.second)
-                    calibratedOutNum++
-                    prevOut = true
-                    prevIn = false
-                } else if (detectMaxInspiration() && calibratedInNum < 2 && !prevIn) {
-                    Log.i("Calibration", "Inspiration: Hold breath for 5 sec")
-                    val calibratedBreathHold = calibrateBreathHold()
-                    bufferAbdoIn.add(calibratedBreathHold.first)
-                    bufferThorIn.add(calibratedBreathHold.second)
-                    calibratedInNum++
-                    prevOut = false
-                    prevIn = true
-                }
-            }
-        }
-        Log.i("Calibration:", "abdoOut: $holdBreathBufferOutAbdo, abdoIn: $holdBreathBufferInAbdo")
-        Log.i("Calibration:", "thorOut: $holdBreathBufferOutThor, thorIn: $holdBreathBufferInThor") */
-
+        calibrateFlow(mService)
     }
 
-    private fun detectMaxInspiration(): Boolean {
+    /* private fun detectMaxInspiration(): Boolean {
         return breathingUtils.smoothValue().first >= calibratedAbdo.first.times(0.95)
                 && breathingUtils.smoothValue().second >= calibratedThor.first.times(0.95)
     }
@@ -90,70 +49,12 @@ object Calibrator {
         return breathingUtils.smoothValue().first <= calibratedAbdo.second.times(0.95)
                 && breathingUtils.smoothValue().second <= calibratedThor.second.times(0.95)
 
-    }
+    }*/
 
     //TODO: muss doch smarter gehen
     //TODO: als Coroutine dann kann sich der screen schön bewegen dazwischen
 
-    private fun calibrateMinAndMax() {
-        /* var maxMinValuesInspiration = Pair(
-            Pair(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY),
-            Pair(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY)
-        )
-        var maxMinValuesExpiration = Pair(
-            Pair(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY),
-            Pair(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY)
-        )
-        val iterations = 5
-        val maxValuesAbdo = arrayListOf<Double>()
-        val maxValuesThor = arrayListOf<Double>()
-        val minValuesAbdo = arrayListOf<Double>()
-        val minValuesThor = arrayListOf<Double>()
-
-        breathingUtils.startFromBeginning()
-        //first abdo
-        repeat(iterations) {
-            while (mService.mExpiration == 0) {
-                maxMinValuesInspiration =
-                    determineMinMax(
-                        maxMinValuesInspiration.first.first,
-                        maxMinValuesInspiration.first.second,
-                        maxMinValuesInspiration.second.first,
-                        maxMinValuesInspiration.second.second
-                    )
-            }
-            maxValuesAbdo.add(maxMinValuesInspiration.first.first)
-            maxValuesThor.add(maxMinValuesInspiration.second.first)
-            minValuesAbdo.add(maxMinValuesInspiration.first.second)
-            minValuesThor.add(maxMinValuesInspiration.second.second)
-
-            while (mService.mInspiration == 0) {
-                maxMinValuesExpiration = determineMinMax(
-                    maxMinValuesInspiration.first.first,
-                    maxMinValuesInspiration.first.second,
-                    maxMinValuesInspiration.second.first,
-                    maxMinValuesInspiration.second.second
-                )
-            }
-            maxValuesAbdo.add(maxMinValuesInspiration.first.first)
-            maxValuesAbdo.add(maxMinValuesExpiration.first.first)
-
-            maxValuesThor.add(maxMinValuesInspiration.second.first)
-            maxValuesThor.add(maxMinValuesExpiration.second.first)
-
-            minValuesAbdo.add(maxMinValuesInspiration.first.second)
-            minValuesAbdo.add(maxMinValuesExpiration.first.second)
-
-            minValuesThor.add(maxMinValuesExpiration.second.second)
-            minValuesThor.add(maxMinValuesInspiration.second.second)
-        }
-        calibratedAbdo =
-            Pair(
-                maxValuesAbdo.maxOrNull()?.times(1.2) ?: 0.0, minValuesAbdo.minOrNull()?.times(1.2) ?: 0.0
-            )
-        calibratedThor = Pair(
-            maxValuesThor.maxOrNull()?.times(1.2) ?: 0.0, minValuesThor.minOrNull()?.times(1.2) ?: 0.0
-        ) */
+    private fun calibrateMinAndMax(mService: BluetoothConnection) {
         val minimaAbdo: ArrayList<Double> = ArrayList()
         val maximaAbdo: ArrayList<Double> = ArrayList()
         val minimaThor: ArrayList<Double> = ArrayList()
@@ -214,29 +115,13 @@ object Calibrator {
         calibratedThor = Pair(mService.calculateMedian(maximaThor) * 1.2, mService.calculateMedian(minimaThor) * 1.2)
     }
 
-    private fun determineMinMax(
-        currMaxAbdo: Double,
-        currMinAbdo: Double,
-        currMaxThor: Double,
-        currMinThor: Double
-    ): Pair<Pair<Double, Double>, Pair<Double, Double>> {
-
-        val abdo = mService.mAbdoCorrected
-        val thor = mService.mThorCorrected
-
-        return Pair(
-            Pair(max(currMaxAbdo, abdo), min(currMinAbdo, abdo)),
-            Pair(max(currMaxThor, thor), min(currMinThor, thor))
-        )
-    }
-
-    private fun calibrateBreathHold(): Pair<Double, Double> {
+    fun calibrateBreathHold(time: Int, pos: String) {
         val diffValuesThor = arrayListOf<Double>()
         val diffValuesAbdo = arrayListOf<Double>()
         val startTime = currentTimeMillis()
         var prevValueAbdo = breathingUtils.smoothValue().first
         var prevValueThor = breathingUtils.smoothValue().second
-        while (currentTimeMillis().minus(startTime) < 5000) {
+        while (currentTimeMillis().minus(startTime) < time) {
             diffValuesAbdo.add(abs(breathingUtils.smoothValue().first.minus(prevValueAbdo)))
             diffValuesThor.add(abs(breathingUtils.smoothValue().second.minus(prevValueThor)))
             prevValueAbdo = breathingUtils.smoothValue().first
@@ -244,15 +129,28 @@ object Calibrator {
             Log.i("Calibration", "${abs(breathingUtils.smoothValue().first.minus(prevValueAbdo))}")
             Log.i("Calibration", "${abs(breathingUtils.smoothValue().second.minus(prevValueThor))}")
         }
-        return Pair(diffValuesAbdo.average(), diffValuesThor.average())
+        when (pos) {
+            "in" -> {
+                holdBreathBufferInAbdo = diffValuesAbdo.average()
+                holdBreathBufferInThor = diffValuesThor.average()
+            }
+            "out" -> {
+                holdBreathBufferOutAbdo = diffValuesAbdo.average()
+                holdBreathBufferOutThor = diffValuesThor.average()
+            }
+            "mid" -> {
+                holdBreathBufferMiddleAbdo = diffValuesAbdo.average()
+                holdBreathBufferMiddleThor = diffValuesThor.average()
+            }
+        }
     }
 
-    fun calibrateFlow() {
-        calibrateMinAndMax()
-        // Log.i("Calibration:", "Max Thor: ${calibratedThor.first} Min Thor: ${calibratedThor.second}")
-        // Log.i("Calibration:", "Max Abdo: ${calibratedAbdo.first} Min Abdo: ${calibratedAbdo.second}")
+    fun calibrateFlow(mService: BluetoothConnection) {
+        Log.i("calibration", "calibrating flow")
+        calibrateMinAndMax(mService)
         calcFlowFactor()
-        // Log.i("Calibration:", "Flow factor X: $flowFactorX, Y: $flowFactorY")
+        Log.i("calibration", "finished calibrating flow")
+
     }
 
     private fun calcFlowFactor() {
@@ -271,10 +169,5 @@ object Calibrator {
         // Log.i("Calibration:", "combinedValueEnd: $combinedValueEnd")
         flowFactorXUp = (xEnd.minus(xStart)).div(combinedValueEnd.plus(correction))
         flowFactorYUp = (yEnd.minus(yStart)).div(combinedValueEnd.plus(correction))
-
-        flowFactorXDown = (xStart.minus(xEnd)).div(combinedValueStart.plus(correction))
-        flowFactorYDown = (yStart.minus(yEnd)).div(combinedValueStart.plus(correction))
-
-
     }
 }

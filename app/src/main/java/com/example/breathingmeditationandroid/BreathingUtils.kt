@@ -105,6 +105,7 @@ class BreathingUtils(mService: BluetoothConnection) {
     fun detectFiveSecondInspiration(): Boolean {
         var startTime = currentTimeMillis()
         while (true) {
+            Log.i("calibration", "${currentTimeMillis().minus(startTime)}s")
             if (mService.mExpiration == 0 && currentTimeMillis().minus(startTime) >= 5000) {
                 return true
             } else if (mService.mInspiration == 0) startTime = currentTimeMillis()
@@ -113,8 +114,8 @@ class BreathingUtils(mService: BluetoothConnection) {
 
     fun detectFiveSecondRespiration(): Boolean {
         var startTime = currentTimeMillis()
-        while(true) {
-            if(mService.mInspiration == 0 && currentTimeMillis().minus(startTime) >= 5000) {
+        while (true) {
+            if (mService.mInspiration == 0 && currentTimeMillis().minus(startTime) >= 5000) {
                 return true
             } else if (mService.mExpiration == 0) startTime = currentTimeMillis()
         }
@@ -125,7 +126,6 @@ class BreathingUtils(mService: BluetoothConnection) {
             holdBreathGesture.detect()
         }
     }
-
 
 
 }
