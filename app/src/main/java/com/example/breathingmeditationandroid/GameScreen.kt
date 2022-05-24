@@ -73,10 +73,12 @@ class GameScreen : ComponentActivity() {
         //setup and start bluetooth service
         mDevice = intent?.extras?.getParcelable("Device")
 
-        Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
-            bindService(intent, connection, Context.BIND_AUTO_CREATE)
-            intent.putExtra("Device", mDevice)
-            startService(intent)
+        thread(start = true, isDaemon = true) {
+            Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
+                bindService(intent, connection, Context.BIND_AUTO_CREATE)
+                intent.putExtra("Device", mDevice)
+                startService(intent)
+            }
         }
     }
 
