@@ -124,55 +124,6 @@ class BreathingUtils(mService: BluetoothConnection) {
         return Pair(medianAbdo, medianThor)
     }
 
-    fun deepBellyBreathDetected() {
-        while (mService.mAbdoCorrected < calibratedAbdo.second * 0.95) {
-            Thread.sleep(2)
-        }
-
-        while (mService.mExpiration == 0) {
-        }
-    }
-
-    fun deepChestBreathDetected() {
-        while (mService.mThorCorrected < calibratedThor.second * 0.95) {
-            Thread.sleep(2)
-        }
-
-        while (mService.mExpiration == 0) {
-        }
-    }
-
-    fun staccatoBreathDetected() {
-
-        //for every breath > half of max
-        //Expiration == 0
-        //for every changed value
-        //buffer of 3
-        //if difference of 20% between first and last
-        //staccato ->
-
-        val bufferStaccato: ArrayList<Double> = ArrayList()
-        var staccatoDetetected = false
-
-        while (!staccatoDetetected) {
-            if (mService.mExpiration == 0 && mService.mThorCorrected > calibratedThor.second * 0.6) {
-                //everytime there is a updated value -> add to buffer
-                if (bufferStaccato.size == 3) {
-                    bufferStaccato.removeAt(0)
-                    bufferStaccato.add(mService.mThorCorrected)
-                    if (bufferStaccato[2] >= bufferStaccato[0] * 1.2) {
-                        staccatoDetetected = true
-                        Log.i("staccato", "detected")
-                    }
-                } else {
-                    bufferStaccato.add(mService.mThorCorrected)
-                }
-            }
-        }
-
-
-    }
-
     fun detectRespiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
         return curr.first < prev.first && curr.second < prev.second
     }
