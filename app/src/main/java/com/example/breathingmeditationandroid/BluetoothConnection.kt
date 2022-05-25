@@ -10,9 +10,7 @@ import android.util.Log
 import android.widget.Toast
 import com.hexoskin.hsapi_android.*
 import com.hexoskin.resp_drift_correction.Corrector
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList

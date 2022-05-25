@@ -12,7 +12,7 @@ class BreathingUtils(mService: BluetoothConnection) {
 
     //TODO: muss doch smarter gehen
     //TODO: als Coroutine dann kann sich der screen schön bewegen dazwischen
-    fun calibrateBreathing(): Pair<Pair<Double, Double>, Pair<Double, Double>> {
+    fun calibrateBreathing(){
 
         val minimaAbdo: ArrayList<Double> = ArrayList()
         val maximaAbdo: ArrayList<Double> = ArrayList()
@@ -30,7 +30,7 @@ class BreathingUtils(mService: BluetoothConnection) {
                     minimaAbdo.add(lokalMinima)
                     lokalMinima = 0.0
                 }
-                if (mService.mAbdoCorrected > lokalMinima) {
+                if (mService.mAbdoCorrected > lokalMaxima) {
                     lokalMaxima = mService.mAbdoCorrected
                 }
             }
@@ -77,11 +77,6 @@ class BreathingUtils(mService: BluetoothConnection) {
         calibratedThor = Pair(
             mService.calculateMedian(maximaThor) * 1.2,
             mService.calculateMedian(minimaThor) * 1.2
-        )
-
-        return Pair(
-            calibratedAbdo,
-            calibratedThor
         )
     }
 

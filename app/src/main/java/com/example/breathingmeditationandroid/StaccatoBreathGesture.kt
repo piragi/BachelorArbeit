@@ -1,36 +1,50 @@
 package com.example.breathingmeditationandroid
 
 import android.util.Log
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 
-class StaccatoBreathGesture(private val mService: BluetoothConnection,
-                            private val breathingUtils: BreathingUtils
+class StaccatoBreathGesture(
+    private val mService: BluetoothConnection,
+    private val breathingUtils: BreathingUtils
 ) :
     IBreathingGesture {
 
     override fun detect() {
-        val bufferStaccato: ArrayList<Double> = ArrayList()
+        val bufferStaccato: MutableList<Double> = mutableListOf()
         var staccatoDetetected = false
 
-        while (!staccatoDetetected) {
+        while (true) {
 
-            if (mService.mExpiration == 0 && mService.mThorCorrected > breathingUtils.calibratedThor.first * 0.6) {
+            if (mService.mExpiration == 0 && mService.mAbdoCorrected > breathingUtils.calibratedAbdo.first * 0.5) {
                 //everytime there is a updated value -> add to buffer
-                if (bufferStaccato.size == 3) {
-                    bufferStaccato.removeAt(0)
-                    bufferStaccato.add(mService.mThorCorrected)
-                    if (bufferStaccato[2] >= bufferStaccato[0] * 1.5) {
-                        staccatoDetetected = true
+                if (bufferStaccato.size == 4) {
+                    if (bufferStaccato[3] != mService.mAbdoCorrected) {
                         Log.i("valuesBuffer", "$bufferStaccato")
-                        Log.i("calibration", "${breathingUtils.calibratedThor.first * 0.6}")
+                        Log.i("calibration", "${breathingUtils.calibratedAbdo.first * 0.5}")
+                        bufferStaccato.removeAt(0)
+                        bufferStaccato.add(mService.mAbdoCorrected)
+                    }
+
+                    if (bufferStaccato[3] >= bufferStaccato[0] * 1.4) {
+                        staccatoDetetected = true
+
                         Log.i("staccato", "detected")
                     }
                 } else {
-                    bufferStaccato.add(mService.mThorCorrected)
+                    bufferStaccato.add(mService.mAbdoCorrected)
                 }
-                Thread.sleep(2)
+            } else {
+                bufferStaccato.clear()
             }
+
         }
     }
 
-
+    // TODO: remove bad practice
+    // https://kotlinlang.org/docs/composing-suspending-functions.html#structured-concurrency-with-async
+    fun detected() = GlobalScope.async {
+        detect()
+        return@async true
+    }
 }
