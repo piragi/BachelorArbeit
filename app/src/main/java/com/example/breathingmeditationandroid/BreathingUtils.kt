@@ -107,6 +107,7 @@ class BreathingUtils(mService: BluetoothConnection) {
         while (true) {
             Log.i("calibration", "${currentTimeMillis().minus(startTime)}s")
             if (mService.mExpiration == 0 && currentTimeMillis().minus(startTime) >= 5000) {
+                Log.i("calibration", "breathe in for 5 sec detected")
                 return true
             } else if (mService.mInspiration == 0) startTime = currentTimeMillis()
         }

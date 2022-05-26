@@ -12,8 +12,10 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.plattysoft.leonids.ParticleSystem
+import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
 import kotlin.math.abs
 import kotlin.math.floor
@@ -55,7 +57,7 @@ class HomeScreenActivity : ComponentActivity() {
             mBound = true
             holdBreathGesture = HoldBreathGesture(mService, 5000.0)
             Log.i("Calibration", "start")
-            Calibrator.calibrate(mService)
+            lifecycleScope.launch { Calibrator.calibrate() }
             bubble2.alpha = 1.0f
             initializeParticleSystems()
             animateLeaves()
@@ -72,7 +74,6 @@ class HomeScreenActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        stop = false
         setContentView(R.layout.home_screen)
         container = findViewById(R.id.home_screen)
         bubble1 = findViewById(R.id.imageViewSettings)
@@ -84,6 +85,7 @@ class HomeScreenActivity : ComponentActivity() {
         Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
             intent.putExtra("Device", mDevice)
+            stop = false
             startService(intent)
         }
     }
@@ -184,7 +186,6 @@ class HomeScreenActivity : ComponentActivity() {
                         setAlpha(bubble1, 1.0f)
                         if (holdBreathGesture.hold) {
                             Intent(this, AboutScreen::class.java).also { intent ->
-                                unbindService(connection)
                                 startActivity(intent)
                                 stop = true
                             }
@@ -198,7 +199,6 @@ class HomeScreenActivity : ComponentActivity() {
                         holdBreathGesture.border = 3.0
                         if (holdBreathGesture.hold) {
                             Intent(this, GameScreen::class.java).also { intent ->
-                                unbindService(connection)
                                 startActivity(intent)
                                 stop = true
                             }

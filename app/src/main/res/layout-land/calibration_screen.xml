@@ -7,18 +7,6 @@
     android:id="@+id/calibration"
     tools:context=".CalibrationScreenActivity" android:orientation="horizontal">
     <ImageView
-        android:id="@+id/home_screen_background_switch"
-        android:layout_width="match_parent"
-        android:layout_height="1080dp"
-        android:layout_alignParentStart="true" android:layout_alignParentTop="true"
-        android:contentDescription="@string/todo" android:src="@drawable/background"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintDimensionRatio="2:1"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent"/>
-
-    <ImageView
         android:id="@+id/calibration_background"
         android:layout_width="match_parent"
         android:layout_height="1080dp"
@@ -29,7 +17,7 @@
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent"/>
-<androidx.appcompat.widget.AppCompatImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/grey_sky"
         android:layout_width="match_parent" android:layout_height="1080dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -42,6 +30,17 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" app:srcCompat="@drawable/clouds_all"/>
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif"
+        android:text="@string/calibration_is_starting"
+        android:textAlignment="center"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
     <!-- <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/cloud5"
         android:layout_width="wrap_content" android:layout_height="1080dp" android:layout_marginStart="59dp"

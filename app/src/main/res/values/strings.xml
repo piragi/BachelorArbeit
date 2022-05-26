@@ -7,4 +7,9 @@
     <string name="play">PLAY</string>
     <string name="calibrate">CALIBRATE</string>
     <string name="about">ABOUT</string>
+    <string name="instruction_breathe_in">Breathe in for 5 seconds...</string>
+    <string name="about_descr">This app was developed by Julia Mayrhauser and Julius Sula as a research project for a
+        bachelor\'s thesis. It was developed in cooperation with the Center of HCI at the University of Salzburg.
+    </string>
+    <string name="calibration_is_starting">Calibration is starting...</string>
 </resources>
