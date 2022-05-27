@@ -1,15 +1,10 @@
 package com.example.breathingmeditationandroid
 
 import android.util.Log
-import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import java.lang.System.currentTimeMillis
 import kotlin.math.absoluteValue
 
-class BreathingUtils(mService: BluetoothConnection) {
-
-    private val mService: BluetoothConnection = mService
+class BreathingUtils(private val mService: BluetoothConnection) {
 
     fun calculateRelativePosition(
         calibratedValue: Pair<Pair<Double, Double>, Pair<Double, Double>>,
@@ -89,7 +84,7 @@ class BreathingUtils(mService: BluetoothConnection) {
             valueListAbdo.add(mService.mAbdoCorrected)
             valueListThor.add(mService.mThorCorrected)
         }
-        return Pair(mService.smoothData(valueListAbdo), mService.smoothData(valueListThor));
+        return Pair(mService.smoothData(valueListAbdo), mService.smoothData(valueListThor))
     }
 
     fun calcCombinedValue(valAbdo: Double, valThor: Double): Double {
@@ -105,28 +100,10 @@ class BreathingUtils(mService: BluetoothConnection) {
     fun detectFiveSecondInspiration(): Boolean {
         var startTime = currentTimeMillis()
         while (true) {
-            Log.i("calibration", "${currentTimeMillis().minus(startTime)}s")
             if (mService.mExpiration == 0 && currentTimeMillis().minus(startTime) >= 5000) {
                 Log.i("calibration", "breathe in for 5 sec detected")
                 return true
             } else if (mService.mInspiration == 0) startTime = currentTimeMillis()
         }
     }
-
-    fun detectFiveSecondRespiration(): Boolean {
-        var startTime = currentTimeMillis()
-        while (true) {
-            if (mService.mInspiration == 0 && currentTimeMillis().minus(startTime) >= 5000) {
-                return true
-            } else if (mService.mExpiration == 0) startTime = currentTimeMillis()
-        }
-    }
-
-    suspend fun detectBreathHold(holdBreathGesture: HoldBreathGesture, time: Double) = coroutineScope {
-        launch {
-            holdBreathGesture.detect()
-        }
-    }
-
-
 }

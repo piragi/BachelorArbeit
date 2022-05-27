@@ -4,7 +4,6 @@ import android.util.Log
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.lang.System.currentTimeMillis
-import kotlin.concurrent.thread
 import kotlin.math.abs
 
 object Calibrator {
@@ -22,12 +21,6 @@ object Calibrator {
 
     private var holdBreathBufferOutAbdo = 0.0
     private var holdBreathBufferOutThor = 0.0
-
-    /* var startingPositionAbdo = 0.0
-    var startingPositionThor = 0.0
-
-    var endPositionAbdo = 0.0
-    var endPositionThor = 0.0*/
 
     var flowFactorXUp = 0.0
     var flowFactorYUp = 0.0
@@ -53,108 +46,102 @@ object Calibrator {
     //TODO: als Coroutine dann kann sich der screen schön bewegen dazwischen
 
     private fun calibrateMinAndMax() {
-        thread(start = true, isDaemon = true) {
-            val minimaAbdo: ArrayList<Double> = ArrayList()
-            val maximaAbdo: ArrayList<Double> = ArrayList()
-            val minimaThor: ArrayList<Double> = ArrayList()
-            val maximaThor: ArrayList<Double> = ArrayList()
-            //TODO: lokal mit k?!?!
-            var lokalMinima = 0.0
-            var lokalMaxima = 0.0
+        Log.i("calibration", "calibrate min max starting")
+        val minimaAbdo: ArrayList<Double> = ArrayList()
+        val maximaAbdo: ArrayList<Double> = ArrayList()
+        val minimaThor: ArrayList<Double> = ArrayList()
+        val maximaThor: ArrayList<Double> = ArrayList()
+        //TODO: lokal mit k?!?!
+        var lokalMinima = 0.0
+        var lokalMaxima = 0.0
 
-            Log.i("Calibration:", "Abdo")
-            //first abdo
-            repeat(1) {
-                while (mService.mExpiration == 0) {
-                    if (!lokalMinima.equals(0.0)) {
-                        minimaAbdo.add(lokalMinima)
-                        lokalMinima = 0.0
-                    }
-                    if (mService.mAbdoCorrected > lokalMinima) {
-                        lokalMaxima = mService.mAbdoCorrected
-                    }
+        Log.i("Calibration:", "Abdo")
+        //first abdo
+        repeat(1) {
+            while (mService.mExpiration == 0) {
+                if (!lokalMinima.equals(0.0)) {
+                    minimaAbdo.add(lokalMinima)
+                    lokalMinima = 0.0
                 }
-
-                while (mService.mInspiration == 0) {
-                    if (!lokalMaxima.equals(0.0)) {
-                        maximaAbdo.add(lokalMaxima)
-                        lokalMaxima = 0.0
-                    }
-                    if (mService.mAbdoCorrected < lokalMinima) {
-                        lokalMinima = mService.mAbdoCorrected
-                    }
-                }
-            }
-            Log.i("Calibration:", "thor")
-            //then thor
-            repeat(1) {
-                while (mService.mExpiration == 0) {
-                    if (!lokalMinima.equals(0.0)) {
-                        minimaThor.add(lokalMinima)
-                        lokalMinima = 0.0
-                    }
-                    if (mService.mThorCorrected > lokalMaxima) {
-                        lokalMaxima = mService.mThorCorrected
-
-                    }
-                }
-
-                while (mService.mInspiration == 0) {
-                    if (!lokalMaxima.equals(0.0)) {
-                        maximaThor.add(lokalMaxima)
-                        lokalMaxima = 0.0
-                    }
-                    if (mService.mThorCorrected < lokalMinima) {
-                        lokalMinima = mService.mThorCorrected
-                    }
+                if (mService.mAbdoCorrected > lokalMinima) {
+                    lokalMaxima = mService.mAbdoCorrected
                 }
             }
 
-            calibratedAbdo =
-                Pair(mService.calculateMedian(maximaAbdo) * 1.2, mService.calculateMedian(minimaAbdo) * 1.2)
-            calibratedThor =
-                Pair(mService.calculateMedian(maximaThor) * 1.2, mService.calculateMedian(minimaThor) * 1.2)
+            while (mService.mInspiration == 0) {
+                if (!lokalMaxima.equals(0.0)) {
+                    maximaAbdo.add(lokalMaxima)
+                    lokalMaxima = 0.0
+                }
+                if (mService.mAbdoCorrected < lokalMinima) {
+                    lokalMinima = mService.mAbdoCorrected
+                }
+            }
         }
+        Log.i("Calibration:", "thor")
+        //then thor
+        repeat(1) {
+            while (mService.mExpiration == 0) {
+                if (!lokalMinima.equals(0.0)) {
+                    minimaThor.add(lokalMinima)
+                    lokalMinima = 0.0
+                }
+                if (mService.mThorCorrected > lokalMaxima) {
+                    lokalMaxima = mService.mThorCorrected
+
+                }
+            }
+
+            while (mService.mInspiration == 0) {
+                if (!lokalMaxima.equals(0.0)) {
+                    maximaThor.add(lokalMaxima)
+                    lokalMaxima = 0.0
+                }
+                if (mService.mThorCorrected < lokalMinima) {
+                    lokalMinima = mService.mThorCorrected
+                }
+            }
+        }
+        Log.i("calibration", "min and max done")
+        calibratedAbdo =
+            Pair(mService.calculateMedian(maximaAbdo) * 1.2, mService.calculateMedian(minimaAbdo) * 1.2)
+        calibratedThor =
+            Pair(mService.calculateMedian(maximaThor) * 1.2, mService.calculateMedian(minimaThor) * 1.2)
     }
 
     fun calibrateBreathHold(time: Int, pos: String) {
-        thread(start = true, isDaemon = true) {
-            val diffValuesThor = arrayListOf<Double>()
-            val diffValuesAbdo = arrayListOf<Double>()
-            val startTime = currentTimeMillis()
-            var prevValueAbdo = breathingUtils.smoothValue().first
-            var prevValueThor = breathingUtils.smoothValue().second
-            while (currentTimeMillis().minus(startTime) < time) {
-                diffValuesAbdo.add(abs(breathingUtils.smoothValue().first.minus(prevValueAbdo)))
-                diffValuesThor.add(abs(breathingUtils.smoothValue().second.minus(prevValueThor)))
-                prevValueAbdo = breathingUtils.smoothValue().first
-                prevValueThor = breathingUtils.smoothValue().second
-                Log.i("Calibration", "${abs(breathingUtils.smoothValue().first.minus(prevValueAbdo))}")
-                Log.i("Calibration", "${abs(breathingUtils.smoothValue().second.minus(prevValueThor))}")
+        val diffValuesThor = arrayListOf<Double>()
+        val diffValuesAbdo = arrayListOf<Double>()
+        val startTime = currentTimeMillis()
+        var prevValueAbdo = breathingUtils.smoothValue().first
+        var prevValueThor = breathingUtils.smoothValue().second
+        while (currentTimeMillis().minus(startTime) < time) {
+            diffValuesAbdo.add(abs(breathingUtils.smoothValue().first.minus(prevValueAbdo)))
+            diffValuesThor.add(abs(breathingUtils.smoothValue().second.minus(prevValueThor)))
+            prevValueAbdo = breathingUtils.smoothValue().first
+            prevValueThor = breathingUtils.smoothValue().second
+        }
+        when (pos) {
+            "in" -> {
+                holdBreathBufferInAbdo = diffValuesAbdo.average()
+                holdBreathBufferInThor = diffValuesThor.average()
             }
-            when (pos) {
-                "in" -> {
-                    holdBreathBufferInAbdo = diffValuesAbdo.average()
-                    holdBreathBufferInThor = diffValuesThor.average()
-                }
-                "out" -> {
-                    holdBreathBufferOutAbdo = diffValuesAbdo.average()
-                    holdBreathBufferOutThor = diffValuesThor.average()
-                }
-                "mid" -> {
-                    holdBreathBufferMiddleAbdo = diffValuesAbdo.average()
-                    holdBreathBufferMiddleThor = diffValuesThor.average()
-                }
+            "out" -> {
+                holdBreathBufferOutAbdo = diffValuesAbdo.average()
+                holdBreathBufferOutThor = diffValuesThor.average()
+            }
+            "mid" -> {
+                holdBreathBufferMiddleAbdo = diffValuesAbdo.average()
+                holdBreathBufferMiddleThor = diffValuesThor.average()
             }
         }
+        Log.i("calibration", "breath hold calibration done")
     }
 
     private suspend fun calibrateFlow() = coroutineScope {
         Log.i("calibration", "calibrating flow")
-        launch {
-            calibrateMinAndMax()
-            calcFlowFactor()
-        }
+        calibrateMinAndMax()
+        calcFlowFactor()
         Log.i("calibration", "finished calibrating flow")
     }
 
@@ -169,9 +156,6 @@ object Calibrator {
         val combinedValueEnd: Double =
             (calibratedAbdo.first.times(0.9).plus(calibratedThor.first.times(0.9)))
         correction = 0 - combinedValueStart
-        // Log.i("Calibration:", "Correction: $correction")
-        // Log.i("Calibration:", "combinedlValueStart: $combinedValueStart")
-        // Log.i("Calibration:", "combinedValueEnd: $combinedValueEnd")
         flowFactorXUp = (xEnd.minus(xStart)).div(combinedValueEnd.plus(correction))
         flowFactorYUp = (yEnd.minus(yStart)).div(combinedValueEnd.plus(correction))
     }

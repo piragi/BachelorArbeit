@@ -19,16 +19,19 @@ import kotlin.concurrent.thread
 
 class CalibrationScreenActivity : ComponentActivity() {
     private var mDevice: BluetoothDevice? = null
-    private lateinit var mService: BluetoothConnection
     private var mBound = false
+    private var calibrationDetected = false
+    private var calibrationFinished = false
+    private lateinit var mService: BluetoothConnection
     private lateinit var greySky: ImageView
     private lateinit var clouds: ImageView
     private lateinit var background: ImageView
-    private var isSnowing = true
     private lateinit var breathingUtils: BreathingUtils
-    private var calibrationDetected = false
-    private var fadeOutSky = false
     private lateinit var text: TextView
+    private lateinit var ps1: ParticleSystem
+    private lateinit var ps2: ParticleSystem
+    private lateinit var ps3: ParticleSystem
+
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -39,6 +42,7 @@ class CalibrationScreenActivity : ComponentActivity() {
             breathingUtils = BreathingUtils(mService)
             lifecycleScope.launch {
                 handleCalibration()
+                changeScreen()
             }
             Log.i("test", "onServiceConnected done")
         }
@@ -58,7 +62,6 @@ class CalibrationScreenActivity : ComponentActivity() {
         background = findViewById(R.id.calibration_background)
         text = findViewById(R.id.text)
         snow()
-        text.text = getString(R.string.calibration_is_starting)
         mDevice = intent?.extras?.getParcelable("Device")
         Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
@@ -67,99 +70,124 @@ class CalibrationScreenActivity : ComponentActivity() {
         }
     }
 
-    private fun guideUser(string: String) {
-        runOnUiThread {
-            text.text = string
-        }
+    private suspend fun displayText(string: String, time: Long) {
+        lifecycleScope.launch {
+            runOnUiThread {
+                text.text = string
+            }
+            delay(time)
+        }.join()
     }
 
     private suspend fun handleCalibration() = withContext(Dispatchers.Default) {
-        guideUser(getString(R.string.instruction_breathe_in))
-        delay(3000)
-        lifecycleScope.launch {
-            displayTimer()
-        }
-        Log.i("test", "handle calibration launched")
-
-        calibrationDetected = breathingUtils.detectFiveSecondInspiration()
-        guideUser("Follow the instructions to clear up the sky!")
-        val job = launch {
-            breathingUtils.startFromBeginning()
-        }
-        delay(5000)
-        job.join()
-        guideUser("Breathe in deep for a minimum of 5 seconds")
-        lifecycleScope.launch {
-            displayTimer()
-        }
+        displayText("Calibration is starting...", 7000)
+        displayText("Follow the instructions to clear up the sky!", 5000)
         launch {
-            Calibrator.calibrate()
+            displayText("Breathe in deeply...", Double.POSITIVE_INFINITY.toLong())
         }
-        //TODO display text correctly
-        Log.i("calibration", "calibration detected")
-        // fadeOutGreySky()
+        calibrationDetected = breathingUtils.detectFiveSecondInspiration()
+        launch {
+            displayText("Breathe out...", Double.POSITIVE_INFINITY.toLong())
+        }
         delay(5000)
-        guideUser("Hold your breath for 5 seconds")
-        lifecycleScope.launch {
-            displayTimer()
+        Log.i("calibration", "calibrate is launching")
+        launch { Calibrator.calibrate() }
+        var iteration = 0
+        repeat(2) {
+            iteration++
+            when (iteration) {
+                1 -> displayText("Breathe in deeply into your stomach...", 6000)
+                2 -> displayText("Breathe in deeply into your chest...", 6000)
+            }
+
+            displayText("Hold your breath...", 2000)
+
+            when (iteration) {
+                1 -> decreaseSnowFlow(0.5)
+                2 -> decreaseSnowFlow(1.0)
+            }
+
+            launch { Calibrator.calibrateBreathHold(5000, "in") }
+            lifecycleScope.launch {
+                displayTimer(4000)
+            }
+            delay(4000)
+            displayText("Breathe out...", 5000)
+            displayText("Hold your breath...", 2000)
+            launch {
+                Calibrator.calibrateBreathHold(5000, "out")
+            }
+            if (iteration == 2)
+                launch { fadeOutGreySky() }
+            lifecycleScope.launch { displayTimer(4000) }
+            delay(4000)
         }
-        Calibrator.calibrateBreathHold(5000, "in")
-        guideUser("Breathe out for 5 seconds")
-        lifecycleScope.launch {
-            displayTimer()
-        }
-        guideUser("Hold your breath for 5 seconds")
-        lifecycleScope.launch {
-            displayTimer()
-        }
-        Calibrator.calibrateBreathHold(5000, "out")
-        guideUser("Calibration finished. Now entering Home Menu...")
+        displayText("Calibration finished. Now entering Home Menu...", 5000)
         delay(5000)
-        changeScreen()
+        calibrationFinished = true
     }
 
-    private fun changeScreen() {
+    private suspend fun changeScreen() {
+        lifecycleScope.launch {
+            while (!calibrationFinished)
+                continue
+        }.join()
         Intent(this, HomeScreenActivity::class.java).also { intent ->
-            startService(intent)
-            overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
+            // intent.putExtra("Device", mDevice)
+            startActivity(intent)
+            // overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
         }
     }
 
-    private fun displayTimer() {
+    private fun displayTimer(time: Long) {
         runOnUiThread {
             text.visibility = View.VISIBLE
         }
-        val timer = object : CountDownTimer(6000, 1000) {
+        val timer = object : CountDownTimer(time, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                guideUser(millisUntilFinished.div(1000).toString())
+                lifecycleScope.launch {
+                    displayText(millisUntilFinished.div(1000).toString(), 0)
+                }
             }
 
             override fun onFinish() {
                 if (!calibrationDetected) {
-                    Thread.sleep(2000)
-                    displayTimer()
-                } else runOnUiThread {
-                    text.visibility = View.GONE
+                    lifecycleScope.launch {
+                        displayTimer(time)
+                        runOnUiThread {
+                            text.visibility = View.GONE
+                        }
+                    }
                 }
             }
         }
         timer.start()
     }
 
+    private fun decreaseSnowFlow(percent: Double) {
+        runOnUiThread {
+            var iteration = 0
+            val fadeout = 10000
+            while (iteration < fadeout.times(percent)) {
+                ps1.setFadeOut(fadeout.minus(iteration).toLong())
+                ps2.setFadeOut(fadeout.minus(iteration).toLong())
+                ps3.setFadeOut(fadeout.minus(iteration).toLong())
 
-    private fun decreaseSnowFlow(vararg particleSystems: ParticleSystem, factor: Int): Boolean {
-        if (factor <= 0)
-            return false
-        for (ps in particleSystems) {
-            ps.setFadeOut(factor.toLong())
+                iteration++
+            }
+            if (percent == 1.0) {
+                ps1.stopEmitting()
+                ps2.stopEmitting()
+                ps3.stopEmitting()
+            }
         }
-        return true
     }
 
     private fun snow() {
-        val ps1 = setParticleSystem()
-        val ps2 = setParticleSystem()
-        val ps3 = setParticleSystem()
+        ps1 = setParticleSystem()
+        ps2 = setParticleSystem()
+        ps3 = setParticleSystem()
+
         ps1.emit(0, 100, 4)
         ps2.emit(1140, 100, 4)
         ps3.emit(2000, 100, 4)
@@ -170,17 +198,6 @@ class CalibrationScreenActivity : ComponentActivity() {
                 ps3.updateEmitPoint(2000, 100)
             }
         }
-        /* val fadeOut = AnimationUtils.loadAnimation(this, R.anim.fadeout)
-        fadeOut.setAnimationListener(object : Animation.AnimationListener {
-            override fun onAnimationStart(animation: Animation) {
-
-            }
-
-            override fun onAnimationEnd(animation: Animation) {
-            }
-
-            override fun onAnimationRepeat(p0: Animation?) {}
-        })*/
     }
 
     private fun setParticleSystem(): ParticleSystem {
@@ -190,50 +207,15 @@ class CalibrationScreenActivity : ComponentActivity() {
             .setAcceleration(0.000017f, 90)
     }
 
-    private fun initializeSnow() {
-        var iteration = 0
-        /* while (true) {
-    if (calibrationDetected) {
-        isSnowing = decreaseSnowFlow(ps1, ps2, ps3, ps4, factor = 10000.minus(iteration))
-
-    }
-    if (!isSnowing) {
-        ps1.stopEmitting()
-        ps2.stopEmitting()
-        ps3.stopEmitting()
-        ps4.stopEmitting()
-        Thread.sleep(5000)
-        fadeOutGreySky()
-        break
-    }
-    iteration++
-} */
-    }
-
     private fun fadeOutGreySky() {
-        thread(start = true, isDaemon = true) {
-            while (!fadeOutSky)
-                continue
-            runOnUiThread {
-                val animation = AnimationUtils.loadAnimation(this, R.anim.fadeout)
-                greySky.startAnimation(animation)
-                clouds.startAnimation(animation)
-                Handler(Looper.getMainLooper()).postDelayed({
-                    greySky.visibility = View.GONE
-                    clouds.visibility = View.GONE
-                }, 0)
-                // animateBackground()
-            }
+        runOnUiThread {
+            val animation = AnimationUtils.loadAnimation(this, R.anim.fadeout)
+            greySky.startAnimation(animation)
+            clouds.startAnimation(animation)
+            Handler(Looper.getMainLooper()).postDelayed({
+                greySky.visibility = View.GONE
+                clouds.visibility = View.GONE
+            }, 0)
         }
     }
-
-    private fun animateBackground() {
-        Intent(this, HomeScreenActivity::class.java).also { intent ->
-            startService(intent)
-            overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
-
-        }
-    }
-
-
 }
