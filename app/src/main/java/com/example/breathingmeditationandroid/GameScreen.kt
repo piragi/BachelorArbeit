@@ -102,12 +102,15 @@ class GameScreen : ComponentActivity() {
                     val detectedThorBreathGesture = deepThorBreathGesture.detected()
                     val detectedAbdoBreathGesture = deepAbdoBreathGesture.detected()
                     val detectedStaccatoBreathGesture = staccatoBreathGesture.detected()
+                    val detectedSighBreathGesture = sighBreathGesture.detected()
 
                     if ( detectedStaccatoBreathGesture.await()) {
                         deepBreathLevel.animationStart()
                     } else if (detectedAbdoBreathGesture.await()) {
                         deepBreathLevel.animationStart()
                     } else if (detectedThorBreathGesture.await()) {
+                        deepBreathLevel.animationStart()
+                    } else if (detectedSighBreathGesture.await()) {
                         deepBreathLevel.animationStart()
                     }
                 }
