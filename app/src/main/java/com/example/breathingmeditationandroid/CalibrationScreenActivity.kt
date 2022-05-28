@@ -40,10 +40,8 @@ class CalibrationScreenActivity : ComponentActivity() {
             Calibrator.initialize(mService)
             mBound = true
             breathingUtils = BreathingUtils(mService)
-            lifecycleScope.launch {
-                handleCalibration()
-                changeScreen()
-            }
+            lifecycleScope.launch { handleCalibration() }
+            lifecycleScope.launch { changeScreen() }
             Log.i("test", "onServiceConnected done")
         }
 
@@ -70,17 +68,8 @@ class CalibrationScreenActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun displayText(string: String, time: Long) {
-        lifecycleScope.launch {
-            runOnUiThread {
-                text.text = string
-            }
-            delay(time)
-        }.join()
-    }
-
     private suspend fun handleCalibration() = withContext(Dispatchers.Default) {
-        displayText("Calibration is starting...", 7000)
+        displayText("Calibration is starting...", 5000)
         displayText("Follow the instructions to clear up the sky!", 5000)
         launch {
             displayText("Breathe in deeply...", Double.POSITIVE_INFINITY.toLong())
@@ -89,15 +78,15 @@ class CalibrationScreenActivity : ComponentActivity() {
         launch {
             displayText("Breathe out...", Double.POSITIVE_INFINITY.toLong())
         }
-        delay(5000)
+        delay(6000)
         Log.i("calibration", "calibrate is launching")
         launch { Calibrator.calibrate() }
         var iteration = 0
         repeat(2) {
             iteration++
             when (iteration) {
-                1 -> displayText("Breathe in deeply into your stomach...", 6000)
-                2 -> displayText("Breathe in deeply into your chest...", 6000)
+                1 -> displayText("Breathe in deeply into your stomach...", 5000)
+                2 -> displayText("Breathe in deeply into your chest...", 5000)
             }
 
             displayText("Hold your breath...", 2000)
@@ -122,20 +111,21 @@ class CalibrationScreenActivity : ComponentActivity() {
             lifecycleScope.launch { displayTimer(4000) }
             delay(4000)
         }
-        displayText("Calibration finished. Now entering Home Menu...", 5000)
-        delay(5000)
+        displayText("Calibration finished!", 5000)
         calibrationFinished = true
     }
 
-    private suspend fun changeScreen() {
-        lifecycleScope.launch {
-            while (!calibrationFinished)
+    private fun changeScreen() {
+        thread(start = true, isDaemon = true) {
+            while (!calibrationFinished) {
                 continue
-        }.join()
-        Intent(this, HomeScreenActivity::class.java).also { intent ->
-            // intent.putExtra("Device", mDevice)
-            startActivity(intent)
-            // overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
+            }
+            Log.i("changeScreen", "calibration finished. Changing screen")
+            Intent(this, HomeScreenActivity::class.java).also { intent ->
+                intent.putExtra("Device", mDevice)
+                startActivity(intent)
+                overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
+            }
         }
     }
 
@@ -162,6 +152,15 @@ class CalibrationScreenActivity : ComponentActivity() {
             }
         }
         timer.start()
+    }
+
+    private suspend fun displayText(string: String, time: Long) {
+        lifecycleScope.launch {
+            runOnUiThread {
+                text.text = string
+            }
+            delay(time)
+        }.join()
     }
 
     private fun decreaseSnowFlow(percent: Double) {

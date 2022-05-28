@@ -56,8 +56,6 @@ class HomeScreenActivity : ComponentActivity() {
             breathingUtils = BreathingUtils(mService)
             mBound = true
             holdBreathGesture = HoldBreathGesture(mService, 5000.0)
-            Log.i("Calibration", "start")
-            lifecycleScope.launch { Calibrator.calibrate() }
             bubble2.alpha = 1.0f
             initializeParticleSystems()
             animateLeaves()
@@ -146,28 +144,23 @@ class HomeScreenActivity : ComponentActivity() {
         val x = floor(xValue)
         val y = floor(yValue)
         if (x in xBorderLeft.toDouble()..xBorderRight.toDouble() && y in yBorderTop.toDouble()..yBorderBottom.toDouble()) {
-            //particleSystem.updateEmitPoint(prevX.toInt(), prevY.toInt())
             particleSystem.updateEmitPoint((abs(prevX.minus(currX))).toInt(), (abs(prevY.minus(currY))).toInt())
             particleSystem.updateEmitPoint(x.toInt(), y.toInt())
         } else if (y in yBorderTop.toDouble()..yBorderBottom.toDouble()) {
             if (x < xBorderLeft.toDouble()) {
-                //particleSystem.updateEmitPoint(xBorderLeft, prevY.toInt())
                 particleSystem.updateEmitPoint(xBorderLeft, (abs(prevY.minus(currY))).toInt())
                 particleSystem.updateEmitPoint(xBorderLeft, y.toInt())
             }
             if (x > xBorderRight.toDouble()) {
-                //particleSystem.updateEmitPoint(xBorderRight, prevY.toInt())
                 particleSystem.updateEmitPoint(xBorderRight, (abs(prevY.minus(currY))).toInt())
                 particleSystem.updateEmitPoint(xBorderRight, y.toInt())
             }
         } else if (x in xBorderLeft.toDouble()..xBorderRight.toDouble()) {
             if (y > yBorderBottom.toDouble()) {
-                //particleSystem.updateEmitPoint(prevX.toInt(), prevY.toInt())
                 particleSystem.updateEmitPoint((abs(prevX.minus(currX))).toInt(), yBorderBottom)
                 particleSystem.updateEmitPoint(x.toInt(), yBorderBottom)
             }
             if (y < yBorderTop.toDouble()) {
-                //particleSystem.updateEmitPoint(prevX.toInt(), prevY.toInt())
                 particleSystem.updateEmitPoint((abs(prevX.minus(currX))).toInt(), yBorderTop)
                 particleSystem.updateEmitPoint(x.toInt(), yBorderTop)
             }
@@ -186,24 +179,28 @@ class HomeScreenActivity : ComponentActivity() {
                         setAlpha(bubble1, 1.0f)
                         if (holdBreathGesture.hold) {
                             Intent(this, AboutScreen::class.java).also { intent ->
+                                intent.putExtra("mDevice", mDevice)
                                 startActivity(intent)
-                                stop = true
                             }
                         }
                     }
                     if (inBubble(coordinatesBubble2)) {
-                        holdBreathGesture.border = 1.0
                         setAlpha(bubble2, 1.0f)
-                    }
-                    if (inBubble(coordinatesBubble3)) {
-                        holdBreathGesture.border = 3.0
                         if (holdBreathGesture.hold) {
-                            Intent(this, GameScreen::class.java).also { intent ->
+                            Intent(this, CalibrationScreenActivity::class.java).also { intent ->
+                                intent.putExtra("mDevice", mDevice)
                                 startActivity(intent)
-                                stop = true
                             }
                         }
+                    }
+                    if (inBubble(coordinatesBubble3)) {
                         setAlpha(bubble3, 1.0f)
+                        if (holdBreathGesture.hold) {
+                            Intent(this, GameScreen::class.java).also { intent ->
+                                intent.putExtra("mDevice", mDevice)
+                                startActivity(intent)
+                            }
+                        }
                     }
                 } else {
                     holdBreathGesture.stop = true
