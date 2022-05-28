@@ -4,16 +4,19 @@ import android.annotation.SuppressLint
 import android.app.Service
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
+import android.content.Context
 import android.content.Intent
-import android.os.*
+import android.os.Binder
+import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import com.hexoskin.hsapi_android.*
 import com.hexoskin.resp_drift_correction.Corrector
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 
 //inspired by: https://developer.android.com/guide/components/services
@@ -64,7 +67,6 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         //TODO: remove helperThis
         //TODO: optimize coroutine
-        val helperThis = this
         GlobalScope.launch(Dispatchers.Default) {
             //connect to the Hexoskin
             try {
@@ -77,7 +79,11 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
 
                 listenBluetoothIncomingData()
 
-                mHexoskinAPI = HexoskinAPI(helperThis, helperThis, helperThis)
+                mHexoskinAPI = HexoskinAPI(
+                    this@BluetoothConnection,
+                    this@BluetoothConnection,
+                    this@BluetoothConnection
+                )
                 mHexoskinAPI!!.Init()
                 mHexoskinAPI!!.enableBluetoothTransmission()
                 mHexoskinAPI!!.setRealTimeMode(true, false, true, true, true)
@@ -212,6 +218,7 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                         val correction = mCorrector.getCorrectedRespiration(adjustedTimestamp)
                         mAbdoCorrected = correction.abdominal
                         mThorCorrected = correction.thorasic
+                        Log.i("mAbdo", "$mAbdoCorrected")
                     }
                 }
                 mThorRaw = values[0][0]
@@ -267,5 +274,24 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         Toast.makeText(this, "disconnected", Toast.LENGTH_SHORT).show()
     }
 
+}
+
+class StartBluetoothConnection(
+    private val mDevice: BluetoothDevice?,
+    private val applicationContext: Context
+) {
+    //Binding service
+    private lateinit var serviceIntent: Intent
+
+
+    fun startBluetoothConnection(): Intent {
+        //setup and start bluetooth service
+        serviceIntent = Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
+            //applicationContext.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+            intent.putExtra("Device", mDevice)
+            applicationContext.startService(intent)
+        }
+        return serviceIntent
+    }
 }
 

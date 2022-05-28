@@ -3,9 +3,7 @@ package com.example.breathingmeditationandroid
 import android.util.Log
 import kotlin.math.absoluteValue
 
-class BreathingUtils(mService: BluetoothConnection) {
-
-    private val mService: BluetoothConnection = mService
+class BreathingUtils(private val mService: BluetoothConnection) {
 
     lateinit var calibratedAbdo: Pair<Double, Double>
     lateinit var calibratedThor: Pair<Double, Double>

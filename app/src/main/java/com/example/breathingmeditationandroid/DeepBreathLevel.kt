@@ -1,6 +1,5 @@
 package com.example.breathingmeditationandroid
 
-import android.media.Image
 import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.Animation

@@ -1,6 +1,5 @@
 package com.example.breathingmeditationandroid
 
-import android.bluetooth.BluetoothDevice
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -13,20 +12,14 @@ import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
 
 
 class GameScreen : ComponentActivity() {
-
-    //Bluetooth Connection
-    private var mDevice: BluetoothDevice? = null
-
     //Binding service
     private lateinit var serviceIntent: Intent
     private lateinit var mService: BluetoothConnection
-    private var mBound = false
 
     private lateinit var breathingUtils: BreathingUtils
     private lateinit var deepAbdoBreathGesture: DeepAbdoBreathGesture
@@ -37,6 +30,7 @@ class GameScreen : ComponentActivity() {
 
     private lateinit var snow: ImageView
 
+    //TODO: Global irgendwo definieren für alle activites?
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as BluetoothConnection.LocalBinder
@@ -59,8 +53,9 @@ class GameScreen : ComponentActivity() {
         setContentView(R.layout.game_screen)
         snow = findViewById<View>(R.id.snow) as ImageView
 
-        startBluetoothConnection()
-
+        //bind service to activity
+        serviceIntent = intent?.extras?.getParcelable("Intent")!!
+        applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
     }
 
     override fun onDestroy() {
@@ -80,18 +75,6 @@ class GameScreen : ComponentActivity() {
 
             breathingUtils.calibrateBreathing()
             startLevel()
-        }
-    }
-
-
-    private fun startBluetoothConnection() {
-        //setup and start bluetooth service
-        mDevice = intent?.extras?.getParcelable("Device")
-
-        serviceIntent = Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
-            bindService(intent, connection, Context.BIND_AUTO_CREATE)
-            intent.putExtra("Device", mDevice)
-            startService(intent)
         }
     }
 

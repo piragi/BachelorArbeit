@@ -1,6 +1,5 @@
 package com.example.breathingmeditationandroid
 
-import android.util.Log
 import java.lang.System.currentTimeMillis
 import kotlin.concurrent.thread
 import kotlin.math.abs
