@@ -32,6 +32,7 @@ class GameScreen : ComponentActivity() {
     private lateinit var deepAbdoBreathGesture: DeepAbdoBreathGesture
     private lateinit var deepThorBreathGesture: DeepThorBreathGesture
     private lateinit var staccatoBreathGesture: StaccatoBreathGesture
+    private lateinit var sighBreathGesture: SighBreathGesture
     private lateinit var deepBreathLevel: DeepBreathLevel
 
     private lateinit var snow: ImageView
@@ -74,6 +75,7 @@ class GameScreen : ComponentActivity() {
             deepAbdoBreathGesture = DeepAbdoBreathGesture(mService, breathingUtils)
             deepThorBreathGesture = DeepThorBreathGesture(mService, breathingUtils)
             staccatoBreathGesture = StaccatoBreathGesture(mService, breathingUtils)
+            sighBreathGesture = SighBreathGesture(mService, breathingUtils)
             deepBreathLevel = DeepBreathLevel(snow, this@GameScreen)
 
             breathingUtils.calibrateBreathing()
@@ -102,6 +104,10 @@ class GameScreen : ComponentActivity() {
                     val detectedStaccatoBreathGesture = staccatoBreathGesture.detected()
 
                     if ( detectedStaccatoBreathGesture.await()) {
+                        deepBreathLevel.animationStart()
+                    } else if (detectedAbdoBreathGesture.await()) {
+                        deepBreathLevel.animationStart()
+                    } else if (detectedThorBreathGesture.await()) {
                         deepBreathLevel.animationStart()
                     }
                 }

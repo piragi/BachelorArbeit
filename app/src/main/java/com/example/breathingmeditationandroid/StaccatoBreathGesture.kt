@@ -14,7 +14,7 @@ class StaccatoBreathGesture(
         val bufferStaccato: MutableList<Double> = mutableListOf()
         var staccatoDetetected = false
 
-        while (true) {
+        while (!staccatoDetetected) {
 
             if (mService.mExpiration == 0 && mService.mAbdoCorrected > breathingUtils.calibratedAbdo.first * 0.5) {
                 //everytime there is a updated value -> add to buffer
@@ -28,7 +28,6 @@ class StaccatoBreathGesture(
 
                     if (bufferStaccato[3] >= bufferStaccato[0] * 1.4) {
                         staccatoDetetected = true
-
                         Log.i("staccato", "detected")
                     }
                 } else {
@@ -37,7 +36,6 @@ class StaccatoBreathGesture(
             } else {
                 bufferStaccato.clear()
             }
-
         }
     }
 
