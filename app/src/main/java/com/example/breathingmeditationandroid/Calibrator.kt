@@ -1,11 +1,10 @@
 package com.example.breathingmeditationandroid
 
 import android.util.Log
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import java.lang.System.currentTimeMillis
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.min
 
 object Calibrator {
 
@@ -13,15 +12,15 @@ object Calibrator {
     var calibratedThor: Pair<Double, Double> = Pair(0.0, 0.0)
 
     // Buffers for how much difference there can be for holding breath
-    private var holdBreathBufferInAbdo = 0.0
-    private var holdBreathBufferInThor = 0.0
+    var holdBreathBufferInAbdo = 0.0
+    var holdBreathBufferInThor = 0.0
 
     //TODO check if this can be calculated from in and out buffer
-    private var holdBreathBufferMiddleAbdo = 0.0
-    private var holdBreathBufferMiddleThor = 0.0
+    var holdBreathBufferMiddleAbdo = 0.0
+    var holdBreathBufferMiddleThor = 0.0
 
-    private var holdBreathBufferOutAbdo = 0.0
-    private var holdBreathBufferOutThor = 0.0
+    var holdBreathBufferOutAbdo = 0.0
+    var holdBreathBufferOutThor = 0.0
 
     var flowFactorXUp = 0.0
     var flowFactorYUp = 0.0
@@ -43,6 +42,7 @@ object Calibrator {
 
     //TODO: muss doch smarter gehen
     //TODO: als Coroutine dann kann sich der screen schön bewegen dazwischen
+    //TODO: 0.0 als minima fixen
 
     private fun calibrateMinAndMax() {
 
@@ -117,6 +117,50 @@ object Calibrator {
         Log.i("calibration", "min and max done")
     }
 
+    fun calibrateMinMax() {
+
+        var minAbdo = Double.POSITIVE_INFINITY
+        var minThor = Double.POSITIVE_INFINITY
+
+        var maxAbdo = Double.NEGATIVE_INFINITY
+        var maxThor = Double.NEGATIVE_INFINITY
+
+        breathingUtils.startFromBeginning()
+        repeat(2) {
+            while (mService.mExpiration == 0) {
+                val mins = determineMin(minAbdo, minThor)
+                val maxs = determineMax(maxAbdo, maxThor)
+
+                minAbdo = mins.first
+                minThor = mins.second
+
+                maxAbdo = maxs.first
+                maxThor = maxs.second
+            }
+            while (mService.mInspiration == 0) {
+                val mins = determineMin(minAbdo, minThor)
+                val maxs = determineMax(maxAbdo, maxThor)
+
+                minAbdo = mins.first
+                minThor = mins.second
+
+                maxAbdo = maxs.first
+                maxThor = maxs.second
+            }
+        }
+        calibratedAbdo = Pair(maxAbdo, minAbdo)
+        calibratedThor = Pair(maxThor, minThor)
+    }
+
+    private fun determineMin(currMinAbdo: Double, currminThor: Double): Pair<Double, Double> {
+        return Pair(min(currMinAbdo, mService.mAbdoCorrected), min(currminThor, mService.mThorCorrected))
+    }
+
+    private fun determineMax(currMaxAbdo: Double, currMaxThor: Double): Pair<Double, Double> {
+        return Pair(max(currMaxAbdo, mService.mAbdoCorrected), max(currMaxThor, mService.mThorCorrected))
+
+    }
+
     fun calibrateMinMaxThor() {
 
     }
@@ -152,12 +196,17 @@ object Calibrator {
                 holdBreathBufferMiddleThor = max(diffValuesThor.average(), holdBreathBufferMiddleThor)
             }
         }
+        Log.i("Calibration", "BufferInAbdo: $holdBreathBufferInAbdo")
+        Log.i("Calibration", "BufferInThor: $holdBreathBufferInThor")
+        Log.i("Calibration", "BufferOutAbdo: $holdBreathBufferOutAbdo")
+        Log.i("Calibration", "BufferOutThor: $holdBreathBufferOutThor")
+
         Log.i("calibration", "breath hold calibration done")
     }
 
     private fun calibrateFlow() {
         Log.i("calibration", "calibrating flow")
-        calibrateMinAndMax()
+        calibrateMinMax()
         calcFlowFactor()
         Log.i("calibration", "finished calibrating flow")
         Log.i("calibration", "min Abdo: ${calibratedAbdo.second} max Abdo: ${calibratedAbdo.first}")
@@ -174,7 +223,7 @@ object Calibrator {
         val combinedValueStart: Double =
             (calibratedAbdo.second.plus(calibratedThor.second))
         val combinedValueEnd: Double =
-            (calibratedAbdo.first.times(0.9).plus(calibratedThor.first.times(0.9)))
+            (calibratedAbdo.first.times(0.6).plus(calibratedThor.first.times(0.6)))
         correction = 0 - combinedValueStart
         flowFactorXUp = (xEnd.minus(xStart)).div(combinedValueEnd.plus(correction))
         flowFactorYUp = (yEnd.minus(yStart)).div(combinedValueEnd.plus(correction))

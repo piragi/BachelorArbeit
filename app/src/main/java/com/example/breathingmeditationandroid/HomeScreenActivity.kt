@@ -12,10 +12,8 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
-import androidx.lifecycle.lifecycleScope
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.plattysoft.leonids.ParticleSystem
-import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
 import kotlin.math.abs
 import kotlin.math.floor
@@ -177,6 +175,9 @@ class HomeScreenActivity : ComponentActivity() {
                 if (selectionDetected) {
                     if (inBubble(coordinatesBubble1)) {
                         setAlpha(bubble1, 1.0f)
+                        holdBreathGesture.stop = false
+                        holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
+                        holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
                         if (holdBreathGesture.hold) {
                             Intent(this, AboutScreen::class.java).also { intent ->
                                 intent.putExtra("mDevice", mDevice)
@@ -186,6 +187,9 @@ class HomeScreenActivity : ComponentActivity() {
                     }
                     if (inBubble(coordinatesBubble2)) {
                         setAlpha(bubble2, 1.0f)
+                        holdBreathGesture.stop = false
+                        holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
+                        holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
                         if (holdBreathGesture.hold) {
                             Intent(this, CalibrationScreenActivity::class.java).also { intent ->
                                 intent.putExtra("mDevice", mDevice)
@@ -195,6 +199,9 @@ class HomeScreenActivity : ComponentActivity() {
                     }
                     if (inBubble(coordinatesBubble3)) {
                         setAlpha(bubble3, 1.0f)
+                        holdBreathGesture.stop = false
+                        holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
+                        holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
                         if (holdBreathGesture.hold) {
                             Intent(this, GameScreen::class.java).also { intent ->
                                 intent.putExtra("mDevice", mDevice)
@@ -207,7 +214,6 @@ class HomeScreenActivity : ComponentActivity() {
                     setAlpha(bubble1, 0.7f)
                     setAlpha(bubble2, 0.7f)
                     setAlpha(bubble3, 0.7f)
-
                 }
                 Thread.sleep(10)
             }
