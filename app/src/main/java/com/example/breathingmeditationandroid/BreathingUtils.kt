@@ -1,19 +1,16 @@
 package com.example.breathingmeditationandroid
 
 import android.util.Log
-import androidx.fragment.app.Fragment
 import kotlin.math.absoluteValue
 
-class BreathingUtils(mService: BluetoothConnection) {
-
-    private val mService: BluetoothConnection = mService
+class BreathingUtils(private val mService: BluetoothConnection) {
 
     lateinit var calibratedAbdo: Pair<Double, Double>
     lateinit var calibratedThor: Pair<Double, Double>
 
     //TODO: muss doch smarter gehen
     //TODO: als Coroutine dann kann sich der screen schön bewegen dazwischen
-    fun calibrateBreathing(): Pair<Pair<Double, Double>, Pair<Double, Double>> {
+    fun calibrateBreathing(){
 
         val minimaAbdo: ArrayList<Double> = ArrayList()
         val maximaAbdo: ArrayList<Double> = ArrayList()
@@ -31,7 +28,7 @@ class BreathingUtils(mService: BluetoothConnection) {
                     minimaAbdo.add(lokalMinima)
                     lokalMinima = 0.0
                 }
-                if (mService.mAbdoCorrected > lokalMinima) {
+                if (mService.mAbdoCorrected > lokalMaxima) {
                     lokalMaxima = mService.mAbdoCorrected
                 }
             }
@@ -71,12 +68,13 @@ class BreathingUtils(mService: BluetoothConnection) {
             }
         }
 
-        calibratedAbdo = Pair(mService.calculateMedian(maximaAbdo) * 1.2, mService.calculateMedian(minimaAbdo) * 1.2)
-        calibratedThor = Pair(mService.calculateMedian(maximaThor) * 1.2, mService.calculateMedian(minimaThor) * 1.2)
-
-        return Pair(
-            calibratedAbdo,
-            calibratedThor
+        calibratedAbdo = Pair(
+            mService.calculateMedian(maximaAbdo) * 1.2,
+            mService.calculateMedian(minimaAbdo) * 1.2
+        )
+        calibratedThor = Pair(
+            mService.calculateMedian(maximaThor) * 1.2,
+            mService.calculateMedian(minimaThor) * 1.2
         )
     }
 
@@ -119,17 +117,6 @@ class BreathingUtils(mService: BluetoothConnection) {
         return Pair(medianAbdo, medianThor)
     }
 
-    fun deepBreathDetected() {
-        while (mService.mAbdoCorrected < calibratedAbdo.second * 0.95
-            || mService.mThorCorrected < calibratedThor.second * 0.95
-        ) {
-            Thread.sleep(2)
-        }
-
-        while (mService.mExpiration == 0) {
-        }
-    }
-
     fun detectRespiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
         return curr.first < prev.first && curr.second < prev.second
     }
@@ -169,8 +156,10 @@ class BreathingUtils(mService: BluetoothConnection) {
     }
 
     private fun calculateMedian(list: MutableList<Pair<Double, Double>>): Pair<Double, Double> {
-        val medianThor = (list[list.size.div(2)].first.plus(list[list.size.div(2).plus(1)].first)).div(2)
-        val medianAbdo = (list[list.size.div(2)].second.plus(list[list.size.div(2).plus(1)].second)).div(2)
+        val medianThor =
+            (list[list.size.div(2)].first.plus(list[list.size.div(2).plus(1)].first)).div(2)
+        val medianAbdo =
+            (list[list.size.div(2)].second.plus(list[list.size.div(2).plus(1)].second)).div(2)
         return Pair(medianAbdo, medianThor)
     }
 }

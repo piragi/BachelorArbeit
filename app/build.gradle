@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 32
 
     defaultConfig {
         applicationId "com.example.breathingmeditationandroid"
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 32
         versionCode 1
         versionName "1.0"
         vectorDrawables.useSupportLibrary = true
@@ -36,6 +36,7 @@ repositories {
     flatDir {
         dirs 'libs'
     }
+
     maven {
         url 'https://jitpack.io'
     }
@@ -50,7 +51,9 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.5.0'
     implementation 'androidx.activity:activity-ktx:1.4.0'
-    implementation(name: 'hsapi_android-release', ext: 'aar')
+    implementation(name:'hsapi_android-release', ext:'aar')
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9'
+    implementation 'com.plattysoft.leonids:LeonidsLib:1.3.2'
 
     implementation 'com.github.ultimateHandsomeBoy666:Particle:0.1.2'
     implementation 'com.plattysoft.leonids:LeonidsLib:1.3.2'

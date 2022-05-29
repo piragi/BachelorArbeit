@@ -2,10 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.example.breathingmeditationandroid">
 
-
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
     <uses-permission android:name="android.permission.BLUETOOTH"/>
 
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
 
     <application
         android:allowBackup="true"
@@ -24,10 +23,8 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".TestView"
+        <activity android:name=".GameScreen"
             android:hardwareAccelerated="true">
-        </activity>
-        <activity android:name=".GameScreen">
         </activity>
         <activity android:name=".HomeScreenActivity">
         </activity>

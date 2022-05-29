@@ -2,8 +2,9 @@ package com.example.breathingmeditationandroid
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -35,7 +36,8 @@ class StartupActivity : AppCompatActivity() {
 
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.BLUETOOTH), 0)
 
-        val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
+        val manager: BluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothAdapter = manager.adapter
         val pairedDevices: Set<BluetoothDevice>? = bluetoothAdapter?.bondedDevices
 
         //TODO: change the null check
@@ -73,11 +75,16 @@ class StartupActivity : AppCompatActivity() {
             lateinit var device: BluetoothDevice
             var textView: TextView = v.findViewById(R.id.row_item) as TextView
 
+
             init {
                 val container = v.findViewById<LinearLayout>(R.id.container)
                 container.setOnClickListener {
-                    Intent(applicationContext, HomeScreenActivity::class.java).also { intent ->
-                        intent.putExtra("Device", device)
+
+                    val bluetoothConnection = StartBluetoothConnection(device, applicationContext)
+                    val serviceIntent = bluetoothConnection.startBluetoothConnection()
+
+                    Intent(applicationContext, GameScreen::class.java).also { intent ->
+                        intent.putExtra("Intent", serviceIntent)
                         startActivity(intent)
                     }
                 }
