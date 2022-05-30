@@ -1,6 +1,9 @@
-package com.example.breathingmeditationandroid
+package com.example.breathingmeditationandroid.gestures
 
 import android.util.Log
+import com.example.breathingmeditationandroid.BluetoothConnection
+import com.example.breathingmeditationandroid.BreathingUtils
+import com.example.breathingmeditationandroid.Calibrator
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 
@@ -16,12 +19,12 @@ class StaccatoBreathGesture(
 
         while (!staccatoDetetected) {
 
-            if (mService.mExpiration == 0 && mService.mAbdoCorrected > breathingUtils.calibratedAbdo.first * 0.5) {
+            if (mService.mExpiration == 0 && mService.mAbdoCorrected > Calibrator.calibratedAbdo.first * 0.5) {
                 //everytime there is a updated value -> add to buffer
                 if (bufferStaccato.size == 4) {
                     if (bufferStaccato[3] != mService.mAbdoCorrected) {
                         Log.i("valuesBuffer", "$bufferStaccato")
-                        Log.i("calibration", "${breathingUtils.calibratedAbdo.first * 0.5}")
+                        Log.i("calibration", "${Calibrator.calibratedAbdo.first * 0.5}")
                         bufferStaccato.removeAt(0)
                         bufferStaccato.add(mService.mAbdoCorrected)
                     }

@@ -1,6 +1,5 @@
 package com.example.breathingmeditationandroid
 
-import android.bluetooth.BluetoothDevice
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -22,10 +21,10 @@ class HomeScreenActivity : ComponentActivity() {
     private lateinit var container: ViewGroup
     private lateinit var particlesMain: ParticleSystem
     private lateinit var particlesSupprt: ParticleSystem
-    private var mDevice: BluetoothDevice? = null
+    private lateinit var serviceIntent: Intent
     private lateinit var mService: BluetoothConnection
-    private var mBound = false
     private lateinit var breathingUtils: BreathingUtils
+
     private val xBorderLeft = 100 //TODO relative to device
     private val xBorderRight = 2000
     private val yBorderTop = 300
@@ -44,45 +43,46 @@ class HomeScreenActivity : ComponentActivity() {
     private lateinit var bubble3: ImageView
     private lateinit var holdBreathGesture: HoldBreathGesture
 
-    private var stop = false
+    // private var stop = false
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as BluetoothConnection.LocalBinder
             mService = binder.getService()
             breathingUtils = BreathingUtils(mService)
-            mBound = true
             holdBreathGesture = HoldBreathGesture(mService, 5000.0)
-            bubble2.alpha = 1.0f
+            holdBreathGesture.detect()
+
             initializeParticleSystems()
             animateLeaves()
-            holdBreathGesture.detect()
 
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             mService.stopService(intent)
-            mBound = false
             return
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.home_screen)
         container = findViewById(R.id.home_screen)
         bubble1 = findViewById(R.id.imageViewSettings)
         bubble2 = findViewById(R.id.imageViewCalibrate)
         bubble3 = findViewById(R.id.imageViewPlay)
-        mDevice = intent?.extras?.getParcelable("Device")
+
         currX = xBorderLeft.toDouble()
         currY = yBorderBottom.toDouble()
-        Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
-            bindService(intent, connection, Context.BIND_AUTO_CREATE)
-            intent.putExtra("Device", mDevice)
-            stop = false
-            startService(intent)
-        }
+        // stop = false
+        serviceIntent = intent?.extras?.getParcelable("Intent")!!
+        applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopService(serviceIntent)
     }
 
     private fun initializeParticleSystems() {
@@ -111,7 +111,7 @@ class HomeScreenActivity : ComponentActivity() {
             // TODO detect selection funktioniert nich immer
             detectSelections(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
             breathingUtils.startFromBeginning()
-            while (!stop) {
+            while (true) { // while !stop
                 val currValue = breathingUtils.smoothValue()
                 val combinedValue = breathingUtils.calcCombinedValue(currValue.first, currValue.second)
 
@@ -178,9 +178,9 @@ class HomeScreenActivity : ComponentActivity() {
                         holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
                         holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
                         if (holdBreathGesture.hold) {
-                            stop = true
+                            // stop = true
                             Intent(this, AboutScreen::class.java).also { intent ->
-                                intent.putExtra("mDevice", mDevice)
+                                intent.putExtra("Intent", serviceIntent)
                                 startActivity(intent)
                             }
                         }
@@ -191,9 +191,9 @@ class HomeScreenActivity : ComponentActivity() {
                         holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
                         holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
                         if (holdBreathGesture.hold) {
-                            stop = true
+                            // stop = true
                             Intent(this, CalibrationScreenActivity::class.java).also { intent ->
-                                intent.putExtra("mDevice", mDevice)
+                                intent.putExtra("Intent", serviceIntent)
                                 startActivity(intent)
                             }
                         }
@@ -204,9 +204,9 @@ class HomeScreenActivity : ComponentActivity() {
                         holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
                         holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
                         if (holdBreathGesture.hold) {
-                            stop = true
+                            // stop = true
                             Intent(this, GameScreen::class.java).also { intent ->
-                                intent.putExtra("mDevice", mDevice)
+                                intent.putExtra("Intent", serviceIntent)
                                 startActivity(intent)
                             }
                         }

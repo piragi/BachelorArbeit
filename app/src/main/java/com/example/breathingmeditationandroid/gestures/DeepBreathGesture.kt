@@ -1,6 +1,9 @@
-package com.example.breathingmeditationandroid
+package com.example.breathingmeditationandroid.gestures
 
 import android.util.Log
+import com.example.breathingmeditationandroid.BluetoothConnection
+import com.example.breathingmeditationandroid.BreathingUtils
+import com.example.breathingmeditationandroid.Calibrator
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 
@@ -10,7 +13,7 @@ class DeepThorBreathGesture(
 ) : IBreathingGesture {
 
     override fun detect() {
-        while (mService.mThorCorrected < breathingUtils.calibratedThor.first) {
+        while (mService.mThorCorrected < Calibrator.calibratedThor.first) {
             Thread.sleep(2)
         }
 
@@ -34,7 +37,7 @@ class DeepAbdoBreathGesture(
 ) : IBreathingGesture {
 
     override fun detect() {
-        while (mService.mAbdoCorrected < breathingUtils.calibratedAbdo.first) {
+        while (mService.mAbdoCorrected < Calibrator.calibratedAbdo.first) {
             Thread.sleep(2)
         }
 

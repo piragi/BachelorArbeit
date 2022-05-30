@@ -17,10 +17,9 @@ import kotlinx.coroutines.*
 import kotlin.concurrent.thread
 
 class CalibrationScreenActivity : ComponentActivity() {
-    private var mDevice: BluetoothDevice? = null
-    private var mBound = false
     private var calibrationDetected = false
     private var calibrationFinished = false
+    private lateinit var serviceIntent: Intent
     private lateinit var mService: BluetoothConnection
     private lateinit var greySky: ImageView
     private lateinit var clouds: ImageView
@@ -37,7 +36,6 @@ class CalibrationScreenActivity : ComponentActivity() {
             val binder = service as BluetoothConnection.LocalBinder
             mService = binder.getService()
             Calibrator.initialize(mService)
-            mBound = true
             breathingUtils = BreathingUtils(mService)
             lifecycleScope.launch { handleCalibration() }
             lifecycleScope.launch { changeScreen() }
@@ -45,7 +43,6 @@ class CalibrationScreenActivity : ComponentActivity() {
 
         override fun onServiceDisconnected(p0: ComponentName?) {
             mService.stopService(intent)
-            mBound = false
             return
         }
     }
@@ -58,12 +55,13 @@ class CalibrationScreenActivity : ComponentActivity() {
         background = findViewById(R.id.calibration_background)
         text = findViewById(R.id.text)
         snow()
-        mDevice = intent?.extras?.getParcelable("Device")
-        Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
-            bindService(intent, connection, Context.BIND_AUTO_CREATE)
-            intent.putExtra("Device", mDevice)
-            startService(intent)
-        }
+        serviceIntent = intent?.extras?.getParcelable("Intent")!!
+        applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopService(serviceIntent)
     }
 
     private suspend fun handleCalibration() = withContext(Dispatchers.Default) {
@@ -117,8 +115,8 @@ class CalibrationScreenActivity : ComponentActivity() {
             while (!calibrationFinished) {
                 continue
             }
-            Intent(this, HomeScreenActivity::class.java).also { intent ->
-                intent.putExtra("Device", mDevice)
+            Intent(this, GameScreen::class.java).also { intent ->
+                intent.putExtra("Intent", serviceIntent)
                 startActivity(intent)
                 overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
             }

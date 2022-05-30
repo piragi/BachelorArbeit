@@ -11,6 +11,10 @@ import android.view.View
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.breathingmeditationandroid.gestures.DeepAbdoBreathGesture
+import com.example.breathingmeditationandroid.gestures.DeepThorBreathGesture
+import com.example.breathingmeditationandroid.gestures.SighBreathGesture
+import com.example.breathingmeditationandroid.gestures.StaccatoBreathGesture
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
@@ -72,8 +76,6 @@ class GameScreen : ComponentActivity() {
             staccatoBreathGesture = StaccatoBreathGesture(mService, breathingUtils)
             sighBreathGesture = SighBreathGesture(mService, breathingUtils)
             deepBreathLevel = DeepBreathLevel(snow, this@GameScreen)
-
-            breathingUtils.calibrateBreathing()
             startLevel()
         }
     }

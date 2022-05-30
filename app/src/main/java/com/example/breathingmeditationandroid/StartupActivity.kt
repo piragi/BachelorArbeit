@@ -84,7 +84,7 @@ class StartupActivity : AppCompatActivity() {
                     val serviceIntent = bluetoothConnection.startBluetoothConnection()
 
                     Intent(applicationContext, CalibrationScreenActivity::class.java).also { intent ->
-                        intent.putExtra("Device", device)
+                        intent.putExtra("Intent", serviceIntent)
                         startActivity(intent)
                     }
                 }

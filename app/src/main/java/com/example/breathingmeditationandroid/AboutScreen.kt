@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 
 class AboutScreen : ComponentActivity() {
     private lateinit var mDevice: BluetoothDevice
+    private lateinit var serviceIntent: Intent
     private lateinit var mService: BluetoothConnection
     private var mBound: Boolean = false
 
@@ -24,14 +25,12 @@ class AboutScreen : ComponentActivity() {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as BluetoothConnection.LocalBinder
             mService = binder.getService()
-            mBound = true
             Log.i("Calibration", "start")
             lifecycleScope.launch { Calibrator.calibrate() }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             mService.stopService(intent)
-            mBound = false
             return
         }
     }
@@ -41,10 +40,12 @@ class AboutScreen : ComponentActivity() {
         super.onCreate(savedInstanceState, persistentState)
         setContentView(R.id.about_screen)
 
-        Intent(applicationContext, BluetoothConnection::class.java).also { intent ->
-            bindService(intent, connection, Context.BIND_AUTO_CREATE)
-            intent.putExtra("Device", mDevice)
-            startService(intent)
-        }
+        serviceIntent = intent?.extras?.getParcelable("Intent")!!
+        applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopService(serviceIntent)
     }
 }

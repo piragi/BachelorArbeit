@@ -1,6 +1,9 @@
-package com.example.breathingmeditationandroid
+package com.example.breathingmeditationandroid.gestures
 
 import android.util.Log
+import com.example.breathingmeditationandroid.BluetoothConnection
+import com.example.breathingmeditationandroid.BreathingUtils
+import com.example.breathingmeditationandroid.Calibrator
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 
@@ -17,7 +20,7 @@ class SighBreathGesture(
 
         while (!sighDetected) {
 
-            if (mService.mInspiration == 0 && mService.mThorCorrected > breathingUtils.calibratedThor.first * 0.5) {
+            if (mService.mInspiration == 0 && mService.mThorCorrected > Calibrator.calibratedThor.first * 0.5) {
                 if (bufferSigh.size == 4) {
                     if (bufferSigh[3] != mService.mThorCorrected) {
                         bufferSigh.removeAt(0)
