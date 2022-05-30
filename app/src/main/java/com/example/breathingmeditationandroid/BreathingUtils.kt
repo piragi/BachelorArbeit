@@ -1,82 +1,10 @@
 package com.example.breathingmeditationandroid
 
 import android.util.Log
+import java.lang.System.currentTimeMillis
 import kotlin.math.absoluteValue
 
 class BreathingUtils(private val mService: BluetoothConnection) {
-
-    lateinit var calibratedAbdo: Pair<Double, Double>
-    lateinit var calibratedThor: Pair<Double, Double>
-
-    //TODO: muss doch smarter gehen
-    //TODO: als Coroutine dann kann sich der screen schön bewegen dazwischen
-    fun calibrateBreathing(){
-
-        val minimaAbdo: ArrayList<Double> = ArrayList()
-        val maximaAbdo: ArrayList<Double> = ArrayList()
-        val minimaThor: ArrayList<Double> = ArrayList()
-        val maximaThor: ArrayList<Double> = ArrayList()
-        //TODO: lokal mit k?!?!
-        var lokalMinima = 0.0
-        var lokalMaxima = 0.0
-
-        Log.i("Calibration:", "Abdo")
-        //first abdo
-        repeat(1) {
-            while (mService.mExpiration == 0) {
-                if (!lokalMinima.equals(0.0)) {
-                    minimaAbdo.add(lokalMinima)
-                    lokalMinima = 0.0
-                }
-                if (mService.mAbdoCorrected > lokalMaxima) {
-                    lokalMaxima = mService.mAbdoCorrected
-                }
-            }
-
-            while (mService.mInspiration == 0) {
-                if (!lokalMaxima.equals(0.0)) {
-                    maximaAbdo.add(lokalMaxima)
-                    lokalMaxima = 0.0
-                }
-                if (mService.mAbdoCorrected < lokalMinima) {
-                    lokalMinima = mService.mAbdoCorrected
-                }
-            }
-        }
-        Log.i("Calibration:", "thor")
-        //then thor
-        repeat(1) {
-            while (mService.mExpiration == 0) {
-                if (!lokalMinima.equals(0.0)) {
-                    minimaThor.add(lokalMinima)
-                    lokalMinima = 0.0
-                }
-                if (mService.mThorCorrected > lokalMaxima) {
-                    lokalMaxima = mService.mThorCorrected
-
-                }
-            }
-
-            while (mService.mInspiration == 0) {
-                if (!lokalMaxima.equals(0.0)) {
-                    maximaThor.add(lokalMaxima)
-                    lokalMaxima = 0.0
-                }
-                if (mService.mThorCorrected < lokalMinima) {
-                    lokalMinima = mService.mThorCorrected
-                }
-            }
-        }
-
-        calibratedAbdo = Pair(
-            mService.calculateMedian(maximaAbdo) * 1.2,
-            mService.calculateMedian(minimaAbdo) * 1.2
-        )
-        calibratedThor = Pair(
-            mService.calculateMedian(maximaThor) * 1.2,
-            mService.calculateMedian(minimaThor) * 1.2
-        )
-    }
 
     fun calculateRelativePosition(
         calibratedValue: Pair<Pair<Double, Double>, Pair<Double, Double>>,
@@ -117,6 +45,17 @@ class BreathingUtils(private val mService: BluetoothConnection) {
         return Pair(medianAbdo, medianThor)
     }
 
+    fun deepBreathDetected() {
+        while (mService.mAbdoCorrected < Calibrator.calibratedAbdo.second * 0.95
+            || mService.mThorCorrected < Calibrator.calibratedThor.second * 0.95
+        ) {
+            Thread.sleep(2)
+        }
+
+        while (mService.mExpiration == 0) {
+        }
+    }
+
     fun detectRespiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
         return curr.first < prev.first && curr.second < prev.second
     }
@@ -125,34 +64,32 @@ class BreathingUtils(private val mService: BluetoothConnection) {
         return curr.first > prev.first && curr.second > prev.second
     }
 
-    fun startFromBeginning(prevAbdo: Double, prevThor: Double) {
-        // damit man nicht mitten in der atmung anfaengt
-        if (detectInspiration(
-                Pair(prevAbdo, prevThor),
-                Pair(smoothPlayerPosition().first, smoothPlayerPosition().second)
-            )
-        ) {
-            while (!detectRespiration(
-                    Pair(prevAbdo, prevThor),
-                    Pair(smoothPlayerPosition().first, smoothPlayerPosition().second)
-                )
-            )
+    fun startFromBeginning() {
+        repeat(1) {
+            while (mService.mExpiration == 0) {
                 continue
-        } else
-            while (!detectInspiration(
-                    Pair(prevAbdo, prevThor),
-                    Pair(smoothPlayerPosition().first, smoothPlayerPosition().second)
-                )
-            )
+            }
+            while (mService.mInspiration == 0) {
                 continue
+            }
+        }
     }
 
     fun smoothValue(): Pair<Double, Double> {
-        val valueList = mutableListOf(Pair(mService.mAbdoCorrected, mService.mThorCorrected))
-        while (valueList.size <= 6) {
-            valueList.add(Pair(mService.mAbdoCorrected, mService.mThorCorrected))
+        val valueListAbdo = arrayListOf(mService.mAbdoCorrected, mService.mThorCorrected)
+        val valueListThor = arrayListOf(mService.mThorCorrected)
+        while (valueListAbdo.size <= 6 && valueListThor.size <= 6) {
+            valueListAbdo.add(mService.mAbdoCorrected)
+            valueListThor.add(mService.mThorCorrected)
         }
-        return calculateMedian(valueList)
+        return Pair(mService.smoothData(valueListAbdo), mService.smoothData(valueListThor))
+    }
+
+    fun calcCombinedValue(valAbdo: Double, valThor: Double): Double {
+        val combinedValue = (valAbdo.plus(valThor)).plus(Calibrator.correction)
+        return if (combinedValue >= 0)
+            combinedValue
+        else 0.0
     }
 
     private fun calculateMedian(list: MutableList<Pair<Double, Double>>): Pair<Double, Double> {
@@ -161,5 +98,15 @@ class BreathingUtils(private val mService: BluetoothConnection) {
         val medianAbdo =
             (list[list.size.div(2)].second.plus(list[list.size.div(2).plus(1)].second)).div(2)
         return Pair(medianAbdo, medianThor)
+    }
+
+    fun detectFiveSecondInspiration(): Boolean {
+        var startTime = currentTimeMillis()
+        while (true) {
+            if (mService.mExpiration == 0 && currentTimeMillis().minus(startTime) >= 5000) {
+                Log.i("calibration", "breathe in for 5 sec detected")
+                return true
+            } else if (mService.mInspiration == 0) startTime = currentTimeMillis()
+        }
     }
 }

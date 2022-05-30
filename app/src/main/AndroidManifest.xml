@@ -16,7 +16,8 @@
         android:largeHeap="true"
         android:theme="@style/Theme.AppCompat.Light">
         <activity android:name=".StartupActivity"
-                  android:exported="true">
+                  android:exported="true"
+                  android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -24,9 +25,14 @@
             </intent-filter>
         </activity>
         <activity android:name=".GameScreen"
-            android:hardwareAccelerated="true">
+                  android:hardwareAccelerated="true"
+                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         </activity>
-        <activity android:name=".HomeScreenActivity">
+        <activity android:name=".CalibrationScreenActivity"
+                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+        </activity>
+        <activity android:name=".HomeScreenActivity"
+                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         </activity>
         <activity android:name=".AboutScreen">
         </activity>
