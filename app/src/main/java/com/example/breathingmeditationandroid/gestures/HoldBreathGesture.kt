@@ -32,7 +32,7 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
                     // Log.i("BreathHold", "hold: $hold")
                     val currValue = breathingUtils.smoothValue()
                     if (!checkPrevValue(
-                            Pair(prevValue.second, prevValue.second),
+                            Pair(prevValue.first, prevValue.second),
                             Pair(currValue.first, currValue.second)
                         )
                     ) {
@@ -42,18 +42,18 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
                         hold = true
                         startTime = currentTimeMillis()
                     }
-                    // Thread.sleep(20)
+                    Thread.sleep(5)
                     prevValue = breathingUtils.smoothValue()
                 } else startTime = currentTimeMillis()
             }
         }
     }
 
-    // TODO fix here
-
     private fun checkPrevValue(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
+        Log.i("BreathHold", "Prev Abdo: ${prev.first}")
+        Log.i("BreathHold", "Curr Abdo: ${curr.first}")
         Log.i("BreathHold", "Abdo: ${prev.first.minus(curr.first)}, Border: ${borderAbdo.times(1.2)}")
-        Log.i("BreathHold", "Thor: ${prev.second.minus(curr.second)}, Border: ${borderThor.times(1.2)}")
+        // Log.i("BreathHold", "Thor: ${prev.second.minus(curr.second)}, Border: ${borderThor.times(1.2)}")
 
         return abs(prev.first.minus(curr.first)) <= borderAbdo.times(1.2)
                 && abs(prev.second.minus(curr.second)) <= borderThor.times(1.2)

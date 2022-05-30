@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.util.Log
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
@@ -99,26 +98,25 @@ class HomeScreenActivity : ComponentActivity() {
             .setRotationSpeedRange(5f, 50f)
             .setFadeOut(250, AccelerateInterpolator())
             .emit(xBorderLeft, yBorderBottom, 10)
-        Log.i("init:", "particles initialized")
     }
 
     private fun animateLeaves() {
-        //TODO weg aus der methode
         val coordinatesBubble1 = Pair(bubble1.left, bubble1.right)
         val coordinatesBubble2 = Pair(bubble2.left, bubble2.right)
         val coordinatesBubble3 = Pair(bubble3.left, bubble3.right)
-        detectSelections(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
         val currVal = breathingUtils.smoothValue()
         prevAbdo = currVal.first
         prevThor = currVal.second
         thread(start = true, isDaemon = true) {
+            // TODO detect selection funktioniert nich immer
+            detectSelections(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
             breathingUtils.startFromBeginning()
             while (!stop) {
                 val currValue = breathingUtils.smoothValue()
                 val combinedValue = breathingUtils.calcCombinedValue(currValue.first, currValue.second)
 
-                currX = (combinedValue).times(Calibrator.flowFactorXUp).plus(xBorderLeft)
-                currY = (combinedValue).times(Calibrator.flowFactorYUp).plus(yBorderBottom)
+                currX = (combinedValue).times(Calibrator.flowFactorX).plus(xBorderLeft)
+                currY = (combinedValue).times(Calibrator.flowFactorY).plus(yBorderBottom)
 
                 moveLeaves(currX, currY, particlesMain)
                 moveLeaves(currX, currY, particlesSupprt)
@@ -172,6 +170,7 @@ class HomeScreenActivity : ComponentActivity() {
     ) {
         thread(start = true, isDaemon = true) {
             while (true) {
+                //TODO implement changing screens
                 if (selectionDetected) {
                     if (inBubble(coordinatesBubble1)) {
                         setAlpha(bubble1, 1.0f)
@@ -179,6 +178,7 @@ class HomeScreenActivity : ComponentActivity() {
                         holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
                         holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
                         if (holdBreathGesture.hold) {
+                            stop = true
                             Intent(this, AboutScreen::class.java).also { intent ->
                                 intent.putExtra("mDevice", mDevice)
                                 startActivity(intent)
@@ -191,6 +191,7 @@ class HomeScreenActivity : ComponentActivity() {
                         holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
                         holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
                         if (holdBreathGesture.hold) {
+                            stop = true
                             Intent(this, CalibrationScreenActivity::class.java).also { intent ->
                                 intent.putExtra("mDevice", mDevice)
                                 startActivity(intent)
@@ -203,6 +204,7 @@ class HomeScreenActivity : ComponentActivity() {
                         holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
                         holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
                         if (holdBreathGesture.hold) {
+                            stop = true
                             Intent(this, GameScreen::class.java).also { intent ->
                                 intent.putExtra("mDevice", mDevice)
                                 startActivity(intent)
@@ -215,7 +217,7 @@ class HomeScreenActivity : ComponentActivity() {
                     setAlpha(bubble2, 0.7f)
                     setAlpha(bubble3, 0.7f)
                 }
-                Thread.sleep(10)
+                Thread.sleep(5)
             }
         }
     }

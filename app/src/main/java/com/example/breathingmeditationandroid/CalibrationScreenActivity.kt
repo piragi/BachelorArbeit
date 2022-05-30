@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.*
-import android.util.Log
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.ImageView
@@ -42,7 +41,6 @@ class CalibrationScreenActivity : ComponentActivity() {
             breathingUtils = BreathingUtils(mService)
             lifecycleScope.launch { handleCalibration() }
             lifecycleScope.launch { changeScreen() }
-            Log.i("test", "onServiceConnected done")
         }
 
         override fun onServiceDisconnected(p0: ComponentName?) {
@@ -79,7 +77,6 @@ class CalibrationScreenActivity : ComponentActivity() {
             displayText("Breathe out...", Double.POSITIVE_INFINITY.toLong())
         }
         delay(6000)
-        Log.i("calibration", "calibrate is launching")
         launch { Calibrator.calibrate() }
         var iteration = 0
         repeat(2) {
@@ -120,7 +117,6 @@ class CalibrationScreenActivity : ComponentActivity() {
             while (!calibrationFinished) {
                 continue
             }
-            Log.i("changeScreen", "calibration finished. Changing screen")
             Intent(this, HomeScreenActivity::class.java).also { intent ->
                 intent.putExtra("Device", mDevice)
                 startActivity(intent)
