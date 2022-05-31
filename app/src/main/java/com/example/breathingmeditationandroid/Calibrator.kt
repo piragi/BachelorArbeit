@@ -1,5 +1,6 @@
 package com.example.breathingmeditationandroid
 
+import android.util.Log
 import java.lang.System.currentTimeMillis
 import kotlin.math.abs
 import kotlin.math.max
@@ -52,7 +53,7 @@ object Calibrator {
             continue
 
         //first abdo
-
+        Log.i("Calibration", "Calibrator: Breathe in")
         while (mService.mExpiration == 0) {
             if (!lokalMinima.equals(0.0)) {
                 minimaAbdo.add(lokalMinima)
@@ -62,6 +63,8 @@ object Calibrator {
                 lokalMaxima = mService.mAbdoCorrected
             }
         }
+
+        Log.i("Calibration", "Calibrator: Breathe out")
 
         while (mService.mInspiration == 0) {
             if (!lokalMaxima.equals(0.0)) {
@@ -79,7 +82,7 @@ object Calibrator {
         val maximaThor: ArrayList<Double> = ArrayList()
 
         //then thor
-
+        Log.i("Calibration", "Calibrator: Breathe in")
         while (mService.mExpiration == 0) {
             if (!lokalMinima.equals(0.0)) {
                 minimaThor.add(lokalMinima)
@@ -90,7 +93,7 @@ object Calibrator {
 
             }
         }
-
+        Log.i("Calibration", "Calibrator: Breathe out")
         while (mService.mInspiration == 0) {
             if (!lokalMaxima.equals(0.0)) {
                 maximaThor.add(lokalMaxima)
@@ -102,6 +105,8 @@ object Calibrator {
         }
         calibratedThor =
             Pair(mService.calculateMedian(maximaThor) * 1.2, mService.calculateMedian(minimaThor) * 1.2)
+        Log.i("Calibration", "MaxAbdo: ${calibratedAbdo.first} MinAbdo: ${calibratedAbdo.second}")
+        Log.i("Calibration", "MaxThor: ${calibratedThor.first} MinThor: ${calibratedThor.second}")
     }
 
     fun calibrateBreathHold(time: Int, pos: String) {
@@ -110,6 +115,7 @@ object Calibrator {
         val startTime = currentTimeMillis()
         var prevValueAbdo = breathingUtils.smoothValue().first
         var prevValueThor = breathingUtils.smoothValue().second
+        Log.i("Calibration", "Calibrator: Hold breath")
         while (currentTimeMillis().minus(startTime) < time) {
             diffValuesAbdo.add(abs(breathingUtils.smoothValue().first.minus(prevValueAbdo)))
             diffValuesThor.add(abs(breathingUtils.smoothValue().second.minus(prevValueThor)))
@@ -150,6 +156,5 @@ object Calibrator {
         correction = 0 - combinedValueStart
         flowFactorX = (xEnd.minus(xStart)).div(combinedValueEnd.plus(correction))
         flowFactorY = (yEnd.minus(yStart)).div(combinedValueEnd.plus(correction))
-
     }
 }
