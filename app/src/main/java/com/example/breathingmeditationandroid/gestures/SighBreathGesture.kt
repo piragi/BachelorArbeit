@@ -22,12 +22,15 @@ class SighBreathGesture(
 
             if (mService.mInspiration == 0 && mService.mThorCorrected > Calibrator.calibratedThor.first * 0.5) {
                 if (bufferSigh.size == 4) {
+
                     if (bufferSigh[3] != mService.mThorCorrected) {
+                        Log.i("sigh", "$bufferSigh")
+                        Log.i("calibration", "${Calibrator.calibratedAbdo.first * 0.5}")
                         bufferSigh.removeAt(0)
                         bufferSigh.add(mService.mThorCorrected)
                     }
 
-                    if (bufferSigh[3] <= bufferSigh[0]*0.7) {
+                    if (bufferSigh[3] <= bufferSigh[0]*0.8) {
                         sighDetected = true
 
                         Log.i("sigh", "detected")

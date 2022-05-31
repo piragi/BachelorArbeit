@@ -31,6 +31,7 @@ class GameScreen : ComponentActivity() {
     private lateinit var staccatoBreathGesture: StaccatoBreathGesture
     private lateinit var sighBreathGesture: SighBreathGesture
     private lateinit var deepBreathLevel: DeepBreathLevel
+    private lateinit var birdsEmergingLevel: BirdsEmerging
 
     private lateinit var snow: ImageView
 
@@ -52,6 +53,7 @@ class GameScreen : ComponentActivity() {
     //View starten
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.i("gamescreeen", "started")
 
         //view
         setContentView(R.layout.game_screen)
@@ -76,6 +78,8 @@ class GameScreen : ComponentActivity() {
             staccatoBreathGesture = StaccatoBreathGesture(mService, breathingUtils)
             sighBreathGesture = SighBreathGesture(mService, breathingUtils)
             deepBreathLevel = DeepBreathLevel(snow, this@GameScreen)
+            birdsEmergingLevel = BirdsEmerging(this@GameScreen)
+            birdsEmergingLevel.animationStart()
             startLevel()
         }
     }
@@ -84,20 +88,22 @@ class GameScreen : ComponentActivity() {
         thread(start = true, isDaemon = true) {
             try {
                 lifecycleScope.launch {
-                    val detectedThorBreathGesture = deepThorBreathGesture.detected()
-                    val detectedAbdoBreathGesture = deepAbdoBreathGesture.detected()
-                    val detectedStaccatoBreathGesture = staccatoBreathGesture.detected()
-                    val detectedSighBreathGesture = sighBreathGesture.detected()
+                    deepBreathLevel.animationStart()
 
-                    if ( detectedStaccatoBreathGesture.await()) {
-                        deepBreathLevel.animationStart()
-                    } else if (detectedAbdoBreathGesture.await()) {
-                        deepBreathLevel.animationStart()
-                    } else if (detectedThorBreathGesture.await()) {
-                        deepBreathLevel.animationStart()
-                    } else if (detectedSighBreathGesture.await()) {
-                        deepBreathLevel.animationStart()
-                    }
+//                    val detectedThorBreathGesture = deepThorBreathGesture.detected()
+//                    val detectedAbdoBreathGesture = deepAbdoBreathGesture.detected()
+//                    val detectedStaccatoBreathGesture = staccatoBreathGesture.detected()
+//                    val detectedSighBreathGesture = sighBreathGesture.detected()
+//
+//                    if ( detectedStaccatoBreathGesture.await()) {
+//                        deepBreathLevel.animationStart()
+//                    } else if (detectedAbdoBreathGesture.await()) {
+//                        deepBreathLevel.animationStart()
+//                    } else if (detectedThorBreathGesture.await()) {
+//                        deepBreathLevel.animationStart()
+//                    } else if (detectedSighBreathGesture.await()) {
+//                        deepBreathLevel.animationStart()
+//                    }
                 }
             } catch (consumed: InterruptedException) {
                 Thread.currentThread().interrupt()

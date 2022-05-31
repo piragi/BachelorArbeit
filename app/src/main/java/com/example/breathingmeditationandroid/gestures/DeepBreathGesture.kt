@@ -13,7 +13,7 @@ class DeepThorBreathGesture(
 ) : IBreathingGesture {
 
     override fun detect() {
-        while (mService.mThorCorrected < Calibrator.calibratedThor.first) {
+        while (mService.mThorCorrected < Calibrator.calibratedThor.first * 0.8) {
             Thread.sleep(2)
         }
 
@@ -37,7 +37,7 @@ class DeepAbdoBreathGesture(
 ) : IBreathingGesture {
 
     override fun detect() {
-        while (mService.mAbdoCorrected < Calibrator.calibratedAbdo.first) {
+        while (mService.mAbdoCorrected < Calibrator.calibratedAbdo.first * 0.8) {
             Thread.sleep(2)
         }
 

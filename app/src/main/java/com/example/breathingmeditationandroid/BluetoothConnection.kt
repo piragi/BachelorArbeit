@@ -218,7 +218,7 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                         val correction = mCorrector.getCorrectedRespiration(adjustedTimestamp)
                         mAbdoCorrected = correction.abdominal
                         mThorCorrected = correction.thorasic
-                        Log.i("mAbdo", "$mAbdoCorrected")
+                        //Log.i("mAbdo", "$mAbdoCorrected")
                     }
                 }
                 mThorRaw = values[0][0]
