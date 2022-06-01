@@ -88,7 +88,6 @@ class GameScreen : ComponentActivity() {
         thread(start = true, isDaemon = true) {
             try {
                 lifecycleScope.launch {
-                    deepBreathLevel.animationStart()
 
 //                    val detectedThorBreathGesture = deepThorBreathGesture.detected()
 //                    val detectedAbdoBreathGesture = deepAbdoBreathGesture.detected()
