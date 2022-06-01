@@ -4,10 +4,12 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.drawable.AnimationDrawable
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.View
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
@@ -32,8 +34,11 @@ class GameScreen : ComponentActivity() {
     private lateinit var sighBreathGesture: SighBreathGesture
     private lateinit var deepBreathLevel: DeepBreathLevel
     private lateinit var birdsEmergingLevel: BirdsEmerging
+    private lateinit var feedbackTrees: FeedbackTrees
 
     private lateinit var snow: ImageView
+    private lateinit var trees: ImageView
+    private lateinit var background: ImageView
 
     //TODO: Global irgendwo definieren für alle activites?
     private val connection = object : ServiceConnection {
@@ -58,6 +63,9 @@ class GameScreen : ComponentActivity() {
         //view
         setContentView(R.layout.game_screen)
         snow = findViewById<View>(R.id.snow) as ImageView
+        background = findViewById<View>(R.id.background) as ImageView
+        //trees = findViewById<View>(R.id.trees_neutral) as ImageView
+
 
         //bind service to activity
         serviceIntent = intent?.extras?.getParcelable("Intent")!!
@@ -80,9 +88,11 @@ class GameScreen : ComponentActivity() {
             deepBreathLevel = DeepBreathLevel(snow, this@GameScreen)
             birdsEmergingLevel = BirdsEmerging(this@GameScreen)
             birdsEmergingLevel.animationStart()
+            feedbackTrees = FeedbackTrees(snow, this@GameScreen, mService)
             startLevel()
         }
     }
+
 
     private fun startLevel() {
         thread(start = true, isDaemon = true) {
