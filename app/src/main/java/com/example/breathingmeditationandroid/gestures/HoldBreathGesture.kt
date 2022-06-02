@@ -3,6 +3,8 @@ package com.example.breathingmeditationandroid.gestures
 import android.util.Log
 import com.example.breathingmeditationandroid.BluetoothConnection
 import com.example.breathingmeditationandroid.BreathingUtils
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import java.lang.System.currentTimeMillis
 import kotlin.concurrent.thread
 import kotlin.math.abs
@@ -40,7 +42,7 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
                         startTime = currentTimeMillis()
                     } else if (currentTimeMillis().minus(startTime) >= time) {
                         hold = true
-                        startTime = currentTimeMillis()
+                        break
                     }
                     Thread.sleep(5)
                     prevValue = breathingUtils.smoothValue()
@@ -48,6 +50,11 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
             }
         }
     }
+
+    suspend fun detected() = GlobalScope.async {
+        detect()
+        return@async true
+    }.await()
 
     private fun checkPrevValue(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
         Log.i("BreathHold", "Prev Abdo: ${prev.first}")

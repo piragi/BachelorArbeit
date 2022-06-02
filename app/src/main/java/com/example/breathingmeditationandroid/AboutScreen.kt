@@ -1,7 +1,5 @@
 package com.example.breathingmeditationandroid
 
-import android.annotation.SuppressLint
-import android.bluetooth.BluetoothDevice
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -12,14 +10,11 @@ import android.os.PersistableBundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import kotlinx.coroutines.launch
 
 class AboutScreen : ComponentActivity() {
-    private lateinit var mDevice: BluetoothDevice
     private lateinit var serviceIntent: Intent
     private lateinit var mService: BluetoothConnection
-    private var mBound: Boolean = false
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -35,10 +30,9 @@ class AboutScreen : ComponentActivity() {
         }
     }
 
-    @SuppressLint("ResourceType")
     override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
         super.onCreate(savedInstanceState, persistentState)
-        setContentView(R.id.about_screen)
+        setContentView(R.layout.about_screen)
 
         serviceIntent = intent?.extras?.getParcelable("Intent")!!
         applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)

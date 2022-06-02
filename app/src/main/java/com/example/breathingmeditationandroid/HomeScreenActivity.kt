@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
@@ -55,6 +56,8 @@ class HomeScreenActivity : ComponentActivity() {
 
             initializeParticleSystems()
             animateLeaves()
+
+            Log.i("init", "service connected")
 
         }
 
@@ -107,16 +110,23 @@ class HomeScreenActivity : ComponentActivity() {
         val currVal = breathingUtils.smoothValue()
         prevAbdo = currVal.first
         prevThor = currVal.second
+        Log.i("init", "animate leaves started")
         thread(start = true, isDaemon = true) {
             // TODO detect selection funktioniert nich immer
-            detectSelections(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
-            breathingUtils.startFromBeginning()
+            changeScreen(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
+            // breathingUtils.startFromBeginning()
+            Thread.sleep(5000)
             while (true) { // while !stop
                 val currValue = breathingUtils.smoothValue()
                 val combinedValue = breathingUtils.calcCombinedValue(currValue.first, currValue.second)
 
-                currX = (combinedValue).times(Calibrator.flowFactorX).plus(xBorderLeft)
-                currY = (combinedValue).times(Calibrator.flowFactorY).plus(yBorderBottom)
+                // currX = (combinedValue).times(Calibrator.flowFactorX).plus(xBorderLeft)
+                // currY = (combinedValue).times(Calibrator.flowFactorY).plus(yBorderBottom)
+
+                // for testing purposes
+
+                currX = coordinatesBubble1.first.plus(100).toDouble()
+                currY = 700.0
 
                 moveLeaves(currX, currY, particlesMain)
                 moveLeaves(currX, currY, particlesSupprt)
@@ -127,8 +137,11 @@ class HomeScreenActivity : ComponentActivity() {
 
                 val prevValue = breathingUtils.smoothValue()
 
-                prevAbdo = prevValue.first
-                prevThor = prevValue.second
+                // prevAbdo = prevValue.first
+                // prevThor = prevValue.second
+
+                currX = coordinatesBubble1.first.plus(100).toDouble()
+                currY = 700.0
 
                 prevX = currX
                 prevY = currY
@@ -163,7 +176,7 @@ class HomeScreenActivity : ComponentActivity() {
         }
     }
 
-    private fun detectSelections(
+    private fun changeScreen(
         coordinatesBubble1: Pair<Int, Int>,
         coordinatesBubble2: Pair<Int, Int>,
         coordinatesBubble3: Pair<Int, Int>
@@ -183,6 +196,7 @@ class HomeScreenActivity : ComponentActivity() {
                                 intent.putExtra("Intent", serviceIntent)
                                 startActivity(intent)
                             }
+                            break
                         }
                     }
                     if (inBubble(coordinatesBubble2)) {
