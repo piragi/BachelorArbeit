@@ -34,7 +34,8 @@
         <activity android:name=".HomeScreenActivity"
                   android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         </activity>
-        <activity android:name=".AboutScreen">
+        <activity android:name=".AboutScreen"
+                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         </activity>
         <service android:name=".BluetoothConnection"/>
     </application>
