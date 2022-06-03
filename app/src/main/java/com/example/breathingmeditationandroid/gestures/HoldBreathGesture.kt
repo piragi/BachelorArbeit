@@ -51,11 +51,6 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
         }
     }
 
-    suspend fun detected() = GlobalScope.async {
-        detect()
-        return@async true
-    }.await()
-
     private fun checkPrevValue(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
         Log.i("BreathHold", "Prev Abdo: ${prev.first}")
         Log.i("BreathHold", "Curr Abdo: ${curr.first}")

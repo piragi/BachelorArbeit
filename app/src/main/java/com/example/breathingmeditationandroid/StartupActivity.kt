@@ -40,6 +40,8 @@ class StartupActivity : AppCompatActivity() {
         val bluetoothAdapter = manager.adapter
         val pairedDevices: Set<BluetoothDevice>? = bluetoothAdapter?.bondedDevices
 
+        ScreenUtils.initialize(this)
+
         //TODO: change the null check
         if (pairedDevices != null) {
             if (pairedDevices.isNotEmpty()) {

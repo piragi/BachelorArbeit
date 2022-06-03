@@ -12,4 +12,5 @@
         bachelor\'s thesis. It was developed in cooperation with the Center of HCI at the University of Salzburg.
     </string>
     <string name="calibration_is_starting">Calibration is starting...</string>
+    <string name="return_to_homescreen">Return</string>
 </resources>

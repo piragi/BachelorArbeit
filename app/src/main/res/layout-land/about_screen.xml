@@ -26,4 +26,23 @@
         android:textSize="34sp"
         app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
+    <ImageView
+        android:id="@+id/cloud"
+        android:layout_width="259dp" android:layout_height="137dp" app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.966"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:alpha="0.7"
+        app:layout_constraintVertical_bias="0.941" app:srcCompat="@drawable/cloud"/>
+    <TextView
+        android:id="@+id/return_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:text="@string/return_to_homescreen" android:textColor="#000000"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/cloud"
+        app:layout_constraintEnd_toEndOf="@+id/cloud" app:layout_constraintStart_toStartOf="@+id/cloud"
+        app:layout_constraintTop_toTopOf="@+id/cloud" app:layout_constraintVertical_bias="0.478"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
