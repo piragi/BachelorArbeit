@@ -20,51 +20,39 @@ class BirdsEmerging(private val activity: ComponentActivity) {
         }
         activity.runOnUiThread {
             //tree one
-            birdsParticleSystem.elementAt(0).emit(coordinatesTree[0].first+10, coordinatesTree[0].second+10,8)
-            birdsParticleSystem.elementAt(1).emit(coordinatesTree[0].first, coordinatesTree[0].second,8)
-            birdsParticleSystem.elementAt(2).emit(coordinatesTree[0].first+5, coordinatesTree[0].second+5,8)
+            birdsParticleSystem.elementAt(0).emit(coordinatesTree[0].first+10, coordinatesTree[0].second+10,8, 200)
+            birdsParticleSystem.elementAt(1).emit(coordinatesTree[0].first, coordinatesTree[0].second,8, 200)
+            birdsParticleSystem.elementAt(2).emit(coordinatesTree[0].first+5, coordinatesTree[0].second+5,8, 200)
 
-            birdsParticleSystem.elementAt(3).emit(coordinatesTree[1].first+10, coordinatesTree[1].second+10,8)
-            birdsParticleSystem.elementAt(4).emit(coordinatesTree[1].first, coordinatesTree[1].second,8)
-            birdsParticleSystem.elementAt(5).emit(coordinatesTree[1].first+5, coordinatesTree[1].second+5,8)
+            birdsParticleSystem.elementAt(3).emit(coordinatesTree[1].first+10, coordinatesTree[1].second+10,8, 200)
+            birdsParticleSystem.elementAt(4).emit(coordinatesTree[1].first, coordinatesTree[1].second,8, 200)
+            birdsParticleSystem.elementAt(5).emit(coordinatesTree[1].first+5, coordinatesTree[1].second+5,8, 200)
 
-            birdsParticleSystem.elementAt(6).emit(coordinatesTree[2].first+10, coordinatesTree[2].second+10,8)
-            birdsParticleSystem.elementAt(7).emit(coordinatesTree[2].first, coordinatesTree[2].second,8)
-            birdsParticleSystem.elementAt(8).emit(coordinatesTree[2].first+5, coordinatesTree[2].second+5,8)
+            birdsParticleSystem.elementAt(6).emit(coordinatesTree[2].first+10, coordinatesTree[2].second+10,8, 200)
+            birdsParticleSystem.elementAt(7).emit(coordinatesTree[2].first, coordinatesTree[2].second,8, 200)
+            birdsParticleSystem.elementAt(8).emit(coordinatesTree[2].first+5, coordinatesTree[2].second+5,8, 200)
 
-            birdsParticleSystem.elementAt(9).emit(coordinatesTree[3].first+10, coordinatesTree[3].second+10,8)
-            birdsParticleSystem.elementAt(10).emit(coordinatesTree[3].first, coordinatesTree[3].second,8)
-            birdsParticleSystem.elementAt(11).emit(coordinatesTree[3].first+5, coordinatesTree[3].second+5,8)
+            birdsParticleSystem.elementAt(9).emit(coordinatesTree[3].first+10, coordinatesTree[3].second+10,8, 200)
+            birdsParticleSystem.elementAt(10).emit(coordinatesTree[3].first, coordinatesTree[3].second,8, 200)
+            birdsParticleSystem.elementAt(11).emit(coordinatesTree[3].first+5, coordinatesTree[3].second+5,8, 200)
 
-            birdsParticleSystem.elementAt(12).emit(coordinatesTree[4].first+10, coordinatesTree[4].second+10,8)
-            birdsParticleSystem.elementAt(13).emit(coordinatesTree[4].first, coordinatesTree[4].second,8)
-            birdsParticleSystem.elementAt(14).emit(coordinatesTree[4].first+5, coordinatesTree[4].second+5,8)
+            birdsParticleSystem.elementAt(12).emit(coordinatesTree[4].first+10, coordinatesTree[4].second+10,8, 200)
+            birdsParticleSystem.elementAt(13).emit(coordinatesTree[4].first, coordinatesTree[4].second,8, 200)
+            birdsParticleSystem.elementAt(14).emit(coordinatesTree[4].first+5, coordinatesTree[4].second+5,8, 200)
 
-            birdsParticleSystem.elementAt(15).emit(coordinatesTree[5].first+10, coordinatesTree[5].second+10,8)
-            birdsParticleSystem.elementAt(16).emit(coordinatesTree[5].first, coordinatesTree[5].second,8)
-            birdsParticleSystem.elementAt(17).emit(coordinatesTree[5].first+5, coordinatesTree[5].second+5,8)
+            birdsParticleSystem.elementAt(15).emit(coordinatesTree[5].first+10, coordinatesTree[5].second+10,8, 200)
+            birdsParticleSystem.elementAt(16).emit(coordinatesTree[5].first, coordinatesTree[5].second,8, 200)
+            birdsParticleSystem.elementAt(17).emit(coordinatesTree[5].first+5, coordinatesTree[5].second+5,8, 200)
 
-            birdsParticleSystem.elementAt(18).emit(coordinatesTree[6].first+10, coordinatesTree[6].second+10,8)
-            birdsParticleSystem.elementAt(19).emit(coordinatesTree[6].first, coordinatesTree[6].second,8)
-            birdsParticleSystem.elementAt(20).emit(coordinatesTree[6].first+5, coordinatesTree[6].second+5,8)
+            birdsParticleSystem.elementAt(18).emit(coordinatesTree[6].first+10, coordinatesTree[6].second+10,8, 200)
+            birdsParticleSystem.elementAt(19).emit(coordinatesTree[6].first, coordinatesTree[6].second,8, 200)
+            birdsParticleSystem.elementAt(20).emit(coordinatesTree[6].first+5, coordinatesTree[6].second+5,8, 200)
 
-            birdsParticleSystem.elementAt(21).emit(coordinatesTree[7].first+10, coordinatesTree[7].second+10,8)
-            birdsParticleSystem.elementAt(22).emit(coordinatesTree[7].first, coordinatesTree[7].second,8)
-            birdsParticleSystem.elementAt(23).emit(coordinatesTree[7].first+5, coordinatesTree[7].second+5,8)
+            birdsParticleSystem.elementAt(21).emit(coordinatesTree[7].first+10, coordinatesTree[7].second+10,8, 200)
+            birdsParticleSystem.elementAt(22).emit(coordinatesTree[7].first, coordinatesTree[7].second,8, 200)
+            birdsParticleSystem.elementAt(23).emit(coordinatesTree[7].first+5, coordinatesTree[7].second+5,8, 200)
 
         }
-
-        Thread.sleep(450)
-
-        activity.runOnUiThread {
-            for (i in 0..7) {
-                birdsParticleSystem.elementAt(i*3).stopEmitting()
-                birdsParticleSystem.elementAt(i*3 + 1).stopEmitting()
-                birdsParticleSystem.elementAt(i*3 + 2).stopEmitting()
-            }
-        }
-
-
     }
 
 

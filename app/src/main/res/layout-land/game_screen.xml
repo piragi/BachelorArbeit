@@ -6,7 +6,6 @@
     tools:showIn="@layout/activity_device"
     tools:ignore="MissingDefaultResource">
 
-
     <ImageView
         android:id="@+id/background"
         android:layout_width="wrap_content"
@@ -31,12 +30,28 @@
         android:scaleType="centerInside"
         android:src="@drawable/background_clouds" />
 
-<!--    <ImageView-->
-<!--        android:id="@+id/trees_neutral"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:adjustViewBounds="true"-->
-<!--        android:scaleType="centerInside"-->
-<!--        android:src="@drawable/trees_neutral_anim" />-->
+    <ImageView
+        android:id="@+id/trees_neutral"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/trees_neutral_anim" />
+
+    <ImageView
+        android:id="@+id/trees_left_background"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/tree_left_background" />
+
+    <ImageView
+        android:id="@+id/trees_right_background"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/tree_right_background" />
 
 </RelativeLayout>
