@@ -92,11 +92,13 @@ class AboutScreen : ComponentActivity() {
                 particlesSupport.updateEmitPoint(newX.roundToInt(), y)
 
                 // Log.i("BreathHold", "stop trigger: ${newX.toInt() !in cloudLeft..cloudRight}")
-                holdBreathGesture.stop = newX.toInt() !in cloudLeft..cloudRight
-
-                if (!holdBreathGesture.stop)
+                if (newX.toInt() !in cloudLeft..cloudRight) {
+                    holdBreathGesture.stopDetection()
+                    runOnUiThread { cloud.alpha = 0.7f }
+                } else {
+                    holdBreathGesture.resumeDetection()
                     runOnUiThread { cloud.alpha = 1.0f }
-                else runOnUiThread { cloud.alpha = 0.7f }
+                }
                 Thread.sleep(5)
             }
         }
@@ -104,14 +106,16 @@ class AboutScreen : ComponentActivity() {
 
     private fun returnToHomeScreen() {
         thread(start = true, isDaemon = true) {
+            holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
+            holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
             while (!holdBreathGesture.hold)
                 continue
             Log.i("BreathHold", "Breath hold detected")
-            Intent(this, HomeScreenActivity::class.java).also { intent ->
+            /* Intent(this, HomeScreenActivity::class.java).also { intent ->
                 intent.putExtra("Intent", serviceIntent)
                 startActivity(intent)
                 overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
-            }
+            } */
         }
     }
 
