@@ -119,7 +119,7 @@ class CalibrationScreenActivity : ComponentActivity() {
             while (!calibrationFinished) {
                 continue
             }
-            Intent(this, GameScreen::class.java).also { intent ->
+            Intent(this, HomeScreenActivity::class.java).also { intent ->
                 intent.putExtra("Intent", serviceIntent)
                 startActivity(intent)
                 overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)

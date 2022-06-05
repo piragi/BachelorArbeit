@@ -6,12 +6,16 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.plattysoft.leonids.ParticleSystem
+import java.lang.Math.ceil
+import java.lang.Math.round
 import kotlin.concurrent.thread
+import kotlin.math.roundToInt
 
 class AboutScreen : ComponentActivity() {
     private lateinit var serviceIntent: Intent
@@ -28,6 +32,7 @@ class AboutScreen : ComponentActivity() {
             holdBreathGesture = HoldBreathGesture(mService, 5000.0)
             breathingUtils = BreathingUtils(mService)
 
+            holdBreathGesture.detect()
             animateLeaves()
             returnToHomeScreen()
         }
@@ -65,28 +70,34 @@ class AboutScreen : ComponentActivity() {
         initializeParticles()
         val startX = ScreenUtils.xBorderLeft
         val startY = ScreenUtils.yBorderBottom
-        val factor = ScreenUtils.xBorderRight.minus(startX).div(5000)
+        val factor = ScreenUtils.xBorderRight.minus(startX).toDouble().div(500)
+        Log.i("animation", "X: $startX, Y: $startY")
+        Log.i("animation", "factor: $factor")
         moveLeaves(startX, startY, factor)
     }
 
-    private fun moveLeaves(startX: Int, y: Int, updateFactor: Int) {
-        runOnUiThread {
+    private fun moveLeaves(startX: Int, y: Int, updateFactor: Double) {
+        thread(start = true, isDaemon = true) {
             val cloud = findViewById<ImageView>(R.id.cloud)
             val cloudLeft = cloud.left
             val cloudRight = cloud.right
-            var newX = startX
+            var newX = startX.toDouble()
             while (true) {
-                if (mService.mExpiration == 0 && newX <= ScreenUtils.xBorderRight) {
-                    newX = newX.plus(updateFactor)
-                    particlesMain.updateEmitPoint(newX, y)
-                }
-                if (mService.mInspiration == 0 && newX >= startX) {
-                    newX = newX.minus(updateFactor)
-                    particlesMain.updateEmitPoint(newX, y)
-                }
-                holdBreathGesture.stop = newX !in cloudLeft..cloudRight
+
+                val currValues = breathingUtils.smoothValue()
+
+                newX = (breathingUtils.calcCombinedValue(currValues.first, currValues.second)
+                    .times(Calibrator.flowFactorX))
+                particlesMain.updateEmitPoint(newX.roundToInt(), y)
+                particlesSupport.updateEmitPoint(newX.roundToInt(), y)
+
+                // Log.i("BreathHold", "stop trigger: ${newX.toInt() !in cloudLeft..cloudRight}")
+                holdBreathGesture.stop = newX.toInt() !in cloudLeft..cloudRight
+
                 if (!holdBreathGesture.stop)
-                    cloud.alpha = 1.0f
+                    runOnUiThread { cloud.alpha = 1.0f }
+                else runOnUiThread { cloud.alpha = 0.7f }
+                Thread.sleep(5)
             }
         }
     }
@@ -95,6 +106,7 @@ class AboutScreen : ComponentActivity() {
         thread(start = true, isDaemon = true) {
             while (!holdBreathGesture.hold)
                 continue
+            Log.i("BreathHold", "Breath hold detected")
             Intent(this, HomeScreenActivity::class.java).also { intent ->
                 intent.putExtra("Intent", serviceIntent)
                 startActivity(intent)

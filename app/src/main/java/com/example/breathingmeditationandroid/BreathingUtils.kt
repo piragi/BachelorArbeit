@@ -2,9 +2,17 @@ package com.example.breathingmeditationandroid
 
 import android.util.Log
 import java.lang.System.currentTimeMillis
+import kotlin.concurrent.thread
 import kotlin.math.absoluteValue
 
 class BreathingUtils(private val mService: BluetoothConnection) {
+
+    var inspiration = false
+    var expiration = false
+
+    init {
+        detectInspirationAndExpiration()
+    }
 
     fun calculateRelativePosition(
         calibratedValue: Pair<Pair<Double, Double>, Pair<Double, Double>>,
@@ -56,12 +64,65 @@ class BreathingUtils(private val mService: BluetoothConnection) {
         }
     }
 
-    fun detectRespiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
-        return curr.first < prev.first && curr.second < prev.second
+
+    // mehr "real time" als inspiration und expiration von mService. Ist teilweise wichtig
+    private fun detectInspirationAndExpiration() {
+        var currAbdo = smoothValue().first
+        var currThor = smoothValue().second
+
+        var abdoBuffer = arrayListOf<Double>()
+        var thorBuffer = arrayListOf<Double>()
+
+        val bufferSize = 100
+
+        thread(start = true, isDaemon = true) {
+            while (true) {
+
+                // Log.i("utils", "inspiration: $inspiration")
+                // Log.i("utils", "expiration: $expiration")
+
+                Log.i("utils", "abdo: ${smoothValue().first}, thor: ${smoothValue().second}")
+
+                val currValue = smoothValue()
+
+                currAbdo = currValue.first
+                currThor = currValue.second
+
+                if (abdoBuffer.size < bufferSize && thorBuffer.size < bufferSize) {
+                    abdoBuffer.add(currAbdo)
+                    thorBuffer.add(currThor)
+                } else {
+                    val abdoAvg = abdoBuffer.average()
+                    val thorAvg = thorBuffer.average()
+
+                    if (abdoAvg != currAbdo && thorAvg != currThor) {
+                        expiration = abdoAvg > currAbdo && thorAvg > currThor
+                        inspiration = abdoAvg < currAbdo && thorAvg < currThor
+                    }
+
+                    abdoBuffer = arrayListOf()
+                    thorBuffer = arrayListOf()
+                }
+
+                Thread.sleep(10)
+            }
+        }
     }
 
-    fun detectInspiration(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
-        return curr.first > prev.first && curr.second > prev.second
+    private fun detectRespiration(
+        abdoBuffer: ArrayList<Double>,
+        thorBuffer: ArrayList<Double>,
+        curr: Pair<Double, Double>
+    ): Boolean {
+        return curr.first < abdoBuffer.average() && curr.second < thorBuffer.average()
+    }
+
+    private fun detectInspiration(
+        abdoBuffer: ArrayList<Double>,
+        thorBuffer: ArrayList<Double>,
+        curr: Pair<Double, Double>
+    ): Boolean {
+        return curr.first > abdoBuffer.average() && curr.second > thorBuffer.average()
     }
 
     fun startFromBeginning() {

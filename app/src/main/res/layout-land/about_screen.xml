@@ -23,10 +23,10 @@
         android:id="@+id/textView"
         android:layout_width="641dp"
         android:layout_height="340dp" android:text="@string/about_descr" android:textColor="#000000"
-        android:textSize="34sp"
+        android:textSize="26sp"
         app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/cloud"
         android:layout_width="259dp" android:layout_height="137dp" app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.966"

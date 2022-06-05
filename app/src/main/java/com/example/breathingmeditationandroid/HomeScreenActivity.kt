@@ -44,6 +44,10 @@ class HomeScreenActivity : ComponentActivity() {
     private lateinit var bubble3: ImageView
     private lateinit var holdBreathGesture: HoldBreathGesture
 
+    private var bubble1Selected = false
+    private var bubble2Selected = false
+    private var bubble3Selected = false
+
     // private var stop = false
 
     private val connection = object : ServiceConnection {
@@ -56,6 +60,9 @@ class HomeScreenActivity : ComponentActivity() {
 
             initializeParticleSystems()
             animateLeaves()
+            changeToAboutScreen()
+            changeToCalibrationScreen()
+            changeToGameScreen()
 
             Log.i("init", "service connected")
 
@@ -186,44 +193,39 @@ class HomeScreenActivity : ComponentActivity() {
                 //TODO implement changing screens
                 if (selectionDetected) {
                     if (inBubble(coordinatesBubble1)) {
-                        setAlpha(bubble1, 1.0f)
                         holdBreathGesture.stop = false
-                        holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
-                        holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
-                        if (holdBreathGesture.hold) {
-                            // stop = true
-                            Intent(this, AboutScreen::class.java).also { intent ->
-                                intent.putExtra("Intent", serviceIntent)
-                                startActivity(intent)
-                            }
-                            break
-                        }
+
+                        holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferOutAbdo
+                        holdBreathGesture.borderThor = Calibrator.holdBreathBufferOutThor
+
+                        bubble1Selected = true
+                        bubble2Selected = false
+                        bubble3Selected = false
+                        setAlpha(bubble1, 1.0f)
+
                     }
                     if (inBubble(coordinatesBubble2)) {
-                        setAlpha(bubble2, 1.0f)
                         holdBreathGesture.stop = false
+
                         holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
                         holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
-                        if (holdBreathGesture.hold) {
-                            // stop = true
-                            Intent(this, CalibrationScreenActivity::class.java).also { intent ->
-                                intent.putExtra("Intent", serviceIntent)
-                                startActivity(intent)
-                            }
-                        }
+
+                        bubble1Selected = false
+                        bubble2Selected = true
+                        bubble3Selected = false
+
+                        setAlpha(bubble2, 1.0f)
                     }
                     if (inBubble(coordinatesBubble3)) {
-                        setAlpha(bubble3, 1.0f)
                         holdBreathGesture.stop = false
                         holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
                         holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
-                        if (holdBreathGesture.hold) {
-                            // stop = true
-                            Intent(this, GameScreen::class.java).also { intent ->
-                                intent.putExtra("Intent", serviceIntent)
-                                startActivity(intent)
-                            }
-                        }
+
+                        bubble1Selected = false
+                        bubble2Selected = false
+                        bubble3Selected = true
+
+                        setAlpha(bubble3, 1.0f)
                     }
                 } else {
                     holdBreathGesture.stop = true
@@ -232,6 +234,41 @@ class HomeScreenActivity : ComponentActivity() {
                     setAlpha(bubble3, 0.7f)
                 }
                 Thread.sleep(5)
+            }
+        }
+    }
+
+    private fun changeToAboutScreen() {
+        thread(start = true, isDaemon = true) {
+            while (!holdBreathGesture.hold && !bubble1Selected)
+                continue
+            Intent(this, AboutScreen::class.java).also { intent ->
+                intent.putExtra("Intent", serviceIntent)
+                startActivity(intent)
+                overridePendingTransition(R.anim.slide_up_bottom, R.anim.slide_up_top)
+            }
+        }
+    }
+
+    private fun changeToGameScreen() {
+        thread(start = true, isDaemon = true) {
+            while (!holdBreathGesture.hold && !bubble2Selected)
+                continue
+            Intent(this, CalibrationScreenActivity::class.java).also { intent ->
+                intent.putExtra("Intent", serviceIntent)
+                startActivity(intent)
+                overridePendingTransition(R.anim.slide_up_bottom, R.anim.slide_up_top)
+            }
+        }
+    }
+
+    private fun changeToCalibrationScreen() {
+        thread(start = true, isDaemon = true) {
+            while (!holdBreathGesture.hold && !bubble3Selected)
+                continue
+            Intent(this, GameScreen::class.java).also { intent ->
+                intent.putExtra("Intent", serviceIntent)
+                startActivity(intent)
             }
         }
     }

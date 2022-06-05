@@ -9,7 +9,7 @@
     <string name="about">ABOUT</string>
     <string name="instruction_breathe_in">Breathe in for 5 seconds...</string>
     <string name="about_descr">This app was developed by Julia Mayrhauser and Julius Sula as a research project for a
-        bachelor\'s thesis. It was developed in cooperation with the Center of HCI at the University of Salzburg.
+        bachelor\'s thesis. It was developed in cooperation with the Center of HCI at the University of Salzburg within the DiMo project.
     </string>
     <string name="calibration_is_starting">Calibration is starting...</string>
     <string name="return_to_homescreen">Return</string>
