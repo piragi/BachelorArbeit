@@ -1,10 +1,8 @@
-package com.example.breathingmeditationandroid
+package com.example.breathingmeditationandroid.levels
 
-import android.graphics.drawable.Drawable
 import android.view.animation.AccelerateInterpolator
-import android.widget.ImageView
 import androidx.activity.ComponentActivity
-import androidx.annotation.UiThread
+import com.example.breathingmeditationandroid.R
 import com.plattysoft.leonids.ParticleSystem
 
 class BirdsEmerging(private val activity: ComponentActivity) {

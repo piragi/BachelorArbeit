@@ -4,13 +4,10 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.graphics.drawable.AnimationDrawable
 import android.os.Bundle
 import android.os.IBinder
-import android.provider.ContactsContract
 import android.util.Log
 import android.view.View
-import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
@@ -18,6 +15,7 @@ import com.example.breathingmeditationandroid.gestures.DeepAbdoBreathGesture
 import com.example.breathingmeditationandroid.gestures.DeepThorBreathGesture
 import com.example.breathingmeditationandroid.gestures.SighBreathGesture
 import com.example.breathingmeditationandroid.gestures.StaccatoBreathGesture
+import com.example.breathingmeditationandroid.levels.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
@@ -36,9 +34,9 @@ class GameScreen : ComponentActivity() {
     private lateinit var deepBreathLevel: DeepBreathLevel
     private lateinit var birdsEmergingLevel: BirdsEmerging
     private lateinit var feedbackTrees: FeedbackTrees
+    private lateinit var rocketTakeOff: RocketTakeOff
+    private lateinit var cloudsFadeOut: CloudsFadeOut
 
-    private lateinit var snow: ImageView
-    private lateinit var trees: ImageView
     private lateinit var background: ImageView
 
     //TODO: Global irgendwo definieren für alle activites?
@@ -63,10 +61,7 @@ class GameScreen : ComponentActivity() {
 
         //view
         setContentView(R.layout.game_screen)
-        snow = findViewById<View>(R.id.snow) as ImageView
-        //background = findViewById<View>(R.id.background) as ImageView
-        //treesNeutral = findViewById<View>(R.id.trees_neutral) as ImageView
-
+        background = findViewById<View>(R.id.background) as ImageView
 
         //bind service to activity
         serviceIntent = intent?.extras?.getParcelable("Intent")!!
@@ -86,11 +81,13 @@ class GameScreen : ComponentActivity() {
             deepThorBreathGesture = DeepThorBreathGesture(mService, breathingUtils)
             staccatoBreathGesture = StaccatoBreathGesture(mService, breathingUtils)
             sighBreathGesture = SighBreathGesture(mService, breathingUtils)
-            deepBreathLevel = DeepBreathLevel(snow, this@GameScreen)
+            deepBreathLevel = DeepBreathLevel(findViewById<View>(R.id.snow) as ImageView, this@GameScreen)
             birdsEmergingLevel = BirdsEmerging(this@GameScreen)
             birdsEmergingLevel.animationStart()
-            feedbackTrees = FeedbackTrees(findViewById<View>(R.id.trees_left_background) as ImageView, findViewById<View>(R.id.trees_right_background) as ImageView, findViewById<View>(R.id.trees_neutral) as ImageView, this@GameScreen, mService)
-            //feedbackTrees.checkForAnimations()
+            feedbackTrees = FeedbackTrees(this@GameScreen, mService)
+            rocketTakeOff = RocketTakeOff(background.height, this@GameScreen)
+            cloudsFadeOut = CloudsFadeOut(this@GameScreen)
+            //rocketTakeOff.startAnimation()
             startLevel()
         }
     }
@@ -101,20 +98,21 @@ class GameScreen : ComponentActivity() {
             try {
                 lifecycleScope.launch {
 
-//                    val detectedThorBreathGesture = deepThorBreathGesture.detected()
-//                    val detectedAbdoBreathGesture = deepAbdoBreathGesture.detected()
-//                    val detectedStaccatoBreathGesture = staccatoBreathGesture.detected()
-//                    val detectedSighBreathGesture = sighBreathGesture.detected()
-//
-//                    if ( detectedStaccatoBreathGesture.await()) {
-//                        deepBreathLevel.animationStart()
-//                    } else if (detectedAbdoBreathGesture.await()) {
-//                        deepBreathLevel.animationStart()
-//                    } else if (detectedThorBreathGesture.await()) {
-//                        deepBreathLevel.animationStart()
-//                    } else if (detectedSighBreathGesture.await()) {
-//                        deepBreathLevel.animationStart()
-//                    }
+                    val detectedThorBreathGesture = deepThorBreathGesture.detected()
+                    val detectedAbdoBreathGesture = deepAbdoBreathGesture.detected()
+                    val detectedStaccatoBreathGesture = staccatoBreathGesture.detected()
+                    val detectedSighBreathGesture = sighBreathGesture.detected()
+
+                    if ( detectedStaccatoBreathGesture.await()) {
+                        birdsEmergingLevel.animationStart()
+                    } else if (detectedAbdoBreathGesture.await()) {
+                        deepBreathLevel.animationStart()
+                    } else if (detectedThorBreathGesture.await()) {
+                        //fadeout clouds
+                        cloudsFadeOut.animationStart()
+                    } else if (detectedSighBreathGesture.await()) {
+                        deepBreathLevel.animationStart()
+                    }
                 }
             } catch (consumed: InterruptedException) {
                 Thread.currentThread().interrupt()
