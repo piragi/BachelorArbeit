@@ -36,25 +36,32 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
     }
 
     override fun detect() {
-        var prevValue = breathingUtils.smoothValue()
-        while (!hold) {
-            Log.i("BreathHold", "hold: $hold")
-            if (!stop) {
-                val currValue = breathingUtils.smoothValue()
-                if (!checkPrevValue(
-                        Pair(prevValue.first, prevValue.second),
-                        Pair(currValue.first, currValue.second)
-                    )
-                ) {
-                    hold = false
-                    startTime = currentTimeMillis()
-                } else if (currentTimeMillis().minus(startTime) >= time) {
-                    hold = true
-                    break
-                }
-                Thread.sleep(5)
-                prevValue = breathingUtils.smoothValue()
-            } else startTime = currentTimeMillis()
+        thread(start = true, isDaemon = true) {
+            var prevValue = breathingUtils.smoothValue()
+            startTime = currentTimeMillis()
+            while (!hold) {
+                // Log.i("BreathHold", "hold: $hold")
+                // Log.i("BreathHold", "time: ${currentTimeMillis()}, start time: $startTime")
+                Log.i("concurrency", "breathHold running")
+                borderAbdo = 1.0
+                borderThor = 1.0
+                if (!stop) {
+                    val currValue = breathingUtils.smoothValue()
+                    if (!checkPrevValue(
+                            Pair(prevValue.first, prevValue.second),
+                            Pair(currValue.first, currValue.second)
+                        )
+                    ) {
+                        hold = false
+                        startTime = currentTimeMillis()
+                    } else if (currentTimeMillis().minus(startTime) >= time) {
+                        hold = true
+                        break
+                    }
+                    Thread.sleep(5)
+                    prevValue = breathingUtils.smoothValue()
+                } else startTime = currentTimeMillis()
+            }
         }
     }
 

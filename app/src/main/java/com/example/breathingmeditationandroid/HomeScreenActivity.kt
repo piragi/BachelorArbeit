@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.provider.Settings.Global
 import android.util.Log
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
@@ -14,7 +15,7 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.plattysoft.leonids.ParticleSystem
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlin.concurrent.thread
 import kotlin.math.abs
 import kotlin.math.floor
@@ -58,17 +59,9 @@ class HomeScreenActivity : ComponentActivity() {
             mService = binder.getService()
             breathingUtils = BreathingUtils(mService)
             holdBreathGesture = HoldBreathGesture(mService, 5000.0)
-            lifecycleScope.launch {
-                holdBreathGesture.detect()
-            }
-
-            initializeParticleSystems()
-            animateLeaves()
-            changeToAboutScreen()
-            changeToCalibrationScreen()
-            changeToGameScreen()
-
             Log.i("init", "service connected")
+
+            start()
 
         }
 
@@ -99,6 +92,15 @@ class HomeScreenActivity : ComponentActivity() {
         stopService(serviceIntent)
     }
 
+    private fun start() {
+        initializeParticleSystems()
+        animateLeaves()
+        changeToAboutScreen()
+        changeToCalibrationScreen()
+        changeToGameScreen()
+        holdBreathGesture.detect()
+    }
+
     private fun initializeParticleSystems() {
         particlesMain = ParticleSystem(this, 10, R.drawable.leaf2, 1000)
         particlesMain.setScaleRange(0.7f, 1.3f)
@@ -115,18 +117,17 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun animateLeaves() {
-        val coordinatesBubble1 = Pair(bubble1.left, bubble1.right)
-        val coordinatesBubble2 = Pair(bubble2.left, bubble2.right)
-        val coordinatesBubble3 = Pair(bubble3.left, bubble3.right)
-        val currVal = breathingUtils.smoothValue()
-        prevAbdo = currVal.first
-        prevThor = currVal.second
-        Log.i("init", "animate leaves started")
         thread(start = true, isDaemon = true) {
+            val coordinatesBubble1 = Pair(bubble1.left, bubble1.right)
+            val coordinatesBubble2 = Pair(bubble2.left, bubble2.right)
+            val coordinatesBubble3 = Pair(bubble3.left, bubble3.right)
+            val currVal = breathingUtils.smoothValue()
+            prevAbdo = currVal.first
+            prevThor = currVal.second
+            Log.i("init", "animate leaves started")
             // TODO detect selection funktioniert nich immer
             changeScreen(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
             // breathingUtils.startFromBeginning()
-            Thread.sleep(5000)
             while (!stop) {
                 val currValue = breathingUtils.smoothValue()
                 val combinedValue = breathingUtils.calcCombinedValue(currValue.first, currValue.second)
@@ -139,8 +140,10 @@ class HomeScreenActivity : ComponentActivity() {
                 currX = coordinatesBubble1.first.plus(100).toDouble()
                 currY = 700.0
 
-                moveLeaves(currX, currY, particlesMain)
-                moveLeaves(currX, currY, particlesSupprt)
+                lifecycleScope.launch {
+                    moveLeaves(currX, currY, particlesMain)
+                    moveLeaves(currX, currY, particlesSupprt)
+                }
 
                 selectionDetected =
                     inBubble(coordinatesBubble1) || inBubble(coordinatesBubble2) || inBubble(coordinatesBubble3)
@@ -157,6 +160,11 @@ class HomeScreenActivity : ComponentActivity() {
                 prevY = currY
             }
         }
+    }
+
+    private fun stopLeaves() {
+        particlesMain.stopEmitting()
+        particlesSupprt.stopEmitting()
     }
 
     private fun moveLeaves(xValue: Double, yValue: Double, particleSystem: ParticleSystem) {
@@ -192,8 +200,9 @@ class HomeScreenActivity : ComponentActivity() {
         coordinatesBubble3: Pair<Int, Int>
     ) {
         thread(start = true, isDaemon = true) {
-            while (true) {
+            while (!holdBreathGesture.hold) {
                 //TODO implement changing screens
+                Log.i("concurrency", "detectSelection running")
                 if (selectionDetected) {
                     holdBreathGesture.resumeDetection()
                     if (inBubble(coordinatesBubble1)) {
@@ -240,47 +249,67 @@ class HomeScreenActivity : ComponentActivity() {
         }
     }
 
+    private fun stopActivity() {
+        stop = true
+        holdBreathGesture.stopDetection()
+        stopLeaves()
+    }
+
     private fun changeToAboutScreen() {
         thread(start = true, isDaemon = true) {
-            while (!holdBreathGesture.hold || !bubble1Selected)
+            while (!holdBreathGesture.hold || !bubble1Selected) {
+                Log.i("concurrency", "changeToAboutScreen running")
                 continue
+            }
+
+            stopActivity()
+            bubble1Selected = false
+
             Intent(this, AboutScreen::class.java).also { intent ->
                 intent.putExtra("Intent", serviceIntent)
                 startActivity(intent)
-                // overridePendingTransition(R.anim.slide_up_bottom, R.anim.slide_up_top)
+                overridePendingTransition(R.anim.slide_down_top, R.anim.slide_down_bottom)
             }
-            stop = true
-            holdBreathGesture.stopDetection()
-            bubble1Selected = false
+
         }
     }
 
     private fun changeToGameScreen() {
         thread(start = true, isDaemon = true) {
-            while (!holdBreathGesture.hold || !bubble2Selected)
+            while (!holdBreathGesture.hold || !bubble3Selected) {
+                Log.i("concurrency", "changeToGameScreen running")
                 continue
+            }
+
+            stopActivity()
+            bubble2Selected = false
+
             Intent(this, CalibrationScreenActivity::class.java).also { intent ->
                 intent.putExtra("Intent", serviceIntent)
                 startActivity(intent)
-                overridePendingTransition(R.anim.slide_up_bottom, R.anim.slide_up_top)
+                overridePendingTransition(
+                    R.anim.slide_down_top, R.anim.slide_down_bottom
+                )
             }
-            stop = true
-            holdBreathGesture.stopDetection()
-            bubble2Selected = false
+
         }
     }
 
     private fun changeToCalibrationScreen() {
         thread(start = true, isDaemon = true) {
-            while (!holdBreathGesture.hold || !bubble3Selected)
+            while (!holdBreathGesture.hold || !bubble2Selected) {
+                Log.i("concurrency", "changeToCalibrationScreen running")
                 continue
+            }
+
+            stopActivity()
+            bubble3Selected = false
+
             Intent(this, GameScreen::class.java).also { intent ->
                 intent.putExtra("Intent", serviceIntent)
                 startActivity(intent)
             }
-            stop = true
-            holdBreathGesture.stopDetection()
-            bubble3Selected = false
+
         }
     }
 
