@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.provider.Settings.Global
 import android.util.Log
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
@@ -76,13 +75,12 @@ class HomeScreenActivity : ComponentActivity() {
 
         setContentView(R.layout.home_screen)
         container = findViewById(R.id.home_screen)
-        bubble1 = findViewById(R.id.imageViewSettings)
-        bubble2 = findViewById(R.id.imageViewCalibrate)
-        bubble3 = findViewById(R.id.imageViewPlay)
+        bubble1 = findViewById(R.id.bubble1)
+        bubble2 = findViewById(R.id.bubble2)
+        bubble3 = findViewById(R.id.bubble3)
 
         currX = xBorderLeft.toDouble()
         currY = yBorderBottom.toDouble()
-        // stop = false
         serviceIntent = intent?.extras?.getParcelable("Intent")!!
         applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
     }
@@ -95,9 +93,8 @@ class HomeScreenActivity : ComponentActivity() {
     private fun start() {
         initializeParticleSystems()
         animateLeaves()
-        changeToAboutScreen()
-        changeToCalibrationScreen()
-        changeToGameScreen()
+        detectSelection()
+        detectScreenChange()
         holdBreathGesture.detect()
     }
 
@@ -118,46 +115,29 @@ class HomeScreenActivity : ComponentActivity() {
 
     private fun animateLeaves() {
         thread(start = true, isDaemon = true) {
-            val coordinatesBubble1 = Pair(bubble1.left, bubble1.right)
-            val coordinatesBubble2 = Pair(bubble2.left, bubble2.right)
-            val coordinatesBubble3 = Pair(bubble3.left, bubble3.right)
             val currVal = breathingUtils.smoothValue()
             prevAbdo = currVal.first
             prevThor = currVal.second
-            Log.i("init", "animate leaves started")
-            // TODO detect selection funktioniert nich immer
-            changeScreen(coordinatesBubble1, coordinatesBubble2, coordinatesBubble3)
-            // breathingUtils.startFromBeginning()
             while (!stop) {
                 val currValue = breathingUtils.smoothValue()
                 val combinedValue = breathingUtils.calcCombinedValue(currValue.first, currValue.second)
 
-                // currX = (combinedValue).times(Calibrator.flowFactorX).plus(xBorderLeft)
-                // currY = (combinedValue).times(Calibrator.flowFactorY).plus(yBorderBottom)
-
-                // for testing purposes
-
-                currX = coordinatesBubble1.first.plus(100).toDouble()
-                currY = 700.0
+                currX = (combinedValue).times(Calibrator.flowFactorX).plus(xBorderLeft)
+                currY = (combinedValue).times(Calibrator.flowFactorY).plus(yBorderBottom)
 
                 lifecycleScope.launch {
                     moveLeaves(currX, currY, particlesMain)
                     moveLeaves(currX, currY, particlesSupprt)
                 }
 
-                selectionDetected =
-                    inBubble(coordinatesBubble1) || inBubble(coordinatesBubble2) || inBubble(coordinatesBubble3)
-
                 val prevValue = breathingUtils.smoothValue()
 
-                // prevAbdo = prevValue.first
-                // prevThor = prevValue.second
-
-                currX = coordinatesBubble1.first.plus(100).toDouble()
-                currY = 700.0
+                prevAbdo = prevValue.first
+                prevThor = prevValue.second
 
                 prevX = currX
                 prevY = currY
+                Thread.sleep(10)
             }
         }
     }
@@ -194,25 +174,27 @@ class HomeScreenActivity : ComponentActivity() {
         }
     }
 
-    private fun changeScreen(
-        coordinatesBubble1: Pair<Int, Int>,
-        coordinatesBubble2: Pair<Int, Int>,
-        coordinatesBubble3: Pair<Int, Int>
-    ) {
+
+    //TODO sometimes not triggered
+
+    private fun detectSelection() {
+        val coordinatesBubble1 =
+            Pair(findViewById<ImageView>(R.id.bubble1).left, findViewById<ImageView>(R.id.bubble1).right)
+        val coordinatesBubble2 =
+            Pair(findViewById<ImageView>(R.id.bubble2).left, findViewById<ImageView>(R.id.bubble2).right)
+        val coordinatesBubble3 =
+            Pair(findViewById<ImageView>(R.id.bubble3).left, findViewById<ImageView>(R.id.bubble3).right)
         thread(start = true, isDaemon = true) {
             while (!holdBreathGesture.hold) {
-                //TODO implement changing screens
-                Log.i("concurrency", "detectSelection running")
+                selectionDetected =
+                    inBubble(coordinatesBubble1) || inBubble(coordinatesBubble2) || inBubble(coordinatesBubble3)
+
                 if (selectionDetected) {
                     holdBreathGesture.resumeDetection()
                     if (inBubble(coordinatesBubble1)) {
 
                         holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferOutAbdo
                         holdBreathGesture.borderThor = Calibrator.holdBreathBufferOutThor
-
-                        bubble1Selected = true
-                        bubble2Selected = false
-                        bubble3Selected = false
 
                         markSelection(bubble1, 1.0f)
 
@@ -222,29 +204,23 @@ class HomeScreenActivity : ComponentActivity() {
                         holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
                         holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
 
-                        bubble1Selected = false
-                        bubble2Selected = true
-                        bubble3Selected = false
-
                         markSelection(bubble2, 1.0f)
                     }
                     if (inBubble(coordinatesBubble3)) {
                         holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
                         holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
 
-                        bubble1Selected = false
-                        bubble2Selected = false
-                        bubble3Selected = true
-
                         markSelection(bubble3, 1.0f)
                     }
                 } else {
+
                     holdBreathGesture.stopDetection()
+
                     markSelection(bubble1, 0.7f)
                     markSelection(bubble2, 0.7f)
                     markSelection(bubble3, 0.7f)
                 }
-                Thread.sleep(5)
+                Thread.sleep(10)
             }
         }
     }
@@ -255,61 +231,50 @@ class HomeScreenActivity : ComponentActivity() {
         stopLeaves()
     }
 
-    private fun changeToAboutScreen() {
+    private fun detectScreenChange() {
         thread(start = true, isDaemon = true) {
-            while (!holdBreathGesture.hold || !bubble1Selected) {
-                Log.i("concurrency", "changeToAboutScreen running")
+            while (!holdBreathGesture.hold)
                 continue
-            }
+            if (bubble1Selected)
+                changeToAboutScreen()
+            else if (bubble2Selected)
+                changeToCalibrationScreen()
+            else changeToGameScreen()
+            Thread.sleep(10)
+        }
+    }
 
-            stopActivity()
-            bubble1Selected = false
+    private fun changeToAboutScreen() {
+        stopActivity()
+        bubble1Selected = false
 
-            Intent(this, AboutScreen::class.java).also { intent ->
-                intent.putExtra("Intent", serviceIntent)
-                startActivity(intent)
-                overridePendingTransition(R.anim.slide_down_top, R.anim.slide_down_bottom)
-            }
-
+        Intent(this, AboutScreen::class.java).also { intent ->
+            intent.putExtra("Intent", serviceIntent)
+            startActivity(intent)
+            overridePendingTransition(R.anim.slide_down_top, R.anim.slide_down_bottom)
         }
     }
 
     private fun changeToGameScreen() {
-        thread(start = true, isDaemon = true) {
-            while (!holdBreathGesture.hold || !bubble3Selected) {
-                Log.i("concurrency", "changeToGameScreen running")
-                continue
-            }
+        stopActivity()
+        bubble2Selected = false
 
-            stopActivity()
-            bubble2Selected = false
-
-            Intent(this, CalibrationScreenActivity::class.java).also { intent ->
-                intent.putExtra("Intent", serviceIntent)
-                startActivity(intent)
-                overridePendingTransition(
-                    R.anim.slide_down_top, R.anim.slide_down_bottom
-                )
-            }
-
+        Intent(this, CalibrationScreenActivity::class.java).also { intent ->
+            intent.putExtra("Intent", serviceIntent)
+            startActivity(intent)
         }
     }
 
     private fun changeToCalibrationScreen() {
-        thread(start = true, isDaemon = true) {
-            while (!holdBreathGesture.hold || !bubble2Selected) {
-                Log.i("concurrency", "changeToCalibrationScreen running")
-                continue
-            }
+        stopActivity()
+        bubble3Selected = false
 
-            stopActivity()
-            bubble3Selected = false
-
-            Intent(this, GameScreen::class.java).also { intent ->
-                intent.putExtra("Intent", serviceIntent)
-                startActivity(intent)
-            }
-
+        Intent(this, CalibrationScreenActivity::class.java).also { intent ->
+            intent.putExtra("Intent", serviceIntent)
+            startActivity(intent)
+            overridePendingTransition(
+                R.anim.slide_down_top, R.anim.slide_down_bottom
+            )
         }
     }
 
@@ -318,6 +283,16 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun markSelection(imageView: ImageView, alpha: Float) {
+        bubble1Selected = imageView.tag.equals("bubble1")
+        bubble2Selected = imageView.tag.equals("bubble2")
+        bubble3Selected = imageView.tag.equals("bubble3")
+
+        if (bubble1Selected && bubble2Selected && bubble3Selected) {
+            bubble1Selected = false
+            bubble2Selected = false
+            bubble3Selected = false
+        }
+
         runOnUiThread {
             imageView.alpha = alpha
         }

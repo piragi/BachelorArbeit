@@ -71,8 +71,6 @@ class AboutScreen : ComponentActivity() {
         val startX = ScreenUtils.xBorderLeft
         val startY = ScreenUtils.yBorderBottom
         val factor = ScreenUtils.xBorderRight.minus(startX).toDouble().div(500)
-        Log.i("animation", "X: $startX, Y: $startY")
-        Log.i("animation", "factor: $factor")
         moveLeaves(startX, startY, factor)
     }
 
@@ -81,7 +79,7 @@ class AboutScreen : ComponentActivity() {
             val cloud = findViewById<ImageView>(R.id.cloud)
             val cloudLeft = cloud.left
             val cloudRight = cloud.right
-            var newX = startX.toDouble()
+            var newX: Double
             while (true) {
 
                 val currValues = breathingUtils.smoothValue()
@@ -91,8 +89,10 @@ class AboutScreen : ComponentActivity() {
                 particlesMain.updateEmitPoint(newX.roundToInt(), y)
                 particlesSupport.updateEmitPoint(newX.roundToInt(), y)
 
-                // Log.i("BreathHold", "stop trigger: ${newX.toInt() !in cloudLeft..cloudRight}")
-                if (newX.toInt() !in cloudLeft..cloudRight) {
+
+                //TODO selection not correct
+
+                if (newX !in cloudLeft.toDouble()..cloudRight.toDouble()) {
                     holdBreathGesture.stopDetection()
                     runOnUiThread { cloud.alpha = 0.7f }
                 } else {
@@ -110,12 +110,11 @@ class AboutScreen : ComponentActivity() {
             holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
             while (!holdBreathGesture.hold)
                 continue
-            Log.i("BreathHold", "Breath hold detected")
-            /* Intent(this, HomeScreenActivity::class.java).also { intent ->
+            Intent(this, HomeScreenActivity::class.java).also { intent ->
                 intent.putExtra("Intent", serviceIntent)
                 startActivity(intent)
                 overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
-            } */
+            }
         }
     }
 

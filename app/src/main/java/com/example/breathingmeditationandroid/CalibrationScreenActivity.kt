@@ -80,12 +80,10 @@ class CalibrationScreenActivity : ComponentActivity() {
         var iteration = 0
         repeat(2) {
             iteration++
-            Log.i("Calibration", "Screen: Breathe in")
             when (iteration) {
                 1 -> displayText("Breathe in deeply into your stomach...", 5000)
                 2 -> displayText("Breathe in deeply into your chest...", 5000)
             }
-            Log.i("Calibration", "Screen: Hold breath")
             displayText("Hold your breath...", 2000)
 
             when (iteration) {
@@ -98,9 +96,7 @@ class CalibrationScreenActivity : ComponentActivity() {
                 displayTimer(4000)
             }
             delay(4000)
-            Log.i("Calibration", "Screen: Breathe out")
             displayText("Breathe out...", 5000)
-            Log.i("Calibration", "Screen: Hold breath")
             displayText("Hold your breath...", 2000)
             launch {
                 Calibrator.calibrateBreathHold(5000, "out")
@@ -111,6 +107,16 @@ class CalibrationScreenActivity : ComponentActivity() {
             delay(4000)
         }
         displayText("Calibration finished!", 5000)
+        Log.i("calibration", "bufferInAbdo: ${Calibrator.holdBreathBufferInAbdo}")
+        Log.i("calibration", "bufferOutAbdo: ${Calibrator.holdBreathBufferOutAbdo}")
+        Log.i("calibration", "bufferInThor: ${Calibrator.holdBreathBufferInThor}")
+        Log.i("calibration", "bufferOutThor: ${Calibrator.holdBreathBufferOutThor}")
+        Log.i("calibration", "maxAbdo: ${Calibrator.calibratedAbdo.first}")
+        Log.i("calibration", "maxThor: ${Calibrator.calibratedThor.first}")
+        Log.i("calibration", "minAbdo: ${Calibrator.calibratedAbdo.second}")
+        Log.i("calibration", "minThor: ${Calibrator.calibratedThor.second}")
+
+
         calibrationFinished = true
     }
 
