@@ -7,6 +7,7 @@ import android.content.ServiceConnection
 import android.graphics.drawable.AnimationDrawable
 import android.os.Bundle
 import android.os.IBinder
+import android.provider.ContactsContract
 import android.util.Log
 import android.view.View
 import android.view.animation.AnimationUtils
@@ -63,8 +64,8 @@ class GameScreen : ComponentActivity() {
         //view
         setContentView(R.layout.game_screen)
         snow = findViewById<View>(R.id.snow) as ImageView
-        background = findViewById<View>(R.id.background) as ImageView
-        //trees = findViewById<View>(R.id.trees_neutral) as ImageView
+        //background = findViewById<View>(R.id.background) as ImageView
+        //treesNeutral = findViewById<View>(R.id.trees_neutral) as ImageView
 
 
         //bind service to activity
@@ -88,7 +89,8 @@ class GameScreen : ComponentActivity() {
             deepBreathLevel = DeepBreathLevel(snow, this@GameScreen)
             birdsEmergingLevel = BirdsEmerging(this@GameScreen)
             birdsEmergingLevel.animationStart()
-            feedbackTrees = FeedbackTrees(snow, this@GameScreen, mService)
+            feedbackTrees = FeedbackTrees(findViewById<View>(R.id.trees_left_background) as ImageView, findViewById<View>(R.id.trees_right_background) as ImageView, findViewById<View>(R.id.trees_neutral) as ImageView, this@GameScreen, mService)
+            //feedbackTrees.checkForAnimations()
             startLevel()
         }
     }

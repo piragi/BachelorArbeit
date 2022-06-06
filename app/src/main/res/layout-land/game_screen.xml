@@ -36,7 +36,7 @@
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
-        android:src="@drawable/trees_neutral_anim" />
+        android:src="@drawable/trees_neutral" />
 
     <ImageView
         android:id="@+id/trees_left_background"
