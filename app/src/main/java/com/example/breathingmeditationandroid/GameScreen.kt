@@ -87,6 +87,7 @@ class GameScreen : ComponentActivity() {
             feedbackTrees = FeedbackTrees(this@GameScreen, mService)
             rocketTakeOff = RocketTakeOff(background.height, this@GameScreen)
             cloudsFadeOut = CloudsFadeOut(this@GameScreen)
+            deepBreathLevel.animationStart()
             startLevel()
         }
     }
