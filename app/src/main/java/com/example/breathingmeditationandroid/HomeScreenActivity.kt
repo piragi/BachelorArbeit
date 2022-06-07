@@ -28,10 +28,10 @@ class HomeScreenActivity : ComponentActivity() {
     private lateinit var mService: BluetoothConnection
     private lateinit var breathingUtils: BreathingUtils
 
-    private val xBorderLeft = 100 //TODO relative to device
-    private val xBorderRight = 2000
-    private val yBorderTop = 300
-    private val yBorderBottom = 800
+    private val xBorderLeft = ScreenUtils.xBorderLeft //TODO relative to device
+    private val xBorderRight = ScreenUtils.xBorderRight
+    private val yBorderTop = ScreenUtils.yBorderTop
+    private val yBorderBottom = ScreenUtils.yBorderBottom
     private var currX: Double = 0.0
     private var currY: Double = 0.0
     private var prevX: Double = 0.0

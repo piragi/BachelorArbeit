@@ -144,11 +144,10 @@ object Calibrator {
     }
 
     private fun calcFlowFactor() {
-        //TODO make specific to device
-        val xStart = 100
-        val xEnd = 2000
-        val yStart = 800
-        val yEnd = 300
+        val xStart = ScreenUtils.xBorderLeft
+        val xEnd = ScreenUtils.xBorderRight
+        val yStart = ScreenUtils.yBorderBottom
+        val yEnd = ScreenUtils.yBorderTop
         val combinedValueStart: Double =
             (calibratedAbdo.second.plus(calibratedThor.second))
         val combinedValueEnd: Double =
