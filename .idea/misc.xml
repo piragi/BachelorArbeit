@@ -16,7 +16,7 @@
         <entry key="..\:/Users/julia/Documents/6th_Semester/Bachelorprojekt/BachelorArbeit/app/src/main/res/layout-land/about_screen.xml" value="0.176" />
         <entry key="..\:/Users/julia/Documents/6th_Semester/Bachelorprojekt/BachelorArbeit/app/src/main/res/layout-land/calibration_screen.xml" value="0.10846560846560846" />
         <entry key="..\:/Users/julia/Documents/6th_Semester/Bachelorprojekt/BachelorArbeit/app/src/main/res/layout-land/game_screen.xml" value="0.10846560846560846" />
-        <entry key="..\:/Users/julia/Documents/6th_Semester/Bachelorprojekt/BachelorArbeit/app/src/main/res/layout-land/home_screen.xml" value="0.176" />
+        <entry key="..\:/Users/julia/Documents/6th_Semester/Bachelorprojekt/BachelorArbeit/app/src/main/res/layout-land/home_screen.xml" value="0.1" />
         <entry key="..\:/Users/julia/Documents/6th_Semester/Bachelorprojekt/BachelorArbeit/app/src/main/res/layout/about_screen.xml" value="0.128125" />
         <entry key="app/src/main/res/layout-land/calibration_screen.xml" value="0.16358024691358025" />
         <entry key="app/src/main/res/layout-land/game_screen.xml" value="0.16358024691358025" />
@@ -25,7 +25,10 @@
       </map>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" project-jdk-name="11" project-jdk-type="JavaSDK">
+  <component name="FrameworkDetectionExcludesConfiguration">
+    <file type="web" url="file://$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">

@@ -24,6 +24,8 @@ class AboutScreen : ComponentActivity() {
     private lateinit var particlesMain: ParticleSystem
     private lateinit var particlesSupport: ParticleSystem
     private lateinit var holdBreathGesture: HoldBreathGesture
+    private lateinit var cloud: ImageView
+    private var stop = false
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -46,6 +48,7 @@ class AboutScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.about_screen)
+        cloud = findViewById(R.id.cloud)
 
         serviceIntent = intent?.extras?.getParcelable("Intent")!!
         applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
@@ -68,27 +71,24 @@ class AboutScreen : ComponentActivity() {
 
     private fun animateLeaves() {
         initializeParticles()
-        val startX = ScreenUtils.xBorderLeft
-        val startY = ScreenUtils.yBorderBottom
-        val factor = ScreenUtils.xBorderRight.minus(startX).toDouble().div(500)
-        moveLeaves(startX, startY, factor)
+        moveLeaves()
     }
 
-    private fun moveLeaves(startX: Int, y: Int, updateFactor: Double) {
+    private fun moveLeaves() {
         thread(start = true, isDaemon = true) {
-            val cloud = findViewById<ImageView>(R.id.cloud)
             val cloudLeft = cloud.left
             val cloudRight = cloud.right
             var newX: Double
-            while (true) {
+            while (!stop) {
 
                 val currValues = breathingUtils.smoothValue()
 
                 newX = (breathingUtils.calcCombinedValue(currValues.first, currValues.second)
                     .times(Calibrator.flowFactorX))
-                particlesMain.updateEmitPoint(newX.roundToInt(), y)
-                particlesSupport.updateEmitPoint(newX.roundToInt(), y)
-
+                if (newX in ScreenUtils.xBorderLeft.toDouble()..ScreenUtils.xBorderRight.toDouble()) {
+                    particlesMain.updateEmitPoint(newX.roundToInt(), ScreenUtils.yBorderBottom)
+                    particlesSupport.updateEmitPoint(newX.roundToInt(), ScreenUtils.yBorderBottom)
+                }
 
                 //TODO selection not correct
 
@@ -110,11 +110,12 @@ class AboutScreen : ComponentActivity() {
             holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
             while (!holdBreathGesture.hold)
                 continue
-            Intent(this, HomeScreenActivity::class.java).also { intent ->
-                intent.putExtra("Intent", serviceIntent)
-                startActivity(intent)
-                overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
-            }
+        }
+        stop = true
+        Intent(this, HomeScreenActivity::class.java).also { intent ->
+            intent.putExtra("Intent", serviceIntent)
+            startActivity(intent)
+            overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
         }
     }
 

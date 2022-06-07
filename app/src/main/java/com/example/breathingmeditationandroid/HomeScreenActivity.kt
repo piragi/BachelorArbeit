@@ -7,31 +7,38 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
-import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.plattysoft.leonids.ParticleSystem
-import kotlinx.coroutines.*
+import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
 import kotlin.math.abs
 import kotlin.math.floor
 
 class HomeScreenActivity : ComponentActivity() {
 
-    private lateinit var container: ViewGroup
     private lateinit var particlesMain: ParticleSystem
     private lateinit var particlesSupprt: ParticleSystem
     private lateinit var serviceIntent: Intent
     private lateinit var mService: BluetoothConnection
     private lateinit var breathingUtils: BreathingUtils
 
+    private lateinit var bubble1: ImageView
+    private lateinit var bubble2: ImageView
+    private lateinit var bubble3: ImageView
+
+    private lateinit var coordinatesBubble1: Pair<Int, Int>
+    private lateinit var coordinatesBubble2: Pair<Int, Int>
+    private lateinit var coordinatesBubble3: Pair<Int, Int>
+
     private val xBorderLeft = ScreenUtils.xBorderLeft //TODO relative to device
     private val xBorderRight = ScreenUtils.xBorderRight
     private val yBorderTop = ScreenUtils.yBorderTop
     private val yBorderBottom = ScreenUtils.yBorderBottom
+
     private var currX: Double = 0.0
     private var currY: Double = 0.0
     private var prevX: Double = 0.0
@@ -41,9 +48,7 @@ class HomeScreenActivity : ComponentActivity() {
     private var prevThor: Double = 0.0
 
     private var selectionDetected: Boolean = false
-    private lateinit var bubble1: ImageView
-    private lateinit var bubble2: ImageView
-    private lateinit var bubble3: ImageView
+
     private lateinit var holdBreathGesture: HoldBreathGesture
 
     private var bubble1Selected = false
@@ -59,7 +64,6 @@ class HomeScreenActivity : ComponentActivity() {
             breathingUtils = BreathingUtils(mService)
             holdBreathGesture = HoldBreathGesture(mService, 5000.0)
             Log.i("init", "service connected")
-
             start()
 
         }
@@ -74,10 +78,12 @@ class HomeScreenActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.home_screen)
-        container = findViewById(R.id.home_screen)
+
         bubble1 = findViewById(R.id.bubble1)
         bubble2 = findViewById(R.id.bubble2)
         bubble3 = findViewById(R.id.bubble3)
+
+
 
         currX = xBorderLeft.toDouble()
         currY = yBorderBottom.toDouble()
@@ -91,9 +97,12 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun start() {
+        coordinatesBubble1 = Pair(bubble1.left, bubble1.right)
+        coordinatesBubble2 = Pair(bubble2.left, bubble2.right)
+        coordinatesBubble3 = Pair(bubble3.left, bubble3.right)
+
         initializeParticleSystems()
         animateLeaves()
-        detectSelection()
         detectScreenChange()
         holdBreathGesture.detect()
     }
@@ -126,6 +135,7 @@ class HomeScreenActivity : ComponentActivity() {
                 currY = (combinedValue).times(Calibrator.flowFactorY).plus(yBorderBottom)
 
                 lifecycleScope.launch {
+                    detectSelection()
                     moveLeaves(currX, currY, particlesMain)
                     moveLeaves(currX, currY, particlesSupprt)
                 }
@@ -137,7 +147,7 @@ class HomeScreenActivity : ComponentActivity() {
 
                 prevX = currX
                 prevY = currY
-                Thread.sleep(10)
+                Thread.sleep(2)
             }
         }
     }
@@ -178,50 +188,38 @@ class HomeScreenActivity : ComponentActivity() {
     //TODO sometimes not triggered
 
     private fun detectSelection() {
-        val coordinatesBubble1 =
-            Pair(findViewById<ImageView>(R.id.bubble1).left, findViewById<ImageView>(R.id.bubble1).right)
-        val coordinatesBubble2 =
-            Pair(findViewById<ImageView>(R.id.bubble2).left, findViewById<ImageView>(R.id.bubble2).right)
-        val coordinatesBubble3 =
-            Pair(findViewById<ImageView>(R.id.bubble3).left, findViewById<ImageView>(R.id.bubble3).right)
-        thread(start = true, isDaemon = true) {
-            while (!holdBreathGesture.hold) {
-                selectionDetected =
-                    inBubble(coordinatesBubble1) || inBubble(coordinatesBubble2) || inBubble(coordinatesBubble3)
+        selectionDetected =
+            inBubble(coordinatesBubble1) || inBubble(coordinatesBubble2) || inBubble(coordinatesBubble3)
 
-                if (selectionDetected) {
-                    holdBreathGesture.resumeDetection()
-                    if (inBubble(coordinatesBubble1)) {
+        if (selectionDetected) {
+            holdBreathGesture.resumeDetection()
+            if (inBubble(coordinatesBubble1)) {
 
-                        holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferOutAbdo
-                        holdBreathGesture.borderThor = Calibrator.holdBreathBufferOutThor
+                holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferOutAbdo
+                holdBreathGesture.borderThor = Calibrator.holdBreathBufferOutThor
 
-                        markSelection(bubble1, 1.0f)
+                markSelection(bubble1, 1.0f)
 
-                    }
-                    if (inBubble(coordinatesBubble2)) {
-
-                        holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
-                        holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
-
-                        markSelection(bubble2, 1.0f)
-                    }
-                    if (inBubble(coordinatesBubble3)) {
-                        holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
-                        holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
-
-                        markSelection(bubble3, 1.0f)
-                    }
-                } else {
-
-                    holdBreathGesture.stopDetection()
-
-                    markSelection(bubble1, 0.7f)
-                    markSelection(bubble2, 0.7f)
-                    markSelection(bubble3, 0.7f)
-                }
-                Thread.sleep(10)
             }
+            if (inBubble(coordinatesBubble2)) {
+
+                holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
+                holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
+
+                markSelection(bubble2, 1.0f)
+            }
+            if (inBubble(coordinatesBubble3)) {
+                holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
+                holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
+
+                markSelection(bubble3, 1.0f)
+            }
+        } else {
+            holdBreathGesture.stopDetection()
+
+            markSelection(bubble1, 0.7f)
+            markSelection(bubble2, 0.7f)
+            markSelection(bubble3, 0.7f)
         }
     }
 
