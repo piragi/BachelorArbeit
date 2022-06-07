@@ -15,9 +15,12 @@ class FeedbackTrees(
     val mService: BluetoothConnection
 ) : InspirationExpirationInterface {
 
-    private val treesLeft: ImageView = activity.findViewById<View>(R.id.trees_left_background) as ImageView
-    private val treesRight: ImageView = activity.findViewById<View>(R.id.trees_right_background) as ImageView
-    private val treesNeutral: ImageView = activity.findViewById<View>(R.id.trees_neutral) as ImageView
+    private val treesLeft: ImageView =
+        activity.findViewById<View>(R.id.trees_left_background) as ImageView
+    private val treesRight: ImageView =
+        activity.findViewById<View>(R.id.trees_right_background) as ImageView
+    private val treesNeutral: ImageView =
+        activity.findViewById<View>(R.id.trees_neutral) as ImageView
 
     init {
         activity.runOnUiThread {

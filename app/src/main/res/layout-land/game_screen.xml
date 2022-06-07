@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:showIn="@layout/activity_device"
-    tools:ignore="MissingDefaultResource">
+    tools:ignore="MissingDefaultResource"
+    tools:showIn="@layout/activity_device">
 
     <ImageView
         android:id="@+id/background"
@@ -35,10 +35,20 @@
         android:id="@+id/rocket"
         android:layout_width="66dp"
         android:layout_height="90dp"
-        android:layout_marginLeft="340dp"
-        android:layout_marginTop="200dp"
-        android:rotation="-17"
-        android:src="@drawable/rocket_shadow_left" />
+        android:layout_marginLeft="347dp"
+        android:layout_marginTop="215dp"
+        android:rotation="-16"
+        android:src="@drawable/rocket_shadow_left"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:id="@+id/rocket_without_fire"
+        android:layout_width="66dp"
+        android:layout_height="90dp"
+        android:layout_marginLeft="347dp"
+        android:layout_marginTop="215dp"
+        android:rotation="-16"
+        android:src="@drawable/rocket_shadow_left_without_fire" />
 
     <ImageView
         android:id="@+id/trees_neutral"
@@ -63,15 +73,5 @@
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
         android:src="@drawable/tree_right_background" />
-
-
-    <ImageView
-        android:id="@+id/rocket2"
-        android:layout_width="66dp"
-        android:layout_height="90dp"
-        android:layout_marginLeft="340dp"
-        android:layout_marginTop="200dp"
-        android:rotation="-17"
-        app:srcCompat="@drawable/rocket_shadow_left" />
 
 </RelativeLayout>

@@ -87,11 +87,9 @@ class GameScreen : ComponentActivity() {
             feedbackTrees = FeedbackTrees(this@GameScreen, mService)
             rocketTakeOff = RocketTakeOff(background.height, this@GameScreen)
             cloudsFadeOut = CloudsFadeOut(this@GameScreen)
-            //rocketTakeOff.startAnimation()
             startLevel()
         }
     }
-
 
     private fun startLevel() {
         thread(start = true, isDaemon = true) {
@@ -111,7 +109,7 @@ class GameScreen : ComponentActivity() {
                         //fadeout clouds
                         cloudsFadeOut.animationStart()
                     } else if (detectedSighBreathGesture.await()) {
-                        deepBreathLevel.animationStart()
+                        rocketTakeOff.startAnimation()
                     }
                 }
             } catch (consumed: InterruptedException) {

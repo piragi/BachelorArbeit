@@ -12,7 +12,7 @@ class CloudsFadeOut(private val activity: ComponentActivity) {
     fun animationStart() {
         val clouds = activity.findViewById<View>(R.id.background_clouds)
         val cloudFadeOut = AnimationUtils.loadAnimation(activity, R.anim.fadeout)
-        cloudFadeOut.setAnimationListener(object: Animation.AnimationListener {
+        cloudFadeOut.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(animation: Animation?) {
             }
 

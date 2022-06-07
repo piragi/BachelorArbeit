@@ -10,9 +10,11 @@ import com.example.breathingmeditationandroid.R
 class RocketTakeOff (private val height: Int, private val activity: ComponentActivity) {
 
     fun startAnimation() {
-        val rocket = activity.findViewById<View>(R.id.rocket) as ImageView
+        val rocketWithFire = activity.findViewById<View>(R.id.rocket) as ImageView
+        val rocketWithoutFire = activity.findViewById<View>(R.id.rocket_without_fire) as ImageView
         activity.runOnUiThread {
-            rocket.visibility = View.VISIBLE
+            rocketWithoutFire.visibility = View.INVISIBLE
+            rocketWithFire.visibility = View.VISIBLE
 
             ValueAnimator.ofFloat(0.0f, 1.0f).apply {
                 interpolator = LinearInterpolator()
@@ -21,8 +23,8 @@ class RocketTakeOff (private val height: Int, private val activity: ComponentAct
                 addUpdateListener {
                     val progressY = animatedValue as Float * (-height)
                     val progressX = animatedValue as Float * -90
-                    rocket.translationY = progressY
-                    rocket.translationX = progressX
+                    rocketWithFire.translationY = progressY
+                    rocketWithFire.translationX = progressX
                 }
             }
         }
