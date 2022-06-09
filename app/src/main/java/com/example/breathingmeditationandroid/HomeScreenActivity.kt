@@ -191,7 +191,6 @@ class HomeScreenActivity : ComponentActivity() {
     private fun detectSelection() {
         selectionDetected =
             inBubble(coordinatesBubble1) || inBubble(coordinatesBubble2) || inBubble(coordinatesBubble3)
-        Log.i("selection", "selection detected: $selectionDetected")
         if (selectionDetected) {
             holdBreathGesture.resumeDetection()
             if (inBubble(coordinatesBubble1)) {
@@ -230,6 +229,8 @@ class HomeScreenActivity : ComponentActivity() {
         stopLeaves()
     }
 
+
+    //TODO bugfix in screen change
     private fun detectScreenChange() {
         thread(start = true, isDaemon = true) {
             while (!holdBreathGesture.hold)
@@ -239,25 +240,24 @@ class HomeScreenActivity : ComponentActivity() {
             else if (bubble2Selected)
                 changeToCalibrationScreen()
             else changeToGameScreen()
-            Thread.sleep(10)
         }
     }
 
     private fun changeToAboutScreen() {
         stopActivity()
         bubble1Selected = false
-
         Intent(this, AboutScreen::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
-            overridePendingTransition(R.anim.slide_down_top, R.anim.slide_down_bottom)
+            overridePendingTransition(
+                R.anim.slide_down_top, R.anim.slide_down_bottom
+            )
         }
     }
 
     private fun changeToGameScreen() {
         stopActivity()
-        bubble2Selected = false
-
+        bubble3Selected = false
         Intent(this, GameScreen::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
@@ -266,8 +266,7 @@ class HomeScreenActivity : ComponentActivity() {
 
     private fun changeToCalibrationScreen() {
         stopActivity()
-        bubble3Selected = false
-
+        bubble2Selected = false
         Intent(this, CalibrationScreenActivity::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
