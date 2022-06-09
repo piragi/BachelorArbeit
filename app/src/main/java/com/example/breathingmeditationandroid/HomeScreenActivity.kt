@@ -65,7 +65,6 @@ class HomeScreenActivity : ComponentActivity() {
             holdBreathGesture = HoldBreathGesture(mService, 5000.0)
             Log.i("init", "service connected")
             start()
-
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -83,10 +82,15 @@ class HomeScreenActivity : ComponentActivity() {
         bubble2 = findViewById(R.id.bubble2)
         bubble3 = findViewById(R.id.bubble3)
 
-
+        Log.i("init", "create")
 
         currX = xBorderLeft.toDouble()
         currY = yBorderBottom.toDouble()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Log.i("init", "start")
         serviceIntent = intent?.extras?.getParcelable("Intent")!!
         applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
     }
@@ -97,17 +101,13 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun start() {
-        coordinatesBubble1 = Pair(bubble1.left, bubble1.right)
-        coordinatesBubble2 = Pair(bubble2.left, bubble2.right)
-        coordinatesBubble3 = Pair(bubble3.left, bubble3.right)
-
-        initializeParticleSystems()
+        initializeUIResources()
         animateLeaves()
         detectScreenChange()
         holdBreathGesture.detect()
     }
 
-    private fun initializeParticleSystems() {
+    private fun initializeUIResources() {
         particlesMain = ParticleSystem(this, 10, R.drawable.leaf2, 1000)
         particlesMain.setScaleRange(0.7f, 1.3f)
             .setSpeedRange(0.05f, 0.1f)
@@ -120,6 +120,9 @@ class HomeScreenActivity : ComponentActivity() {
             .setRotationSpeedRange(5f, 50f)
             .setFadeOut(250, AccelerateInterpolator())
             .emit(xBorderLeft, yBorderBottom, 10)
+        coordinatesBubble1 = Pair(bubble1.left, bubble1.right)
+        coordinatesBubble2 = Pair(bubble2.left, bubble2.right)
+        coordinatesBubble3 = Pair(bubble3.left, bubble3.right)
     }
 
     private fun animateLeaves() {
@@ -128,6 +131,7 @@ class HomeScreenActivity : ComponentActivity() {
             prevAbdo = currVal.first
             prevThor = currVal.second
             while (!stop) {
+                Log.i("coordinates", "$coordinatesBubble1, $coordinatesBubble2, $coordinatesBubble3")
                 val currValue = breathingUtils.smoothValue()
                 val combinedValue = breathingUtils.calcCombinedValue(currValue.first, currValue.second)
 
@@ -184,13 +188,10 @@ class HomeScreenActivity : ComponentActivity() {
         }
     }
 
-
-    //TODO sometimes not triggered
-
     private fun detectSelection() {
         selectionDetected =
             inBubble(coordinatesBubble1) || inBubble(coordinatesBubble2) || inBubble(coordinatesBubble3)
-
+        Log.i("selection", "selection detected: $selectionDetected")
         if (selectionDetected) {
             holdBreathGesture.resumeDetection()
             if (inBubble(coordinatesBubble1)) {
@@ -257,7 +258,7 @@ class HomeScreenActivity : ComponentActivity() {
         stopActivity()
         bubble2Selected = false
 
-        Intent(this, CalibrationScreenActivity::class.java).also { intent ->
+        Intent(this, GameScreen::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
         }
