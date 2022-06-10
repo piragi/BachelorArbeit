@@ -9,6 +9,10 @@ class BreathingUtils(private val mService: BluetoothConnection) {
 
     var inspiration = false
     var expiration = false
+    var currAbdo = 0.0
+    var currThor = 0.0
+    var prevAbdo = 0.0
+    var prevThor = 0.0
 
     init {
         detectInspirationAndExpiration()
@@ -67,9 +71,6 @@ class BreathingUtils(private val mService: BluetoothConnection) {
 
     // mehr "real time" als inspiration und expiration von mService. Ist teilweise wichtig
     private fun detectInspirationAndExpiration() {
-        var currAbdo = smoothValue().first
-        var currThor = smoothValue().second
-
         var abdoBuffer = arrayListOf<Double>()
         var thorBuffer = arrayListOf<Double>()
 
@@ -81,12 +82,7 @@ class BreathingUtils(private val mService: BluetoothConnection) {
                 // Log.i("utils", "inspiration: $inspiration")
                 // Log.i("utils", "expiration: $expiration")
 
-                Log.i("utils", "abdo: ${smoothValue().first}, thor: ${smoothValue().second}")
-
-                val currValue = smoothValue()
-
-                currAbdo = currValue.first
-                currThor = currValue.second
+                smoothValue()
 
                 if (abdoBuffer.size < bufferSize && thorBuffer.size < bufferSize) {
                     abdoBuffer.add(currAbdo)
@@ -136,18 +132,22 @@ class BreathingUtils(private val mService: BluetoothConnection) {
         }
     }
 
-    fun smoothValue(): Pair<Double, Double> {
+    fun smoothValue() {
         val valueListAbdo = arrayListOf(mService.mAbdoCorrected, mService.mThorCorrected)
         val valueListThor = arrayListOf(mService.mThorCorrected)
         while (valueListAbdo.size <= 6 && valueListThor.size <= 6) {
             valueListAbdo.add(mService.mAbdoCorrected)
             valueListThor.add(mService.mThorCorrected)
         }
-        return Pair(mService.smoothData(valueListAbdo), mService.smoothData(valueListThor))
+        prevAbdo = currAbdo
+        prevThor = currThor
+
+        currAbdo = mService.smoothData(valueListAbdo)
+        currThor = mService.smoothData(valueListThor)
     }
 
-    fun calcCombinedValue(valAbdo: Double, valThor: Double): Double {
-        val combinedValue = (valAbdo.plus(valThor)).plus(Calibrator.correction)
+    fun calcCombinedValue(): Double {
+        val combinedValue = (currAbdo.plus(currThor)).plus(Calibrator.correction)
         return if (combinedValue >= 0)
             combinedValue
         else 0.0
