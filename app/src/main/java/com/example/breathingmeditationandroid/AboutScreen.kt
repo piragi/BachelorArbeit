@@ -6,13 +6,10 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
-import com.plattysoft.leonids.ParticleSystem
 import kotlin.concurrent.thread
-import kotlin.math.roundToInt
 
 class AboutScreen : ComponentActivity() {
     private lateinit var serviceIntent: Intent
