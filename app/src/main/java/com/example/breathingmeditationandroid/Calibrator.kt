@@ -20,8 +20,8 @@ object Calibrator {
     var holdBreathBufferOutAbdo = 0.0
     var holdBreathBufferOutThor = 0.0
 
-    var flowFactorX = 0.0
-    var flowFactorY = 0.0
+    var flowFactorX = 400.0
+    var flowFactorY = -200.0
 
     var correction = 0.0
 
@@ -113,14 +113,16 @@ object Calibrator {
         val diffValuesThor = arrayListOf<Double>()
         val diffValuesAbdo = arrayListOf<Double>()
         val startTime = currentTimeMillis()
-        var prevValueAbdo = breathingUtils.smoothValue().first
-        var prevValueThor = breathingUtils.smoothValue().second
+        breathingUtils.smoothValue()
+        var prevValueAbdo = breathingUtils.currAbdo
+        var prevValueThor = breathingUtils.currThor
         Log.i("Calibration", "Calibrator: Hold breath")
         while (currentTimeMillis().minus(startTime) < time) {
-            diffValuesAbdo.add(abs(breathingUtils.smoothValue().first.minus(prevValueAbdo)))
-            diffValuesThor.add(abs(breathingUtils.smoothValue().second.minus(prevValueThor)))
-            prevValueAbdo = breathingUtils.smoothValue().first
-            prevValueThor = breathingUtils.smoothValue().second
+            breathingUtils.smoothValue()
+            diffValuesAbdo.add(abs(breathingUtils.currAbdo.minus(prevValueAbdo)))
+            diffValuesThor.add(abs(breathingUtils.currThor.minus(prevValueThor)))
+            prevValueAbdo = breathingUtils.currAbdo
+            prevValueThor = breathingUtils.currThor
         }
         when (pos) {
             "in" -> {

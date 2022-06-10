@@ -15,7 +15,7 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
     private var breathingUtils: BreathingUtils
     var startTime: Long = 0
     var hold = false
-    private var stop = false
+    private var stop = true
     var borderAbdo = 0.0
     var borderThor = 0.0
     private var time: Double
@@ -37,7 +37,7 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
 
     override fun detect() {
         thread(start = true, isDaemon = true) {
-            var prevValue = breathingUtils.smoothValue()
+            breathingUtils.smoothValue()
             startTime = currentTimeMillis()
             while (!hold) {
                 // Log.i("BreathHold", "hold: $hold")
@@ -46,10 +46,10 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
                 borderAbdo = 1.0
                 borderThor = 1.0
                 if (!stop) {
-                    val currValue = breathingUtils.smoothValue()
+                    breathingUtils.smoothValue()
                     if (!checkPrevValue(
-                            Pair(prevValue.first, prevValue.second),
-                            Pair(currValue.first, currValue.second)
+                            Pair(breathingUtils.prevAbdo, breathingUtils.prevThor),
+                            Pair(breathingUtils.currAbdo, breathingUtils.currThor)
                         )
                     ) {
                         hold = false
@@ -59,7 +59,7 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
                         break
                     }
                     Thread.sleep(5)
-                    prevValue = breathingUtils.smoothValue()
+                    breathingUtils.smoothValue()
                 } else startTime = currentTimeMillis()
             }
         }
