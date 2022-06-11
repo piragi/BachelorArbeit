@@ -44,7 +44,7 @@ class GamePause(activity: ComponentActivity, breathingUtils: BreathingUtils, hol
     private fun startAnimation() {
         thread(start = true, isDaemon = true) {
             while (!holdBreathGesture.hold) {
-                selectionUtils.animateLeaves()
+                selectionUtils.animateLeavesDiagonal()
                 breathingUtils.smoothValue()
                 Thread.sleep(2)
             }

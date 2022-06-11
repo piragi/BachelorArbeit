@@ -15,7 +15,7 @@
         android:hardwareAccelerated="false"
         android:largeHeap="true"
         android:theme="@style/Theme.AppCompat.Light">
-        <activity android:name=".StartupActivity"
+        <activity android:name=".screens.StartupActivity"
                   android:exported="true"
                   android:screenOrientation="landscape">
             <intent-filter>
@@ -24,17 +24,17 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".GameScreen"
+        <activity android:name=".screens.GameScreen"
                   android:hardwareAccelerated="true"
                   android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         </activity>
-        <activity android:name=".CalibrationScreenActivity"
+        <activity android:name=".screens.CalibrationScreenActivity"
                   android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         </activity>
-        <activity android:name=".HomeScreenActivity"
+        <activity android:name=".screens.HomeScreenActivity"
                   android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         </activity>
-        <activity android:name=".AboutScreen"
+        <activity android:name=".screens.AboutScreen"
                   android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         </activity>
         <service android:name=".BluetoothConnection"/>

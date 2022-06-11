@@ -39,9 +39,6 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
             breathingUtils.smoothValue()
             startTime = currentTimeMillis()
             while (!hold) {
-                // Log.i("BreathHold", "hold: $hold")
-                // Log.i("BreathHold", "time: ${currentTimeMillis()}, start time: $startTime")
-                Log.i("concurrency", "breathHold running")
                 borderAbdo = 1.0
                 borderThor = 1.0
                 if (!stop) {
@@ -51,11 +48,13 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
                             Pair(breathingUtils.currAbdo, breathingUtils.currThor)
                         )
                     ) {
+                        Log.i("breathHold", "prevAbdo: ${breathingUtils.prevAbdo}, currAbdo: ${breathingUtils.currAbdo}")
+                        Log.i("breathHold", "currAbdo: ${breathingUtils.prevThor}, currThor: ${breathingUtils.currThor}")
+
                         hold = false
                         startTime = currentTimeMillis()
                     } else if (currentTimeMillis().minus(startTime) >= time) {
                         hold = true
-                        break
                     }
                     Thread.sleep(5)
                     breathingUtils.smoothValue()

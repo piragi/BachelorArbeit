@@ -1,4 +1,4 @@
-package com.example.breathingmeditationandroid
+package com.example.breathingmeditationandroid.screens
 
 import android.content.ComponentName
 import android.content.Context
@@ -12,6 +12,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.breathingmeditationandroid.*
 import com.example.breathingmeditationandroid.gestures.*
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils

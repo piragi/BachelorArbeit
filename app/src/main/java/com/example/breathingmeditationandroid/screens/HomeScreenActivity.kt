@@ -1,4 +1,4 @@
-package com.example.breathingmeditationandroid
+package com.example.breathingmeditationandroid.screens
 
 import android.content.ComponentName
 import android.content.Context
@@ -9,6 +9,9 @@ import android.os.IBinder
 import android.util.Log
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
+import com.example.breathingmeditationandroid.BluetoothConnection
+import com.example.breathingmeditationandroid.R
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
@@ -42,8 +45,8 @@ class HomeScreenActivity : ComponentActivity() {
             mService = binder.getService()
             breathingUtils = BreathingUtils(mService)
             holdBreathGesture = HoldBreathGesture(mService, 5000.0)
-            Log.i("init", "service connected")
             start()
+            Log.i("init", "service connected")
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -94,7 +97,7 @@ class HomeScreenActivity : ComponentActivity() {
     private fun animateLeaves() {
         thread(start = true, isDaemon = true) {
             while (!holdBreathGesture.hold) {
-                selectionUtils.animateLeaves()
+                selectionUtils.animateLeavesDiagonal()
                 breathingUtils.smoothValue()
                 Thread.sleep(2)
             }
@@ -110,6 +113,7 @@ class HomeScreenActivity : ComponentActivity() {
     //TODO bugfix in screen change
     private fun detectScreenChange() {
         thread(start = true, isDaemon = true) {
+            holdBreathGesture.detect()
             while (!holdBreathGesture.hold)
                 continue
             if (bubble1.first.tag == "selected" && !(bubble2.first.tag == "selected" || bubble3.first.tag == "selected"))

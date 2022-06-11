@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#3AA8A5"
     android:id="@+id/calibration"
-    tools:context=".CalibrationScreenActivity" android:orientation="horizontal">
+    tools:context=".screens.CalibrationScreenActivity" android:orientation="horizontal">
     <ImageView
         android:id="@+id/calibration_background"
         android:layout_width="match_parent"

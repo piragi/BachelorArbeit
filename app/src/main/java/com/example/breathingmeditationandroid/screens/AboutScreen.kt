@@ -1,4 +1,4 @@
-package com.example.breathingmeditationandroid
+package com.example.breathingmeditationandroid.screens
 
 import android.content.ComponentName
 import android.content.Context
@@ -6,8 +6,11 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
+import com.example.breathingmeditationandroid.BluetoothConnection
+import com.example.breathingmeditationandroid.R
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
@@ -27,6 +30,7 @@ class AboutScreen : ComponentActivity() {
             mService = binder.getService()
             holdBreathGesture = HoldBreathGesture(mService, 5000.0)
             breathingUtils = BreathingUtils(mService)
+            holdBreathGesture.detect()
             animateLeaves()
             returnToHomeScreen()
         }
@@ -41,12 +45,10 @@ class AboutScreen : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.about_screen)
         cloud = findViewById(R.id.cloud)
-
-        serviceIntent = intent?.extras?.getParcelable("Intent")!!
-        applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
     }
 
     private fun animateLeaves() {
+        Log.i("clouds", "${Pair(cloud.left, cloud.right)}")
         selectionUtils = SelectionUtils(
             this@AboutScreen,
             breathingUtils,
@@ -55,7 +57,7 @@ class AboutScreen : ComponentActivity() {
         )
         thread(start = true, isDaemon = true) {
             while (!holdBreathGesture.hold) {
-                selectionUtils.animateLeaves()
+                selectionUtils.animateLeavesHorizontal()
                 Thread.sleep(2)
             }
         }
@@ -65,12 +67,18 @@ class AboutScreen : ComponentActivity() {
         thread(start = true, isDaemon = true) {
             while (!holdBreathGesture.hold)
                 continue
+            Intent(this, HomeScreenActivity::class.java).also { intent ->
+                intent.putExtra("Intent", serviceIntent)
+                startActivity(intent)
+                overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
+            }
         }
-        Intent(this, HomeScreenActivity::class.java).also { intent ->
-            intent.putExtra("Intent", serviceIntent)
-            startActivity(intent)
-            overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
-        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        serviceIntent = intent?.extras?.getParcelable("Intent")!!
+        applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
     }
 
     override fun onDestroy() {

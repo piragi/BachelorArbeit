@@ -1,4 +1,4 @@
-package com.example.breathingmeditationandroid
+package com.example.breathingmeditationandroid.screens
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -16,6 +16,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.breathingmeditationandroid.R
+import com.example.breathingmeditationandroid.StartBluetoothConnection
 import com.example.breathingmeditationandroid.utils.ScreenUtils
 
 
@@ -61,13 +63,13 @@ class StartupActivity : AppCompatActivity() {
             return mDevices.size
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DevicesAdapter.DeviceViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceViewHolder {
             val v: View = LayoutInflater.from(parent.context).inflate(R.layout.row_item, parent, false)
             return DeviceViewHolder(v)
         }
 
         @SuppressLint("MissingPermission") //TODO: Supressed permission
-        override fun onBindViewHolder(holder: DevicesAdapter.DeviceViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: DeviceViewHolder, position: Int) {
             val device: BluetoothDevice = mDevices[position]
             holder.textView.text = device.name
             holder.device = device
@@ -86,7 +88,7 @@ class StartupActivity : AppCompatActivity() {
                     val bluetoothConnection = StartBluetoothConnection(device, applicationContext)
                     val serviceIntent = bluetoothConnection.startBluetoothConnection()
 
-                    Intent(applicationContext, CalibrationScreenActivity::class.java).also { intent ->
+                    Intent(applicationContext, HomeScreenActivity::class.java).also { intent ->
                         intent.putExtra("Intent", serviceIntent)
                         startActivity(intent)
                     }

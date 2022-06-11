@@ -1,5 +1,6 @@
 package com.example.breathingmeditationandroid.utils
 
+import android.util.Log
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
@@ -38,9 +39,16 @@ class SelectionUtils(
         initializeLeaves()
     }
 
-    fun animateLeaves() {
+    fun animateLeavesDiagonal() {
         moveLeaves(leavesMain, calcXMovement(), calcYMovement())
         moveLeaves(leavesSupport, calcXMovement(), calcYMovement())
+        detectSelection()
+        breathingUtils.smoothValue()
+    }
+
+    fun animateLeavesHorizontal() {
+        moveLeaves(leavesMain, calcXMovement(), ScreenUtils.yBorderBottom.toDouble())
+        moveLeaves(leavesSupport, calcXMovement(), ScreenUtils.yBorderBottom.toDouble())
         detectSelection()
         breathingUtils.smoothValue()
     }
@@ -53,24 +61,19 @@ class SelectionUtils(
         val x = floor(newX)
         val y = floor(newY)
         if (x in xBorderLeft.toDouble()..xBorderRight.toDouble() && y in yBorderTop.toDouble()..yBorderBottom.toDouble()) {
-            // particleSystem.updateEmitPoint((abs(prevX.minus(currX))).toInt(), (abs(prevY.minus(currY))).toInt())
             particleSystem.updateEmitPoint(x.toInt(), y.toInt())
         } else if (y in yBorderTop.toDouble()..yBorderBottom.toDouble()) {
             if (x < xBorderLeft.toDouble()) {
-                // particleSystem.updateEmitPoint(xBorderLeft, (abs(prevY.minus(currY))).toInt())
                 particleSystem.updateEmitPoint(xBorderLeft, y.toInt())
             }
             if (x > xBorderRight.toDouble()) {
-                // particleSystem.updateEmitPoint(xBorderRight, (abs(prevY.minus(currY))).toInt())
                 particleSystem.updateEmitPoint(xBorderRight, y.toInt())
             }
         } else if (x in xBorderLeft.toDouble()..xBorderRight.toDouble()) {
             if (y > yBorderBottom.toDouble()) {
-                // particleSystem.updateEmitPoint((abs(prevX.minus(currX))).toInt(), yBorderBottom)
                 particleSystem.updateEmitPoint(x.toInt(), yBorderBottom)
             }
             if (y < yBorderTop.toDouble()) {
-                // particleSystem.updateEmitPoint((abs(prevX.minus(currX))).toInt(), yBorderTop)
                 particleSystem.updateEmitPoint(x.toInt(), yBorderTop)
             }
         }
@@ -89,6 +92,7 @@ class SelectionUtils(
                     holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
                     holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
                 }
+                Log.i("selection", "selection detected")
                 holdBreathGesture.resumeDetection()
                 selectionDetected = true
                 markSelection(bubble.first, 1.0f)

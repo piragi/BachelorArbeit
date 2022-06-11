@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#3AA8A5"
     android:id="@+id/home_screen"
-    tools:context=".HomeScreenActivity" android:orientation="horizontal">
+    tools:context=".screens.HomeScreenActivity" android:orientation="horizontal">
 
     <ImageView
         android:id="@+id/background"

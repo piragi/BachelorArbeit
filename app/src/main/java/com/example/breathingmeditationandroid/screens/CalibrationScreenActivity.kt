@@ -1,4 +1,4 @@
-package com.example.breathingmeditationandroid
+package com.example.breathingmeditationandroid.screens
 
 import android.content.ComponentName
 import android.content.Context
@@ -12,6 +12,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.breathingmeditationandroid.BluetoothConnection
+import com.example.breathingmeditationandroid.Calibrator
+import com.example.breathingmeditationandroid.R
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.plattysoft.leonids.ParticleSystem
 import kotlinx.coroutines.*
