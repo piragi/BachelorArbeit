@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.breathingmeditationandroid.utils.ScreenUtils
 
 
 class StartupActivity : AppCompatActivity() {
@@ -85,7 +86,7 @@ class StartupActivity : AppCompatActivity() {
                     val bluetoothConnection = StartBluetoothConnection(device, applicationContext)
                     val serviceIntent = bluetoothConnection.startBluetoothConnection()
 
-                    Intent(applicationContext, HomeScreenActivity::class.java).also { intent ->
+                    Intent(applicationContext, CalibrationScreenActivity::class.java).also { intent ->
                         intent.putExtra("Intent", serviceIntent)
                         startActivity(intent)
                     }

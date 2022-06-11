@@ -1,6 +1,8 @@
 package com.example.breathingmeditationandroid
 
 import android.util.Log
+import com.example.breathingmeditationandroid.utils.BreathingUtils
+import com.example.breathingmeditationandroid.utils.ScreenUtils
 import java.lang.System.currentTimeMillis
 import kotlin.math.abs
 import kotlin.math.max

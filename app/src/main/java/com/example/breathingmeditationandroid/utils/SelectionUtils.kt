@@ -1,9 +1,10 @@
-package com.example.breathingmeditationandroid
+package com.example.breathingmeditationandroid.utils
 
-import android.util.Log
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
+import com.example.breathingmeditationandroid.Calibrator
+import com.example.breathingmeditationandroid.R
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.plattysoft.leonids.ParticleSystem
 import kotlin.math.floor

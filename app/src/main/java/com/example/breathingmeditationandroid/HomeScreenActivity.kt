@@ -6,15 +6,13 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.provider.Settings.Global
 import android.util.Log
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
-import androidx.lifecycle.lifecycleScope
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
+import com.example.breathingmeditationandroid.utils.BreathingUtils
+import com.example.breathingmeditationandroid.utils.SelectionUtils
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
 
 class HomeScreenActivity : ComponentActivity() {

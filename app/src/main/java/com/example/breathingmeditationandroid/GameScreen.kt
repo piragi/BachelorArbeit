@@ -9,9 +9,12 @@ import android.os.IBinder
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.breathingmeditationandroid.gestures.*
+import com.example.breathingmeditationandroid.utils.BreathingUtils
+import com.example.breathingmeditationandroid.utils.SelectionUtils
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
@@ -31,6 +34,13 @@ class GameScreen : ComponentActivity() {
     private lateinit var deepBreathLevel: DeepBreathLevel
     private lateinit var birdsEmergingLevel: BirdsEmerging
     private lateinit var pause: GamePause
+    private lateinit var selectionUtils: SelectionUtils
+
+    private lateinit var whiteBox: ImageView
+    private lateinit var resumeBubble: ImageView
+    private lateinit var endBubble: ImageView
+    private lateinit var resumeText: TextView
+    private lateinit var endText: TextView
 
     private lateinit var snow: ImageView
 
@@ -80,7 +90,7 @@ class GameScreen : ComponentActivity() {
             deepBreathLevel = DeepBreathLevel(snow, this@GameScreen)
             birdsEmergingLevel = BirdsEmerging(this@GameScreen)
             birdsEmergingLevel.animationStart()
-            pause = GamePause(this@GameScreen, breathingUtils, holdBreathGesture)
+            getUiResources()
             startLevel()
         }
     }
@@ -89,12 +99,9 @@ class GameScreen : ComponentActivity() {
         thread(start = true, isDaemon = true) {
             try {
                 lifecycleScope.launch {
-                    deepBreathLevel.animationStart()
-                    val detectedBreathHold = holdBreathGesture.detected()
-                    if (detectedBreathHold.await()) {
-                        pause.pauseGame()
-                        resumeGame()
-                    }
+                    // deepBreathLevel.animationStart()
+
+                    listenForPause()
 
 //                    val detectedThorBreathGesture = deepThorBreathGesture.detected()
 //                    val detectedAbdoBreathGesture = deepAbdoBreathGesture.detected()
@@ -117,14 +124,56 @@ class GameScreen : ComponentActivity() {
         }
     }
 
-    private fun resumeGame() {
-        while (!pause.end && !pause.resume) {
-            continue
+    private fun listenForPause() {
+        pauseGame()
+        resumeGame()
+    }
+
+    private fun pauseGame() {
+        runOnUiThread {
+            whiteBox.alpha = 0.5f
+            resumeBubble.alpha = 0.7f
+            endBubble.alpha = 0.7f
+            resumeText.alpha = 1.0f
+            endText.alpha = 1.0f
         }
-        if (pause.end)
-            Intent(this, HomeScreenActivity::class.java).also { intent ->
-                intent.putExtra("Intent", serviceIntent)
-                startActivity(intent)
+        pause = GamePause(this@GameScreen, breathingUtils, holdBreathGesture, prepareSelection())
+        pause.pauseGame()
+    }
+
+    private fun resumeGame() {
+        thread(start = true, isDaemon = true) {
+            while (!pause.end && !pause.resume) {
+                continue
             }
+            runOnUiThread {
+                whiteBox.alpha = 1.0f
+                resumeBubble.alpha = 0.0F
+                endBubble.alpha = 0.0F
+                resumeText.alpha = 0.0F
+                endText.alpha = 0.0F
+            }
+            if (pause.end)
+                Intent(this, HomeScreenActivity::class.java).also { intent ->
+                    intent.putExtra("Intent", serviceIntent)
+                    startActivity(intent)
+                }
+        }
+    }
+
+    private fun prepareSelection(): SelectionUtils {
+        val bubbles = arrayOf(
+            Pair(endBubble, Pair(endBubble.left, endBubble.right)),
+            Pair(resumeBubble, Pair(resumeBubble.left, resumeBubble.right))
+        )
+        return SelectionUtils(this@GameScreen, breathingUtils, holdBreathGesture, bubbles)
+    }
+
+    private fun getUiResources() {
+        whiteBox = findViewById(R.id.white_box)
+        resumeBubble = findViewById(R.id.resumeBubble)
+        endBubble = findViewById(R.id.endBubble)
+        resumeText = findViewById(R.id.resume)
+        endText = findViewById(R.id.end)
     }
 }

@@ -1,6 +1,5 @@
 package com.example.breathingmeditationandroid
 
-import android.bluetooth.BluetoothDevice
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -13,6 +12,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.plattysoft.leonids.ParticleSystem
 import kotlinx.coroutines.*
 import kotlin.concurrent.thread

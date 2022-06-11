@@ -9,6 +9,8 @@ import android.os.IBinder
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
+import com.example.breathingmeditationandroid.utils.BreathingUtils
+import com.example.breathingmeditationandroid.utils.SelectionUtils
 import kotlin.concurrent.thread
 
 class AboutScreen : ComponentActivity() {

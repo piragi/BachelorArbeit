@@ -1,4 +1,4 @@
-package com.example.breathingmeditationandroid
+package com.example.breathingmeditationandroid.utils
 
 import androidx.appcompat.app.AppCompatActivity
 

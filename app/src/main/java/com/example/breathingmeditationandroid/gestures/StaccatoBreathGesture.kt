@@ -2,7 +2,7 @@ package com.example.breathingmeditationandroid.gestures
 
 import android.util.Log
 import com.example.breathingmeditationandroid.BluetoothConnection
-import com.example.breathingmeditationandroid.BreathingUtils
+import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.example.breathingmeditationandroid.Calibrator
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async

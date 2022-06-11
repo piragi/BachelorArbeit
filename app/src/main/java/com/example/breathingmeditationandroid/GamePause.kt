@@ -1,20 +1,20 @@
 package com.example.breathingmeditationandroid
-
+import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
+import com.example.breathingmeditationandroid.utils.BreathingUtils
+import com.example.breathingmeditationandroid.utils.SelectionUtils
 import kotlin.concurrent.thread
 
-class GamePause(activity: ComponentActivity, breathingUtils: BreathingUtils, holdBreathGesture: HoldBreathGesture) {
+class GamePause(activity: ComponentActivity, breathingUtils: BreathingUtils, holdBreathGesture: HoldBreathGesture, selectionUtils: SelectionUtils) {
 
     private var activity: ComponentActivity
     private var breathingUtils: BreathingUtils
     private var holdBreathGesture: HoldBreathGesture
     private var selectionUtils: SelectionUtils
-    private lateinit var bubbles: Array<Pair<ImageView, Pair<Int, Int>>>
-    private var background: RelativeLayout
+    private var background: ViewGroup
     private var resumeBubble: ImageView
     private var endBubble: ImageView
     private var resumeText: TextView
@@ -26,7 +26,7 @@ class GamePause(activity: ComponentActivity, breathingUtils: BreathingUtils, hol
         this.activity = activity
         this.breathingUtils = breathingUtils
         this.holdBreathGesture = holdBreathGesture
-        this.selectionUtils = SelectionUtils(activity, breathingUtils, holdBreathGesture, bubbles)
+        this.selectionUtils = selectionUtils
 
         background = activity.findViewById(R.id.game_screen)
         resumeBubble = activity.findViewById(R.id.resumeBubble)
@@ -34,20 +34,9 @@ class GamePause(activity: ComponentActivity, breathingUtils: BreathingUtils, hol
         resumeText = activity.findViewById(R.id.resume)
         endText = activity.findViewById(R.id.end)
 
-        bubbles = arrayOf(
-            Pair(endBubble, Pair(endBubble.left, endBubble.right)),
-            Pair(resumeBubble, Pair(resumeBubble.left, resumeBubble.right))
-        )
     }
 
     fun pauseGame() {
-        activity.runOnUiThread {
-            background.alpha = 0.5f
-            resumeBubble.alpha = 0.7f
-            endBubble.alpha = 0.7f
-            resumeText.alpha = 1.0f
-            endText.alpha = 1.0f
-        }
         startAnimation()
         detectScreenChange()
     }
@@ -69,19 +58,8 @@ class GamePause(activity: ComponentActivity, breathingUtils: BreathingUtils, hol
             if (endBubble.tag == "selected")
                 end = true
             else if (resumeBubble.tag == "selected") {
-                resumeGame()
                 resume = true
             }
-        }
-    }
-
-    private fun resumeGame() {
-        activity.runOnUiThread {
-            background.alpha = 1.0f
-            resumeBubble.alpha = 0.0F
-            endBubble.alpha = 0.0F
-            resumeText.alpha = 0.0F
-            endText.alpha = 0.0F
         }
     }
 }
