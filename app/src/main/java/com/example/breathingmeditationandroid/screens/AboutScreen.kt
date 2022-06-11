@@ -7,13 +7,18 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
+import android.view.ViewTreeObserver
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.breathingmeditationandroid.BluetoothConnection
 import com.example.breathingmeditationandroid.R
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
 
 class AboutScreen : ComponentActivity() {
@@ -23,6 +28,7 @@ class AboutScreen : ComponentActivity() {
     private lateinit var holdBreathGesture: HoldBreathGesture
     private lateinit var cloud: ImageView
     private lateinit var selectionUtils: SelectionUtils
+    private lateinit var cloudCoordinates: Pair<Int, Int>
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -47,18 +53,33 @@ class AboutScreen : ComponentActivity() {
         cloud = findViewById(R.id.cloud)
     }
 
+    //TODO not detecting correctly sometimes
+    private fun getBubbleCoordinates() {
+        if (cloud.left == 0 && cloud.right == 0) {
+            Log.i("bubbles", "only zero values")
+            cloud.viewTreeObserver.addOnGlobalLayoutListener {
+                val left: Int = cloud.left
+                val right: Int = cloud.right
+                cloudCoordinates = Pair(left, right)
+            }
+        } else cloudCoordinates = Pair(cloud.left, cloud.right)
+    }
+
     private fun animateLeaves() {
-        Log.i("clouds", "${Pair(cloud.left, cloud.right)}")
-        selectionUtils = SelectionUtils(
-            this@AboutScreen,
-            breathingUtils,
-            holdBreathGesture,
-            arrayOf(Pair(cloud, Pair(cloud.left, cloud.right)))
-        )
-        thread(start = true, isDaemon = true) {
-            while (!holdBreathGesture.hold) {
-                selectionUtils.animateLeavesHorizontal()
-                Thread.sleep(2)
+        getBubbleCoordinates()
+        if (this::cloudCoordinates.isInitialized) {
+            Log.i("bubbles", "initialized")
+            selectionUtils = SelectionUtils(
+                this@AboutScreen,
+                breathingUtils,
+                holdBreathGesture,
+                arrayListOf(Pair(cloud, cloudCoordinates))
+            )
+            thread(start = true, isDaemon = true) {
+                while (!holdBreathGesture.hold) {
+                    selectionUtils.animateLeavesHorizontal()
+                    Thread.sleep(2)
+                }
             }
         }
     }
@@ -71,6 +92,7 @@ class AboutScreen : ComponentActivity() {
                 intent.putExtra("Intent", serviceIntent)
                 startActivity(intent)
                 overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
+                finish()
             }
         }
     }

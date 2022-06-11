@@ -163,7 +163,7 @@ class GameScreen : ComponentActivity() {
     }
 
     private fun prepareSelection(): SelectionUtils {
-        val bubbles = arrayOf(
+        val bubbles = arrayListOf(
             Pair(endBubble, Pair(endBubble.left, endBubble.right)),
             Pair(resumeBubble, Pair(resumeBubble.left, resumeBubble.right))
         )

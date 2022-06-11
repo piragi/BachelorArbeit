@@ -7,16 +7,19 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
+import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.lifecycleScope
 import com.example.breathingmeditationandroid.BluetoothConnection
 import com.example.breathingmeditationandroid.R
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
-import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
+
 
 class HomeScreenActivity : ComponentActivity() {
 
@@ -24,13 +27,13 @@ class HomeScreenActivity : ComponentActivity() {
     private lateinit var mService: BluetoothConnection
     private lateinit var breathingUtils: BreathingUtils
 
-    private lateinit var bubble1: Pair<ImageView, Pair<Int, Int>>
-    private lateinit var bubble2: Pair<ImageView, Pair<Int, Int>>
-    private lateinit var bubble3: Pair<ImageView, Pair<Int, Int>>
+    private lateinit var bubble1: ImageView
+    private lateinit var bubble2: ImageView
+    private lateinit var bubble3: ImageView
 
-    private lateinit var bubbles: Array<Pair<ImageView, Pair<Int, Int>>>
+    private lateinit var bubbles: ArrayList<Pair<ImageView, Pair<Int, Int>>>
 
-    private lateinit var breathHoldDetected: Deferred<Boolean>
+    private lateinit var view: ConstraintLayout
 
     private lateinit var holdBreathGesture: HoldBreathGesture
     private lateinit var selectionUtils: SelectionUtils
@@ -59,10 +62,11 @@ class HomeScreenActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.home_screen)
+        view = findViewById(R.id.home_screen)
 
-        bubble1 = Pair(findViewById(R.id.bubble1), Pair(0, 0))
-        bubble2 = Pair(findViewById(R.id.bubble2), Pair(0, 0))
-        bubble3 = Pair(findViewById(R.id.bubble3), Pair(0, 0))
+        bubble1 = findViewById(R.id.bubble1)
+        bubble2 = findViewById(R.id.bubble2)
+        bubble3 = findViewById(R.id.bubble3)
 
         Log.i("init", "create")
     }
@@ -81,16 +85,41 @@ class HomeScreenActivity : ComponentActivity() {
 
     private fun start() {
         initializeBubbles()
-        selectionUtils = SelectionUtils(this@HomeScreenActivity, breathingUtils, holdBreathGesture, bubbles)
-        animateLeaves()
-        detectScreenChange()
+        if (this::bubbles.isInitialized) {
+            for(bubble in bubbles) {
+                Log.i("bubbles", "${bubble.second}")
+            }
+            lifecycleScope.launch {
+                selectionUtils =
+                    SelectionUtils(this@HomeScreenActivity, breathingUtils, holdBreathGesture, bubbles)
+                animateLeaves()
+                detectScreenChange()
+            }
+        }
     }
 
     private fun initializeBubbles() {
-        bubbles = arrayOf(
-            Pair(bubble1.first, Pair(bubble1.first.left, bubble1.first.right)),
-            Pair(bubble2.first, Pair(bubble2.first.left, bubble2.first.right)),
-            Pair(bubble3.first, Pair(bubble3.first.left, bubble3.first.right))
+        if (bubble1.left == 0 || bubble1.right == 0 || bubble2.left == 0 || bubble2.right == 0 || bubble3.left == 0 || bubble3.right == 0) {
+            bubbles = arrayListOf()
+            bubble1.viewTreeObserver.addOnGlobalLayoutListener {
+                val left: Int = bubble1.left
+                val right: Int = bubble1.right
+                bubbles.add(Pair(bubble1, Pair(left, right)))
+            }
+            bubble2.viewTreeObserver.addOnGlobalLayoutListener {
+                val left: Int = bubble2.left
+                val right: Int = bubble2.right
+                bubbles.add(Pair(bubble2, Pair(left, right)))
+            }
+            bubble3.viewTreeObserver.addOnGlobalLayoutListener {
+                val left: Int = bubble3.left
+                val right: Int = bubble3.right
+                bubbles.add(Pair(bubble3, Pair(left, right)))
+            }
+        } else bubbles = arrayListOf(
+            Pair(bubble1, Pair(bubble1.left, bubble1.right)),
+            Pair(bubble2, Pair(bubble2.left, bubble2.right)),
+            Pair(bubble3, Pair(bubble3.left, bubble3.right))
         )
     }
 
@@ -109,18 +138,16 @@ class HomeScreenActivity : ComponentActivity() {
         selectionUtils.stopLeaves()
     }
 
-
-    //TODO bugfix in screen change
     private fun detectScreenChange() {
         thread(start = true, isDaemon = true) {
             holdBreathGesture.detect()
             while (!holdBreathGesture.hold)
                 continue
-            if (bubble1.first.tag == "selected" && !(bubble2.first.tag == "selected" || bubble3.first.tag == "selected"))
+            if (bubble1.tag == "selected" && !(bubble2.tag == "selected" || bubble3.tag == "selected"))
                 changeToAboutScreen()
-            else if ((bubble2.first.tag == "selected" && !(bubble1.first.tag == "selected" || bubble3.first.tag == "selected")))
+            else if ((bubble2.tag == "selected" && !(bubble1.tag == "selected" || bubble3.tag == "selected")))
                 changeToCalibrationScreen()
-            else if (bubble3.first.tag == "selected" && !(bubble1.first.tag == "selected" || bubble2.first.tag == "selected"))
+            else if (bubble3.tag == "selected" && !(bubble1.tag == "selected" || bubble2.tag == "selected"))
                 changeToGameScreen()
         }
     }
@@ -134,6 +161,7 @@ class HomeScreenActivity : ComponentActivity() {
             overridePendingTransition(
                 R.anim.slide_down_top, R.anim.slide_down_bottom
             )
+            finish()
         }
     }
 
@@ -143,6 +171,7 @@ class HomeScreenActivity : ComponentActivity() {
         Intent(this, GameScreen::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
+            finish()
         }
     }
 
@@ -155,6 +184,7 @@ class HomeScreenActivity : ComponentActivity() {
             overridePendingTransition(
                 R.anim.slide_down_top, R.anim.slide_down_bottom
             )
+            finish()
         }
     }
 }

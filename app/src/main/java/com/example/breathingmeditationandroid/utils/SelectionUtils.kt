@@ -14,11 +14,11 @@ class SelectionUtils(
     activity: ComponentActivity,
     breathingUtils: BreathingUtils,
     holdBreathGesture: HoldBreathGesture? = null,
-    bubbles: Array<Pair<ImageView, Pair<Int, Int>>>
+    bubbles: ArrayList<Pair<ImageView, Pair<Int, Int>>>
 ) {
     private lateinit var leavesMain: ParticleSystem
     private lateinit var leavesSupport: ParticleSystem
-    private var bubbles: Array<Pair<ImageView, Pair<Int, Int>>>
+    private var bubbles: ArrayList<Pair<ImageView, Pair<Int, Int>>>
 
     private var activity: ComponentActivity
     private var breathingUtils: BreathingUtils
@@ -92,7 +92,6 @@ class SelectionUtils(
                     holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
                     holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
                 }
-                Log.i("selection", "selection detected")
                 holdBreathGesture.resumeDetection()
                 selectionDetected = true
                 markSelection(bubble.first, 1.0f)
@@ -106,6 +105,7 @@ class SelectionUtils(
     }
 
     private fun inBubble(coordinatesBubble: Pair<Int, Int>): Boolean {
+        Log.i("selection", "currx: $currX, range: $coordinatesBubble")
         return currX in coordinatesBubble.first.toDouble()..coordinatesBubble.second.toDouble()
     }
 
