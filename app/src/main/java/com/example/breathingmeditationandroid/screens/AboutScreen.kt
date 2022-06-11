@@ -28,7 +28,7 @@ class AboutScreen : ComponentActivity() {
     private lateinit var holdBreathGesture: HoldBreathGesture
     private lateinit var cloud: ImageView
     private lateinit var selectionUtils: SelectionUtils
-    private lateinit var cloudCoordinates: Pair<Int, Int>
+    private lateinit var clouds: ArrayList<Pair<ImageView, Pair<Int, Int>>>
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -57,23 +57,25 @@ class AboutScreen : ComponentActivity() {
     private fun getBubbleCoordinates() {
         if (cloud.left == 0 && cloud.right == 0) {
             Log.i("bubbles", "only zero values")
+            clouds = arrayListOf()
             cloud.viewTreeObserver.addOnGlobalLayoutListener {
                 val left: Int = cloud.left
                 val right: Int = cloud.right
-                cloudCoordinates = Pair(left, right)
+                Log.i("bubbles", "$left, $right")
+                clouds.add(Pair(cloud, Pair(left, right)))
             }
-        } else cloudCoordinates = Pair(cloud.left, cloud.right)
+        } else clouds = arrayListOf(Pair(cloud, Pair(cloud.left, cloud.right)))
     }
 
     private fun animateLeaves() {
         getBubbleCoordinates()
-        if (this::cloudCoordinates.isInitialized) {
+        if (this::clouds.isInitialized) {
             Log.i("bubbles", "initialized")
             selectionUtils = SelectionUtils(
                 this@AboutScreen,
                 breathingUtils,
                 holdBreathGesture,
-                arrayListOf(Pair(cloud, cloudCoordinates))
+                clouds
             )
             thread(start = true, isDaemon = true) {
                 while (!holdBreathGesture.hold) {

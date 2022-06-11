@@ -128,7 +128,7 @@ class HomeScreenActivity : ComponentActivity() {
             while (!holdBreathGesture.hold) {
                 selectionUtils.animateLeavesDiagonal()
                 breathingUtils.smoothValue()
-                Thread.sleep(2)
+                Thread.sleep(5)
             }
         }
     }
