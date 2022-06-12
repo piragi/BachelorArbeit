@@ -126,13 +126,16 @@ class GameScreen : ComponentActivity() {
             while (true) {
                 if (holdBreathGesture.hold && !launched) {
                     launched = true
-                    pauseGame()
+                    lifecycleScope.launch {
+                        pauseGame()
+                    }
                 }
                 if (pause.end)
                     changeToHomeScreen()
                 else if (pause.resume) {
                     resumeGame()
                     holdBreathGesture.detect()
+                    launched = false
                 }
             }
         }
@@ -142,7 +145,6 @@ class GameScreen : ComponentActivity() {
         Intent(this, HomeScreenActivity::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
-            overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
             finish()
         }
     }

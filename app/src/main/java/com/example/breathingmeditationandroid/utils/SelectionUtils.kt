@@ -36,21 +36,24 @@ class SelectionUtils(
         this.breathingUtils = breathingUtils
         this.holdBreathGesture = holdBreathGesture!!
         this.bubbles = bubbles
-        initializeLeaves()
     }
 
     fun animateLeavesDiagonal() {
-        moveLeaves(leavesMain, calcXMovement(), calcYMovement())
-        moveLeaves(leavesSupport, calcXMovement(), calcYMovement())
-        detectSelection()
-        breathingUtils.smoothValue()
+        if (this::leavesMain.isInitialized && this::leavesSupport.isInitialized) {
+            moveLeaves(leavesMain, calcXMovement(), calcYMovement())
+            moveLeaves(leavesSupport, calcXMovement(), calcYMovement())
+            detectSelection()
+            breathingUtils.smoothValue()
+        }
     }
 
     fun animateLeavesHorizontal() {
-        moveLeaves(leavesMain, calcXMovement(), ScreenUtils.yBorderBottom.toDouble())
-        moveLeaves(leavesSupport, calcXMovement(), ScreenUtils.yBorderBottom.toDouble())
-        detectSelection()
-        breathingUtils.smoothValue()
+        if (this::leavesMain.isInitialized && this::leavesSupport.isInitialized) {
+            moveLeaves(leavesMain, calcXMovement(), ScreenUtils.yBorderBottom.toDouble())
+            moveLeaves(leavesSupport, calcXMovement(), ScreenUtils.yBorderBottom.toDouble())
+            detectSelection()
+            breathingUtils.smoothValue()
+        }
     }
 
     private fun moveLeaves(
@@ -137,6 +140,10 @@ class SelectionUtils(
     fun stopLeaves() {
         leavesMain.stopEmitting()
         leavesSupport.stopEmitting()
+    }
+
+    fun resumeLeaves() {
+        initializeLeaves()
     }
 
     private fun calcXMovement(): Double {

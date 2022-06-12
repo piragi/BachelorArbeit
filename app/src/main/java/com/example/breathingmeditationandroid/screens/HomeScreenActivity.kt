@@ -92,6 +92,7 @@ class HomeScreenActivity : ComponentActivity() {
             lifecycleScope.launch {
                 selectionUtils =
                     SelectionUtils(this@HomeScreenActivity, breathingUtils, holdBreathGesture, bubbles)
+                selectionUtils.resumeLeaves()
                 animateLeaves()
                 detectScreenChange()
             }

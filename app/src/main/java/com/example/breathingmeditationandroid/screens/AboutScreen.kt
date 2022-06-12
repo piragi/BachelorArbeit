@@ -77,6 +77,7 @@ class AboutScreen : ComponentActivity() {
                 holdBreathGesture,
                 clouds
             )
+            selectionUtils.resumeLeaves()
             thread(start = true, isDaemon = true) {
                 while (!holdBreathGesture.hold) {
                     selectionUtils.animateLeavesHorizontal()

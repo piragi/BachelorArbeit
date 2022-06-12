@@ -38,6 +38,7 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
         thread(start = true, isDaemon = true) {
             breathingUtils.smoothValue()
             startTime = currentTimeMillis()
+            hold = false
             while (!hold) {
                 borderAbdo = 1.0
                 borderThor = 1.0

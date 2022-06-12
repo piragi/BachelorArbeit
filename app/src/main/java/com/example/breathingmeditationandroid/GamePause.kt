@@ -34,6 +34,7 @@ class GamePause(
     private lateinit var bubbles: ArrayList<Pair<ImageView, Pair<Int, Int>>>
     var resume = false
     var end = false
+    private var paused = false
 
     init {
         this.activity = activity
@@ -48,6 +49,8 @@ class GamePause(
         endText = activity.findViewById(R.id.end)
 
         getUiResources()
+        startAnimation()
+        detectScreenChange()
 
     }
 
@@ -55,10 +58,12 @@ class GamePause(
         initializeBubbles()
         if (this::bubbles.isInitialized) {
             thread(start = true, isDaemon = true) {
-                while (!holdBreathGesture.hold) {
-                    selectionUtils.animateLeavesDiagonal()
-                    breathingUtils.smoothValue()
-                    Thread.sleep(2)
+                while (true) {
+                    if (!holdBreathGesture.hold && paused) {
+                        selectionUtils.animateLeavesDiagonal()
+                        breathingUtils.smoothValue()
+                        Thread.sleep(2)
+                    }
                 }
             }
         }
@@ -66,23 +71,26 @@ class GamePause(
 
     private fun detectScreenChange() {
         thread(start = true, isDaemon = true) {
-            while (!holdBreathGesture.hold)
-                continue
-            if (endBubble.tag == "selected") {
-                end = true
-                selectionUtils.stopLeaves()
+            while (true) {
+                if (holdBreathGesture.hold && paused) {
+                    if (endBubble.tag == "selected") {
+                        end = true
+                    } else if (resumeBubble.tag == "selected") {
+                        resume = true
+                    }
+                    end = false
+                    resume = false
+                    selectionUtils.stopLeaves()
+                }
             }
-            else if (resumeBubble.tag == "selected") {
-                resume = true
-                selectionUtils.stopLeaves()
-            }
-            end = false
-            resume = false
         }
     }
 
+    // TODO leaves displayed double
     fun pauseGame() {
         holdBreathGesture.detect()
+        paused = true
+        selectionUtils.resumeLeaves()
         activity.runOnUiThread {
             whiteBox.alpha = 0.5f
             resumeBubble.alpha = 0.7f
@@ -90,8 +98,6 @@ class GamePause(
             resumeText.alpha = 1.0f
             endText.alpha = 1.0f
         }
-        startAnimation()
-        detectScreenChange()
     }
 
     private fun initializeBubbles() {
@@ -130,6 +136,7 @@ class GamePause(
             endText.alpha = 0.0F
         }
         holdBreathGesture.stopDetection()
+        paused = false
     }
 
     private fun getUiResources() {
