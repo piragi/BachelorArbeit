@@ -68,7 +68,7 @@ class CalibrationScreenActivity : ComponentActivity() {
         stopService(serviceIntent)
     }
 
-    private suspend fun handleCalibration() = withContext(Dispatchers.Default) {
+    /* private suspend fun handleCalibration() = withContext(Dispatchers.Default) {
         displayText("Calibration is starting...", 5000)
         displayText("Follow the instructions to clear up the sky!", 5000)
         launch {
@@ -114,6 +114,44 @@ class CalibrationScreenActivity : ComponentActivity() {
         Log.i("calibration", "bufferOutAbdo: ${Calibrator.holdBreathBufferOutAbdo}")
         Log.i("calibration", "bufferInThor: ${Calibrator.holdBreathBufferInThor}")
         Log.i("calibration", "bufferOutThor: ${Calibrator.holdBreathBufferOutThor}")
+        Log.i("calibration", "maxAbdo: ${Calibrator.calibratedAbdo.first}")
+        Log.i("calibration", "maxThor: ${Calibrator.calibratedThor.first}")
+        Log.i("calibration", "minAbdo: ${Calibrator.calibratedAbdo.second}")
+        Log.i("calibration", "minThor: ${Calibrator.calibratedThor.second}")
+
+
+        calibrationFinished = true
+    } */
+
+    private suspend fun handleCalibration() = withContext(Dispatchers.Default) {
+        displayText("Calibration is starting...", 5000)
+        displayText("Follow the instructions to clear up the sky!", 5000)
+        launch {
+            displayText("Breathe in deeply...", Double.POSITIVE_INFINITY.toLong())
+        }
+        calibrationDetected = breathingUtils.detectFiveSecondInspiration()
+        launch {
+            displayText("Breathe out...", Double.POSITIVE_INFINITY.toLong())
+        }
+        delay(5000)
+        launch { Calibrator.calibrate() }
+        var iteration = 0
+        repeat(2) {
+            iteration++
+            when (iteration) {
+                1 -> displayText("Breathe in deeply into your stomach...", 5000)
+                2 -> displayText("Breathe in deeply into your chest...", 5000)
+            }
+
+            when (iteration) {
+                1 -> decreaseSnowFlow(0.5)
+                2 -> decreaseSnowFlow(1.0)
+            }
+            displayText("Breathe out...", 5000)
+            if (iteration == 2)
+                launch { fadeOutGreySky() }
+        }
+        displayText("Calibration finished!", 5000)
         Log.i("calibration", "maxAbdo: ${Calibrator.calibratedAbdo.first}")
         Log.i("calibration", "maxThor: ${Calibrator.calibratedThor.first}")
         Log.i("calibration", "minAbdo: ${Calibrator.calibratedAbdo.second}")

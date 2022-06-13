@@ -22,8 +22,8 @@ object Calibrator {
     var holdBreathBufferOutAbdo = 0.0
     var holdBreathBufferOutThor = 0.0
 
-    var flowFactorX = 400.0
-    var flowFactorY = -200.0
+    var flowFactorX = 0.0
+    var flowFactorY = 0.0
 
     var correction = 0.0
 
