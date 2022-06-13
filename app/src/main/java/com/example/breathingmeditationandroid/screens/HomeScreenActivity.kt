@@ -47,7 +47,7 @@ class HomeScreenActivity : ComponentActivity() {
             val binder = service as BluetoothConnection.LocalBinder
             mService = binder.getService()
             breathingUtils = BreathingUtils(mService)
-            holdBreathGesture = HoldBreathGesture(mService, 5000.0)
+            holdBreathGesture = HoldBreathGesture(mService)
             start()
             Log.i("init", "service connected")
         }

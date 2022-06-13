@@ -89,9 +89,12 @@ class SelectionUtils(
         var selectionDetected = false
         for (bubble in bubbles) {
             if (inBubble(bubble.second)) {
-                if (bubble.second.second <= (1 / 2).times(ScreenUtils.xDimension)) {
+                if (bubble.second.first < (1 / 3).times(ScreenUtils.xDimension)) {
                     holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferOutAbdo
                     holdBreathGesture.borderThor = Calibrator.holdBreathBufferOutThor
+                } else if(bubble.second.first in (2/3).times(ScreenUtils.xDimension) .. (1/3).times(ScreenUtils.xDimension)){
+                    holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferMiddleAbdo
+                    holdBreathGesture.borderThor = Calibrator.holdBreathBufferMiddleThor
                 } else {
                     holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
                     holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor

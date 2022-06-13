@@ -92,10 +92,10 @@ class GamePause(
     private suspend fun pauseTextDisplay() = coroutineScope {
         val text = activity.findViewById<TextView>(R.id.pauseText)
         activity.runOnUiThread {
-            text.text = R.string.pause_game.toString()
+            text.text = "Game paused"
             text.animate()
                 .alpha(1.0f)
-                .y((ScreenUtils.yBorderTop.minus(200).toFloat()))
+                .y((ScreenUtils.yDimension.minus(100).toFloat()))
                 .setDuration(1000)
                 .setListener(null)
         }
@@ -105,9 +105,9 @@ class GamePause(
     private suspend fun pauseTextReposition() = coroutineScope {
         val text = activity.findViewById<TextView>(R.id.pauseText)
         activity.runOnUiThread {
-            text.text = R.string.resume_game.toString()
+            text.text = "Game resumed"
             text.animate()
-                .y(ScreenUtils.yBorderTop.div(2).toFloat())
+                .y(ScreenUtils.yDimension.div(2).toFloat())
                 .setDuration(2000)
                 .setListener(null)
         }

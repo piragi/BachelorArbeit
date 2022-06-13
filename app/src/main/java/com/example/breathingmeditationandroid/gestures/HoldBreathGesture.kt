@@ -9,10 +9,10 @@ import java.lang.System.currentTimeMillis
 import kotlin.concurrent.thread
 import kotlin.math.abs
 
-class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathingGesture {
+class HoldBreathGesture(mService: BluetoothConnection, time: Double = 5000.000) : IBreathingGesture {
     private val mService: BluetoothConnection
     private var breathingUtils: BreathingUtils
-    var startTime: Long = 0
+    private var startTime: Long = 0
     var hold = false
     private var stop = false
     var borderAbdo = 0.0
@@ -34,14 +34,14 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
         stop = false
     }
 
+
+    //TODO not detected properly
     override fun detect() {
         thread(start = true, isDaemon = true) {
             breathingUtils.smoothValue()
             startTime = currentTimeMillis()
             hold = false
             while (!hold) {
-                borderAbdo = 1.0
-                borderThor = 1.0
                 if (!stop) {
                     breathingUtils.smoothValue()
                     if (!checkPrevValue(
@@ -49,15 +49,11 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
                             Pair(breathingUtils.currAbdo, breathingUtils.currThor)
                         )
                     ) {
-                        Log.i("breathHold", "prevAbdo: ${breathingUtils.prevAbdo}, currAbdo: ${breathingUtils.currAbdo}")
-                        Log.i("breathHold", "currAbdo: ${breathingUtils.prevThor}, currThor: ${breathingUtils.currThor}")
-
-                        hold = false
                         startTime = currentTimeMillis()
                     } else if (currentTimeMillis().minus(startTime) >= time) {
                         hold = true
                     }
-                    Thread.sleep(5)
+                    Thread.sleep(2)
                     breathingUtils.smoothValue()
                 } else startTime = currentTimeMillis()
             }
@@ -70,7 +66,10 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double) : IBreathin
     }
 
     private fun checkPrevValue(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
-        return abs(prev.first.minus(curr.first)) <= borderAbdo.times(1.2)
-                && abs(prev.second.minus(curr.second)) <= borderThor.times(1.2)
+        Log.i(
+            "holdBreath", "${abs(prev.first.minus(curr.first)) == 0.0}, ${abs(prev.second.minus(curr.second)) == 0.0}"
+        )
+        return abs(prev.first.minus(curr.first)) == 0.0
+                && abs(prev.second.minus(curr.second)) == 0.0
     }
 }

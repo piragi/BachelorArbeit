@@ -1,6 +1,6 @@
 package com.example.breathingmeditationandroid.gestures
 
 interface IBreathingGesture {
-    //TODO make detect private
+    //TODO add functions like resume, pause and detected to interface
     fun detect()
 }
