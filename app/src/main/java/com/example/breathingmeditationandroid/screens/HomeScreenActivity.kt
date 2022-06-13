@@ -86,13 +86,12 @@ class HomeScreenActivity : ComponentActivity() {
     private fun start() {
         initializeBubbles()
         if (this::bubbles.isInitialized) {
-            for(bubble in bubbles) {
+            for (bubble in bubbles) {
                 Log.i("bubbles", "${bubble.second}")
             }
             lifecycleScope.launch {
                 selectionUtils =
                     SelectionUtils(this@HomeScreenActivity, breathingUtils, holdBreathGesture, bubbles)
-                selectionUtils.resumeLeaves()
                 animateLeaves()
                 detectScreenChange()
             }
@@ -127,9 +126,13 @@ class HomeScreenActivity : ComponentActivity() {
     private fun animateLeaves() {
         thread(start = true, isDaemon = true) {
             while (!holdBreathGesture.hold) {
-                selectionUtils.animateLeavesDiagonal()
-                breathingUtils.smoothValue()
-                Thread.sleep(5)
+                try {
+                    selectionUtils.animateLeavesDiagonal()
+                    breathingUtils.smoothValue()
+                    Thread.sleep(5)
+                } catch (exception: ConcurrentModificationException) {
+                    continue
+                }
             }
         }
     }

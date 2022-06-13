@@ -1,6 +1,5 @@
 package com.example.breathingmeditationandroid
 
-import android.content.Intent
 import android.util.Log
 import android.view.ViewGroup
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
@@ -8,16 +7,14 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
-import com.example.breathingmeditationandroid.screens.HomeScreenActivity
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlin.concurrent.thread
 
 class GamePause(
     activity: ComponentActivity,
-    mService: BluetoothConnection
+    holdBreathGesture: HoldBreathGesture,
+    breathingUtils: BreathingUtils
 ) {
 
     private var activity: ComponentActivity
@@ -30,17 +27,16 @@ class GamePause(
     private var endBubble: ImageView
     private var resumeText: TextView
     private var endText: TextView
-    private var mService: BluetoothConnection
     private lateinit var bubbles: ArrayList<Pair<ImageView, Pair<Int, Int>>>
     var resume = false
     var end = false
     private var paused = false
+    private var stop = false
 
     init {
         this.activity = activity
-        this.mService = mService
-        this.holdBreathGesture = HoldBreathGesture(mService, 5000.0)
-        this.breathingUtils = BreathingUtils(mService)
+        this.holdBreathGesture = holdBreathGesture
+        this.breathingUtils = breathingUtils
 
         background = activity.findViewById(R.id.game_screen)
         resumeBubble = activity.findViewById(R.id.resumeBubble)
@@ -58,7 +54,7 @@ class GamePause(
         initializeBubbles()
         if (this::bubbles.isInitialized) {
             thread(start = true, isDaemon = true) {
-                while (true) {
+                while (!stop) {
                     if (!holdBreathGesture.hold && paused) {
                         selectionUtils.animateLeavesDiagonal()
                         breathingUtils.smoothValue()
@@ -71,7 +67,7 @@ class GamePause(
 
     private fun detectScreenChange() {
         thread(start = true, isDaemon = true) {
-            while (true) {
+            while (!stop) {
                 if (holdBreathGesture.hold && paused) {
                     if (endBubble.tag == "selected") {
                         end = true
@@ -89,8 +85,9 @@ class GamePause(
     // TODO leaves displayed double
     fun pauseGame() {
         holdBreathGesture.detect()
+        selectionUtils = SelectionUtils(activity, breathingUtils, holdBreathGesture, bubbles)
         paused = true
-        selectionUtils.resumeLeaves()
+
         activity.runOnUiThread {
             whiteBox.alpha = 0.5f
             resumeBubble.alpha = 0.7f
@@ -98,6 +95,10 @@ class GamePause(
             resumeText.alpha = 1.0f
             endText.alpha = 1.0f
         }
+    }
+
+    fun stopAll() {
+        stop = true
     }
 
     private fun initializeBubbles() {
@@ -128,15 +129,16 @@ class GamePause(
     }
 
     fun resumeGame() {
-        activity.runOnUiThread {
-            whiteBox.alpha = 0.0f
-            resumeBubble.alpha = 0.0F
-            endBubble.alpha = 0.0F
-            resumeText.alpha = 0.0F
-            endText.alpha = 0.0F
-        }
+        selectionUtils.stopLeaves()
         holdBreathGesture.stopDetection()
         paused = false
+        activity.runOnUiThread {
+            whiteBox.alpha = 0.0f
+            resumeBubble.alpha = 0.0f
+            endBubble.alpha = 0.0f
+            resumeText.alpha = 0.0f
+            endText.alpha = 0.0f
+        }
     }
 
     private fun getUiResources() {
@@ -145,10 +147,9 @@ class GamePause(
         endBubble = activity.findViewById(R.id.endBubble)
         resumeText = activity.findViewById(R.id.resume)
         endText = activity.findViewById(R.id.end)
-        val bubbles = arrayListOf(
+        bubbles = arrayListOf(
             Pair(endBubble, Pair(endBubble.left, endBubble.right)),
             Pair(resumeBubble, Pair(resumeBubble.left, resumeBubble.right))
         )
-        selectionUtils = SelectionUtils(activity, breathingUtils, holdBreathGesture, bubbles)
     }
 }

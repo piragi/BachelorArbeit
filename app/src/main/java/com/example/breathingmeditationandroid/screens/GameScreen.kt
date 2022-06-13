@@ -94,7 +94,6 @@ class GameScreen : ComponentActivity() {
             try {
                 lifecycleScope.launch {
                     // deepBreathLevel.animationStart()
-                    pause = GamePause(this@GameScreen, mService)
                     listenForPause()
 //                    val detectedThorBreathGesture = deepThorBreathGesture.detected()
 //                    val detectedAbdoBreathGesture = deepAbdoBreathGesture.detected()
@@ -125,35 +124,45 @@ class GameScreen : ComponentActivity() {
             var launched = false
             while (true) {
                 if (holdBreathGesture.hold && !launched) {
+                    Log.i("pause", "paused")
                     launched = true
                     lifecycleScope.launch {
                         pauseGame()
                     }
                 }
-                if (pause.end)
-                    changeToHomeScreen()
-                else if (pause.resume) {
-                    resumeGame()
-                    holdBreathGesture.detect()
-                    launched = false
+                if (launched && this@GameScreen::pause.isInitialized) {
+                    if (pause.end) {
+                        Log.i("pause", "ended")
+                        changeToHomeScreen()
+                    } else if (pause.resume) {
+                        Log.i("pause", "resumed")
+                        resumeGame()
+                        launched = false
+                    }
                 }
             }
         }
     }
 
     private fun changeToHomeScreen() {
+        pause.stopAll()
+        holdBreathGesture.stopDetection()
         Intent(this, HomeScreenActivity::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
+            overridePendingTransition(R.anim.fadeout, R.anim.fadein)
             finish()
         }
     }
 
     private fun pauseGame() {
+        pause = GamePause(this@GameScreen, HoldBreathGesture(mService, 5000.0), breathingUtils)
         pause.pauseGame()
     }
 
     private fun resumeGame() {
+        holdBreathGesture = HoldBreathGesture(mService, 5000.0)
+        holdBreathGesture.detect()
         pause.resumeGame()
     }
 }
