@@ -9,13 +9,11 @@ import android.os.IBinder
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
-import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.breathingmeditationandroid.*
 import com.example.breathingmeditationandroid.gestures.*
 import com.example.breathingmeditationandroid.utils.BreathingUtils
-import com.example.breathingmeditationandroid.utils.SelectionUtils
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
@@ -150,7 +148,7 @@ class GameScreen : ComponentActivity() {
         Intent(this, HomeScreenActivity::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
-            overridePendingTransition(R.anim.fadeout, R.anim.fadein)
+            overridePendingTransition(R.anim.fadein_fast_full, R.anim.fadeout_fast_full)
             finish()
         }
     }

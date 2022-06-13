@@ -3,12 +3,15 @@ package com.example.breathingmeditationandroid
 import android.util.Log
 import android.view.ViewGroup
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.example.breathingmeditationandroid.utils.BreathingUtils
+import com.example.breathingmeditationandroid.utils.ScreenUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
+import kotlinx.coroutines.*
 import kotlin.concurrent.thread
 
 class GamePause(
@@ -55,10 +58,13 @@ class GamePause(
         if (this::bubbles.isInitialized) {
             thread(start = true, isDaemon = true) {
                 while (!stop) {
-                    if (!holdBreathGesture.hold && paused) {
-                        selectionUtils.animateLeavesDiagonal()
-                        breathingUtils.smoothValue()
-                        Thread.sleep(2)
+                    try {
+                        if (!holdBreathGesture.hold && paused) {
+                            selectionUtils.animateLeavesDiagonal()
+                            Thread.sleep(2)
+                        }
+                    } catch (e: ConcurrentModificationException) {
+                        continue
                     }
                 }
             }
@@ -82,17 +88,56 @@ class GamePause(
         }
     }
 
+
+    private suspend fun pauseTextDisplay() = coroutineScope {
+        val text = activity.findViewById<TextView>(R.id.pauseText)
+        activity.runOnUiThread {
+            text.text = R.string.pause_game.toString()
+            text.animate()
+                .alpha(1.0f)
+                .y((ScreenUtils.yBorderTop.minus(200).toFloat()))
+                .setDuration(1000)
+                .setListener(null)
+        }
+        delay(1000)
+    }
+
+    private suspend fun pauseTextReposition() = coroutineScope {
+        val text = activity.findViewById<TextView>(R.id.pauseText)
+        activity.runOnUiThread {
+            text.text = R.string.resume_game.toString()
+            text.animate()
+                .y(ScreenUtils.yBorderTop.div(2).toFloat())
+                .setDuration(2000)
+                .setListener(null)
+        }
+        delay(2000)
+        activity.runOnUiThread {
+            text.animate()
+                .alpha(0.0f)
+                .setDuration(500)
+                .setListener(null)
+        }
+    }
+
     // TODO leaves displayed double
     fun pauseGame() {
+        GlobalScope.launch {
+            pauseTextDisplay()
+        }
         holdBreathGesture.detect()
         selectionUtils = SelectionUtils(activity, breathingUtils, holdBreathGesture, bubbles)
         paused = true
 
         activity.runOnUiThread {
             whiteBox.alpha = 0.5f
+            resumeBubble.startAnimation(AnimationUtils.loadAnimation(activity, R.anim.fadein))
             resumeBubble.alpha = 0.7f
+            endBubble.startAnimation(AnimationUtils.loadAnimation(activity, R.anim.fadein))
             endBubble.alpha = 0.7f
+            resumeText.startAnimation(AnimationUtils.loadAnimation(activity, R.anim.fadein))
             resumeText.alpha = 1.0f
+            endText.startAnimation(AnimationUtils.loadAnimation(activity, R.anim.fadein))
             endText.alpha = 1.0f
         }
     }
@@ -132,11 +177,18 @@ class GamePause(
         selectionUtils.stopLeaves()
         holdBreathGesture.stopDetection()
         paused = false
+        GlobalScope.launch {
+            pauseTextReposition()
+        }
         activity.runOnUiThread {
             whiteBox.alpha = 0.0f
+            resumeBubble.startAnimation(AnimationUtils.loadAnimation(activity, R.anim.fadeout_quick))
             resumeBubble.alpha = 0.0f
+            endBubble.startAnimation(AnimationUtils.loadAnimation(activity, R.anim.fadeout_quick))
             endBubble.alpha = 0.0f
+            resumeText.startAnimation(AnimationUtils.loadAnimation(activity, R.anim.fadeout_quick))
             resumeText.alpha = 0.0f
+            endText.startAnimation(AnimationUtils.loadAnimation(activity, R.anim.fadeout_quick))
             endText.alpha = 0.0f
         }
     }

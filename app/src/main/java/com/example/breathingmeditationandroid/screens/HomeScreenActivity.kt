@@ -7,7 +7,7 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
-import android.view.ViewTreeObserver.OnGlobalLayoutListener
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -85,6 +85,7 @@ class HomeScreenActivity : ComponentActivity() {
 
     private fun start() {
         initializeBubbles()
+        animateBubbles()
         if (this::bubbles.isInitialized) {
             for (bubble in bubbles) {
                 Log.i("bubbles", "${bubble.second}")
@@ -95,6 +96,14 @@ class HomeScreenActivity : ComponentActivity() {
                 animateLeaves()
                 detectScreenChange()
             }
+        }
+    }
+
+    private fun animateBubbles() {
+        runOnUiThread {
+            bubble1.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fadein))
+            bubble2.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fadein))
+            bubble3.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fadein))
         }
     }
 
@@ -128,7 +137,6 @@ class HomeScreenActivity : ComponentActivity() {
             while (!holdBreathGesture.hold) {
                 try {
                     selectionUtils.animateLeavesDiagonal()
-                    breathingUtils.smoothValue()
                     Thread.sleep(5)
                 } catch (exception: ConcurrentModificationException) {
                     continue
@@ -175,6 +183,7 @@ class HomeScreenActivity : ComponentActivity() {
         Intent(this, GameScreen::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
+            overridePendingTransition(R.anim.fadein_fast_full, R.anim.fadeout_fast_full)
             finish()
         }
     }

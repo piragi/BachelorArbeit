@@ -96,5 +96,17 @@
         app:layout_constraintLeft_toLeftOf="@+id/resumeBubble"
         app:layout_constraintRight_toRightOf="@+id/resumeBubble" app:layout_constraintTop_toTopOf="@+id/resumeBubble"
         app:layout_constraintVertical_bias="0.459"/>
+    <TextView
+        android:id="@+id/pauseText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:text="Game paused"
+        android:textColor="#00838D"
+        android:textSize="24dp"
+        android:textStyle="bold"
+        android:alpha="0.0"
+        app:layout_constraintBottom_toBottomOf="@id/background" app:layout_constraintHorizontal_bias="0.499"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@+id/background" app:layout_constraintTop_toTopOf="@+id/background"
+        app:layout_constraintVertical_bias="0.509"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
