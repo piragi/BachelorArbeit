@@ -68,7 +68,7 @@ class CalibrationScreenActivity : ComponentActivity() {
         stopService(serviceIntent)
     }
 
-    /* private suspend fun handleCalibration() = withContext(Dispatchers.Default) {
+    private suspend fun handleCalibration() = withContext(Dispatchers.Default) {
         displayText("Calibration is starting...", 5000)
         displayText("Follow the instructions to clear up the sky!", 5000)
         launch {
@@ -121,9 +121,9 @@ class CalibrationScreenActivity : ComponentActivity() {
 
 
         calibrationFinished = true
-    } */
+    }
 
-    private suspend fun handleCalibration() = withContext(Dispatchers.Default) {
+    /* private suspend fun handleCalibration() = withContext(Dispatchers.Default) {
         displayText("Calibration is starting...", 5000)
         displayText("Follow the instructions to clear up the sky!", 5000)
         launch {
@@ -159,14 +159,14 @@ class CalibrationScreenActivity : ComponentActivity() {
 
 
         calibrationFinished = true
-    }
+    } */
 
     private fun changeScreen() {
         thread(start = true, isDaemon = true) {
             while (!calibrationFinished) {
                 continue
             }
-            Intent(this, HomeScreenActivity::class.java).also { intent ->
+            Intent(this, GameScreen::class.java).also { intent ->
                 intent.putExtra("Intent", serviceIntent)
                 startActivity(intent)
                 overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)

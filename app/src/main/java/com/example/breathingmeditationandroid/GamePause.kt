@@ -95,7 +95,7 @@ class GamePause(
             text.text = "Game paused"
             text.animate()
                 .alpha(1.0f)
-                .y((ScreenUtils.yDimension.minus(100).toFloat()))
+                .y(50f)
                 .setDuration(1000)
                 .setListener(null)
         }

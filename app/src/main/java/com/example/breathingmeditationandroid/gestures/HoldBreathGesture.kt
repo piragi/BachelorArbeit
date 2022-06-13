@@ -41,20 +41,23 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double = 5000.000) 
             breathingUtils.smoothValue()
             startTime = currentTimeMillis()
             hold = false
+            var localPrevAbdo = 0.0
+            var localPrevThor = 0.0
             while (!hold) {
                 if (!stop) {
                     breathingUtils.smoothValue()
                     if (!checkPrevValue(
-                            Pair(breathingUtils.prevAbdo, breathingUtils.prevThor),
+                            Pair(localPrevAbdo, localPrevThor),
                             Pair(breathingUtils.currAbdo, breathingUtils.currThor)
                         )
                     ) {
+                        localPrevAbdo = breathingUtils.currAbdo
+                        localPrevThor = breathingUtils.currThor
                         startTime = currentTimeMillis()
                     } else if (currentTimeMillis().minus(startTime) >= time) {
                         hold = true
                     }
-                    Thread.sleep(2)
-                    breathingUtils.smoothValue()
+                    Thread.sleep(15)
                 } else startTime = currentTimeMillis()
             }
         }
@@ -69,7 +72,10 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double = 5000.000) 
         Log.i(
             "holdBreath", "${abs(prev.first.minus(curr.first)) == 0.0}, ${abs(prev.second.minus(curr.second)) == 0.0}"
         )
-        return abs(prev.first.minus(curr.first)) == 0.0
-                && abs(prev.second.minus(curr.second)) == 0.0
+        Log.i("holdBreath", "prevAbdo: ${breathingUtils.prevAbdo}, currAbdo: ${breathingUtils.currAbdo}")
+        Log.i("holdBreath", "prevThor: ${breathingUtils.prevThor}, currThor: ${breathingUtils.currThor}")
+
+        return abs(prev.first.minus(curr.first)) <= borderAbdo.times(1.2)
+                && abs(prev.second.minus(curr.second)) <= borderThor.times(1.2)
     }
 }
