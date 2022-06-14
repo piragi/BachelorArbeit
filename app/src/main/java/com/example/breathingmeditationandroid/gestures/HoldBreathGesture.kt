@@ -70,7 +70,11 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double = 4000.0) : 
                         hold = true
                     }
                     Thread.sleep(15)
-                } else startTime = currentTimeMillis()
+                } else {
+                    valueCount = 0
+                    errorCount = 0
+                    startTime = currentTimeMillis()
+                }
             }
         }
     }
