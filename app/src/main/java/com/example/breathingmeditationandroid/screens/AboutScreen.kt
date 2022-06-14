@@ -29,7 +29,7 @@ class AboutScreen : ComponentActivity() {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as BluetoothConnection.LocalBinder
             mService = binder.getService()
-            holdBreathGesture = HoldBreathGesture(mService, 5000.0)
+            holdBreathGesture = HoldBreathGesture(mService)
             breathingUtils = BreathingUtils(mService)
             holdBreathGesture.detect()
             animateLeaves()

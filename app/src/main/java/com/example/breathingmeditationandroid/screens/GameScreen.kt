@@ -78,7 +78,7 @@ class GameScreen : ComponentActivity() {
             deepThorBreathGesture = DeepThorBreathGesture(mService, breathingUtils)
             staccatoBreathGesture = StaccatoBreathGesture(mService, breathingUtils)
             sighBreathGesture = SighBreathGesture(mService, breathingUtils)
-            holdBreathGesture = HoldBreathGesture(mService, 5000.0)
+            holdBreathGesture = HoldBreathGesture(mService)
             deepBreathLevel = DeepBreathLevel(snow, this@GameScreen)
             birdsEmergingLevel = BirdsEmerging(this@GameScreen)
             // birdsEmergingLevel.animationStart()
@@ -128,6 +128,14 @@ class GameScreen : ComponentActivity() {
                         pauseGame()
                     }
                 }
+                if (mService.mExpiration == 0) {
+                    holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
+                    holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
+                }
+                if (mService.mInspiration == 0) {
+                    holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferOutAbdo
+                    holdBreathGesture.borderThor = Calibrator.holdBreathBufferOutThor
+                }
                 if (launched && this@GameScreen::pause.isInitialized) {
                     if (pause.end) {
                         Log.i("pause", "ended")
@@ -154,12 +162,12 @@ class GameScreen : ComponentActivity() {
     }
 
     private fun pauseGame() {
-        pause = GamePause(this@GameScreen, HoldBreathGesture(mService, 5000.0), breathingUtils)
+        pause = GamePause(this@GameScreen, HoldBreathGesture(mService), breathingUtils)
         pause.pauseGame()
     }
 
     private fun resumeGame() {
-        holdBreathGesture = HoldBreathGesture(mService, 5000.0)
+        holdBreathGesture = HoldBreathGesture(mService)
         holdBreathGesture.detect()
         pause.resumeGame()
     }

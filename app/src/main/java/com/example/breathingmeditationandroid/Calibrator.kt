@@ -126,20 +126,23 @@ object Calibrator {
             prevValueAbdo = breathingUtils.currAbdo
             prevValueThor = breathingUtils.currThor
         }
+        diffValuesAbdo.sort()
+        diffValuesThor.sort()
         when (pos) {
             "in" -> {
-                holdBreathBufferInAbdo = max(diffValuesAbdo.average(), holdBreathBufferInAbdo)
-                holdBreathBufferInThor = max(diffValuesThor.average(), holdBreathBufferInThor)
+                holdBreathBufferInAbdo = max(diffValuesAbdo[diffValuesAbdo.size - 1], holdBreathBufferInAbdo)
+                holdBreathBufferInThor = max(diffValuesThor[diffValuesThor.size - 1], holdBreathBufferInThor)
             }
             "out" -> {
-                holdBreathBufferOutAbdo = max(diffValuesAbdo.average(), holdBreathBufferOutAbdo)
-                holdBreathBufferOutThor = max(diffValuesThor.average(), holdBreathBufferOutThor)
+                holdBreathBufferOutAbdo = max(diffValuesAbdo[diffValuesAbdo.size - 1], holdBreathBufferOutAbdo)
+                holdBreathBufferOutThor = max(diffValuesThor[diffValuesThor.size - 1], holdBreathBufferOutThor)
             }
             "mid" -> {
-                holdBreathBufferMiddleAbdo = max(diffValuesAbdo.average(), holdBreathBufferMiddleAbdo)
-                holdBreathBufferMiddleThor = max(diffValuesThor.average(), holdBreathBufferMiddleThor)
+                holdBreathBufferMiddleAbdo = max(diffValuesAbdo[diffValuesAbdo.size - 1], holdBreathBufferMiddleAbdo)
+                holdBreathBufferMiddleThor = max(diffValuesThor[diffValuesThor.size - 1], holdBreathBufferMiddleThor)
             }
         }
+        Thread.sleep(15)
     }
 
     private fun calibrateFlow() {
