@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.IOException
+import java.lang.ref.WeakReference
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -46,6 +47,8 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
 
     var mInspiration: Int = 0
     var mExpiration: Int = 0
+
+    var listener = WeakReference<InspirationExpirationInterface>(null)
 
 
     inner class LocalBinder : Binder() {
@@ -166,11 +169,13 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
                     mCorrector.addInspiration(time, mHexoskinAPI!!.currentSessionStartTime)
                     mExpiration = 0
                     mInspiration = value
+                    listener.get()?.onInspiration()
                 }
                 HexoskinDataType.EXPIRATION -> {
                     mCorrector.addExpiration(time, mHexoskinAPI!!.currentSessionStartTime)
                     mInspiration = 0
                     mExpiration = value
+                    listener.get()?.onExpiration()
                 }
                 HexoskinDataType.RESP_CIRCUIT_TEMPERATURE -> {
                     val converted: Float =
@@ -272,6 +277,10 @@ class BluetoothConnection : Service(), HexoskinDataListener, HexoskinLogListener
         mCorrector.uninit()
         stopSelf()
         Toast.makeText(this, "disconnected", Toast.LENGTH_SHORT).show()
+    }
+
+    fun addListener(listener: InspirationExpirationInterface) {
+        this.listener = WeakReference(listener)
     }
 
 }
