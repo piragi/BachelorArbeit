@@ -31,7 +31,7 @@ class SighBreathGesture(
                         bufferSigh.add(mService.mThorCorrected)
                     }
 
-                    if (bufferSigh[bufferSize - 1] <= bufferSigh[0] * 0.65) {
+                    if (bufferSigh[bufferSize - 1] <= bufferSigh[0] * 0.7) {
                         sighDetected = true
 
                         Log.i("sigh", "detected")
