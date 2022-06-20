@@ -166,8 +166,8 @@ class BreathingUtils(private val mService: BluetoothConnection) {
     fun detectFiveSecondInspiration(): Boolean {
         var startTime = currentTimeMillis()
         while (true) {
-            if (mService.mExpiration == 0 && currentTimeMillis().minus(startTime) >= 5000) {
-                Log.i("calibration", "breathe in for 5 sec detected")
+            if (mService.mExpiration == 0 && currentTimeMillis().minus(startTime) >= 4000) {
+                Log.i("calibration", "breathe in for 4 sec detected")
                 return true
             } else if (mService.mInspiration == 0) startTime = currentTimeMillis()
         }
