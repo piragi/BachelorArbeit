@@ -85,6 +85,8 @@ class SelectionUtils(
         currY = newY
     }
 
+    //TODO mechanismus der bubble auswählt nachdem 4 sekunden vergangen sind
+
     private fun detectSelection() {
         var selectionDetected = false
         for (bubble in bubbles) {
