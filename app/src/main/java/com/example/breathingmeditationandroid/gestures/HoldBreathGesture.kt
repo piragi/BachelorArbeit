@@ -43,7 +43,7 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double = 4000.0) : 
             hold = false
             var localPrevAbdo = 0.0
             var localPrevThor = 0.0
-            val buffer = 0.2 // 10% of values
+            val buffer = 0.1 // 10% of values
             var valueCount = 0
             var errorCount = 0
             while (!hold) {
