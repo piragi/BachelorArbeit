@@ -20,6 +20,7 @@ import com.example.breathingmeditationandroid.gestures.SighBreathGesture
 import com.example.breathingmeditationandroid.gestures.StaccatoBreathGesture
 import com.example.breathingmeditationandroid.levels.*
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
 
@@ -89,11 +90,9 @@ class GameScreen : ComponentActivity() {
             holdBreathGesture = HoldBreathGesture(mService)
             deepBreathLevel = DeepBreathLevel(findViewById<View>(R.id.snow) as ImageView, this@GameScreen)
             birdsEmergingLevel = BirdsEmerging(this@GameScreen)
-            birdsEmergingLevel.animationStart()
             feedbackTrees = FeedbackTrees(this@GameScreen, mService)
             rocketTakeOff = RocketTakeOff(background.height, this@GameScreen)
             cloudsFadeOut = CloudsFadeOut(this@GameScreen)
-            deepBreathLevel.animationStart()
             startLevel()
         }
     }
@@ -102,22 +101,44 @@ class GameScreen : ComponentActivity() {
         thread(start = true, isDaemon = true) {
             try {
                 lifecycleScope.launch {
+                    delay(5000L)
                     listenForPause()
-                    val detectedThorBreathGesture = deepThorBreathGesture.detected()
-                    val detectedAbdoBreathGesture = deepAbdoBreathGesture.detected()
-                    val detectedStaccatoBreathGesture = staccatoBreathGesture.detected()
-                    val detectedSighBreathGesture = sighBreathGesture.detected()
+                    val detectedThorBreathGesture = deepThorBreathGesture.detect()
+                    val detectedAbdoBreathGesture = deepAbdoBreathGesture.detect()
+                    val detectedStaccatoBreathGesture = staccatoBreathGesture.detect()
+                    val detectedSighBreathGesture = sighBreathGesture.detect()
 
-                    if ( detectedStaccatoBreathGesture.await()) {
-                        birdsEmergingLevel.animationStart()
-                    } else if (detectedAbdoBreathGesture.await()) {
-                        deepBreathLevel.animationStart()
-                    } else if (detectedThorBreathGesture.await()) {
-                        //fadeout clouds
-                        cloudsFadeOut.animationStart()
-                    } else if (detectedSighBreathGesture.await()) {
-                        rocketTakeOff.startAnimation()
+                    GlobalScope.launch {
+                        if ( detectedStaccatoBreathGesture.await()) {
+                            birdsEmergingLevel.animationStart()
+                        }
                     }
+                    GlobalScope.launch {
+                        if (detectedAbdoBreathGesture.await()) {
+                            deepBreathLevel.animationStart()
+                        }
+                    }
+                    GlobalScope.launch {
+                        if (detectedThorBreathGesture.await()) {
+                            //fadeout clouds
+                            cloudsFadeOut.animationStart()
+                        }
+                    }
+                    GlobalScope.launch {
+                        if (detectedSighBreathGesture.await()) {
+                            rocketTakeOff.startAnimation()
+                        }
+                    }
+//                    if ( detectedStaccatoBreathGesture.await()) {
+//                        birdsEmergingLevel.animationStart()
+//                    } else if (detectedAbdoBreathGesture.await()) {
+//                        deepBreathLevel.animationStart()
+//                    } else if (detectedThorBreathGesture.await()) {
+//                        //fadeout clouds
+//                        cloudsFadeOut.animationStart()
+//                    } else if (detectedSighBreathGesture.await()) {
+//                        rocketTakeOff.startAnimation()
+//                    }
                 }
             } catch (consumed: InterruptedException) {
                 Thread.currentThread().interrupt()

@@ -8,18 +8,19 @@
     android:id="@+id/home_screen"
     tools:context=".screens.HomeScreenActivity" android:orientation="horizontal">
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/background"
-        android:layout_width="match_parent"
-        android:layout_height="1080dp"
-        android:layout_alignParentStart="true" android:layout_alignParentTop="true"
-        android:contentDescription="@string/todo" android:src="@drawable/background"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/background_without_trees"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintDimensionRatio="2:1"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.443"/>
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/snow"
@@ -29,10 +30,13 @@
         android:scaleType="centerInside"
         android:src="@drawable/snow"
         app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="@id/background"
-        app:layout_constraintVertical_bias="0.410"/>
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"
+        app:layout_constraintVertical_bias="0.088" />
+
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/trees_neutral"
         android:layout_width="wrap_content"
@@ -40,50 +44,57 @@
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
         android:src="@drawable/trees_neutral"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintBottom_toBottomOf="@id/background"
-        app:layout_constraintTop_toTopOf="@id/background"/>
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"
+        app:layout_constraintVertical_bias="0.0" />
+
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/bubble3"
-        android:layout_width="150dp" android:layout_height="90dp"
+        android:layout_width="260dp"
+        android:layout_height="140dp"
         android:layout_alignParentBottom="true"
-        android:layout_marginEnd="50dp"
-        android:layout_marginStart="80dp" android:layout_marginBottom="48dp"
+        android:layout_marginTop="80dp"
         android:alpha="0.7"
         android:tag="bubble3"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="2:1"
-        app:layout_constraintHorizontal_bias="0.951"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toEndOf="@+id/bubble2"
-        app:layout_constraintTop_toTopOf="parent" app:layout_constraintVertical_bias="0.256"
-        app:srcCompat="@drawable/bubble_unselected"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        app:srcCompat="@drawable/bubble_unselected" />
+
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/bubble1"
-        android:layout_width="150dp" android:layout_height="90dp"
+        android:layout_width="260dp"
+        android:layout_height="140dp"
         android:layout_marginBottom="80dp"
-        android:layout_marginStart="50dp"
         android:alpha="0.7"
         android:tag="bubble1"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.69"
+        app:layout_constraintEnd_toStartOf="@+id/bubble2"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/bubble2" app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.99" app:srcCompat="@drawable/bubble_unselected"/>
+        app:layout_constraintStart_toStartOf="@+id/background"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.99"
+        app:srcCompat="@drawable/bubble_unselected" />
+
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/bubble2"
-        android:layout_width="150dp" android:layout_height="90dp" android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true" android:layout_marginStart="88dp"
-        android:layout_marginTop="71dp"
+        android:layout_width="260dp"
+        android:layout_height="140dp"
         android:alpha="0.7"
         android:tag="bubble2"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.0" app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/bubble3"
-        app:layout_constraintStart_toEndOf="@+id/bubble1"
-        app:layout_constraintTop_toTopOf="parent" app:layout_constraintVertical_bias="0.344"
-        app:srcCompat="@drawable/bubble_unselected"/>
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/bubble_unselected" />
+
     <TextView
         android:id="@+id/about"
         android:layout_width="wrap_content"

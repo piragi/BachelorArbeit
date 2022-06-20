@@ -23,9 +23,11 @@
         <entry key="..\:/Users/julia/Documents/6th_Semester/Bachelorprojekt/BachelorArbeit/app/src/main/res/layout/about_screen.xml" value="0.128125" />
         <entry key="..\:/Users/julia/Documents/6th_Semester/Bachelorprojekt/BachelorArbeit/app/src/main/res/layout/home_screen.xml" value="0.1296875" />
         <entry key="app/src/main/res/layout-land/calibration_screen.xml" value="0.16358024691358025" />
-        <entry key="app/src/main/res/layout-land/game_screen.xml" value="0.16358024691358025" />
+        <entry key="app/src/main/res/layout-land/game_screen.xml" value="0.16" />
+        <entry key="app/src/main/res/layout-land/home_screen.xml" value="0.12" />
         <entry key="app/src/main/res/layout/calibration_screen.xml" value="0.19322916666666667" />
         <entry key="app/src/main/res/layout/content_device_list.xml" value="0.19322916666666667" />
+        <entry key="app/src/main/res/layout/home_screen.xml" value="0.18177083333333333" />
       </map>
     </option>
   </component>

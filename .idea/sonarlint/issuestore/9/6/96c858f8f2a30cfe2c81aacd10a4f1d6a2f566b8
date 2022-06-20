@@ -1,0 +1,6 @@
+
+qkotlin:S6306"TUsing "GlobalScope" here leads to the breaking of structured concurrency principles.(˜œ×üÿÿÿÿ
+xkotlin:S63062"TUsing "GlobalScope" here leads to the breaking of structured concurrency principles.(”íÇûÿÿÿÿ8ıùß—0
+Okotlin:S11350"2Complete the task associated to this TODO comment.(éÊÜİúÿÿÿÿ
+okotlin:S3776"RRefactor this method to reduce its Cognitive Complexity from 22 to the 15 allowed.(˜œ×üÿÿÿÿ
+^kotlin:S63153"?This function returns "Deferred", but its result is never used.(‰ì³×8Šúß—0

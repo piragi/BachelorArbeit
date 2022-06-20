@@ -10,9 +10,9 @@ import kotlinx.coroutines.async
 class SighBreathGesture(
     private val mService: BluetoothConnection,
     private val breathingUtils: BreathingUtils
-) : IBreathingGesture {
+) {
 
-    override fun detect() {
+    fun detect() = GlobalScope.async {
         // mInhale detected
         // drop by 20% or something
         var sighDetected = false
@@ -34,6 +34,7 @@ class SighBreathGesture(
                         sighDetected = true
 
                         Log.i("sigh", "detected")
+
                     }
                 } else {
                     bufferSigh.add(mService.mThorCorrected)
@@ -42,6 +43,7 @@ class SighBreathGesture(
                 bufferSigh.clear()
             }
         }
+        return@async true
     }
 
     // TODO: remove bad practice

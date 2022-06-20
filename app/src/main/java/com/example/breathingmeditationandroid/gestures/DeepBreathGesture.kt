@@ -10,9 +10,9 @@ import kotlinx.coroutines.async
 class DeepThorBreathGesture(
     private val mService: BluetoothConnection,
     private val breathingUtils: BreathingUtils
-) : IBreathingGesture {
+) {
 
-    override fun detect() {
+    fun detect() = GlobalScope.async {
         while (mService.mThorCorrected < Calibrator.calibratedThor.first * 0.8) {
             Thread.sleep(2)
         }
@@ -20,6 +20,8 @@ class DeepThorBreathGesture(
         while (mService.mExpiration == 0) {
         }
         Log.i("ThorBreath", "detected")
+        return@async true
+
 
     }
 
@@ -34,9 +36,9 @@ class DeepThorBreathGesture(
 class DeepAbdoBreathGesture(
     private val mService: BluetoothConnection,
     private val breathingUtils: BreathingUtils
-) : IBreathingGesture {
+) {
 
-    override fun detect() {
+    fun detect() = GlobalScope.async {
         while (mService.mAbdoCorrected < Calibrator.calibratedAbdo.first * 0.8) {
             Thread.sleep(2)
         }
@@ -44,6 +46,8 @@ class DeepAbdoBreathGesture(
         while (mService.mExpiration == 0) {
         }
         Log.i("AbdoBreath", "detected")
+        return@async true
+
     }
 
     // TODO: remove bad practice

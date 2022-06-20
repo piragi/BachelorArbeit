@@ -10,10 +10,9 @@ import kotlinx.coroutines.async
 class StaccatoBreathGesture(
     private val mService: BluetoothConnection,
     private val breathingUtils: BreathingUtils
-) :
-    IBreathingGesture {
+) {
 
-    override fun detect() {
+    fun detect() = GlobalScope.async {
         val bufferStaccato: MutableList<Double> = mutableListOf()
         var staccatoDetetected = false
 
@@ -23,8 +22,8 @@ class StaccatoBreathGesture(
                 //everytime there is a updated value -> add to buffer
                 if (bufferStaccato.size == 4) {
                     if (bufferStaccato[3] != mService.mAbdoCorrected) {
-//                        Log.i("valuesBuffer", "$bufferStaccato")
-//                        Log.i("calibration", "${Calibrator.calibratedAbdo.first * 0.5}")
+                        Log.i("valuesBuffer", "$bufferStaccato")
+                        Log.i("calibration", "${Calibrator.calibratedAbdo.first * 0.5}")
                         bufferStaccato.removeAt(0)
                         bufferStaccato.add(mService.mAbdoCorrected)
                     }
@@ -40,6 +39,8 @@ class StaccatoBreathGesture(
                 bufferStaccato.clear()
             }
         }
+        return@async true
+
     }
 
     // TODO: remove bad practice

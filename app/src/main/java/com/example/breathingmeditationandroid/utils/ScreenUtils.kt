@@ -21,8 +21,8 @@ object ScreenUtils {
             yDimension = metrics.heightPixels
 
             xBorderLeft = 100
-            xBorderRight = xDimension.minus(280)
-            yBorderBottom = yDimension.minus(280)
+            xBorderRight = xDimension.minus(100)
+            yBorderBottom = yDimension.minus(300)
             yBorderTop = 300
 
             absoluteX = Pair(0, xDimension)

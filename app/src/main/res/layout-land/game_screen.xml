@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/game_screen"
+    android:background="#3AA8A5"
     tools:ignore="MissingDefaultResource">
 
 
@@ -16,24 +17,27 @@
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
         android:src="@drawable/background_without_trees"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-    />
+        app:layout_constraintVertical_bias="1.0" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/snow"
-        android:layout_width="759dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
         android:src="@drawable/snow"
         app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@id/background"
-        app:layout_constraintRight_toRightOf="@id/background" app:layout_constraintTop_toTopOf="@id/background"
-        app:layout_constraintVertical_bias="0.088"/>
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"
+        app:layout_constraintVertical_bias="0.088" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/background_clouds"
@@ -41,26 +45,40 @@
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
-        android:src="@drawable/background_clouds" />
+        android:src="@drawable/background_clouds"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/rocket"
         android:layout_width="66dp"
         android:layout_height="90dp"
-        android:layout_marginLeft="347dp"
-        android:layout_marginTop="215dp"
         android:rotation="-16"
         android:src="@drawable/rocket_shadow_left"
-        android:visibility="invisible" />
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintHorizontal_bias="0.499"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"
+        app:layout_constraintVertical_bias="0.792" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/rocket_without_fire"
         android:layout_width="66dp"
         android:layout_height="90dp"
-        android:layout_marginLeft="347dp"
-        android:layout_marginTop="215dp"
         android:rotation="-16"
-        android:src="@drawable/rocket_shadow_left_without_fire" />
+        android:src="@drawable/rocket_shadow_left_without_fire"
+        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintHorizontal_bias="0.499"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"
+        app:layout_constraintVertical_bias="0.792" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/trees_neutral"
@@ -68,30 +86,45 @@
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
-        android:src="@drawable/trees_neutral" />
+        android:src="@drawable/trees_neutral"
+        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"/>
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/trees_left_background"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
-        android:src="@drawable/tree_left_background" />
+        android:src="@drawable/tree_left_background"
+        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"/>
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/trees_right_background"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
-        android:src="@drawable/tree_right_background" />
+        android:src="@drawable/tree_right_background"
+        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"/>
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/white_box"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" android:alpha="0.0"
-        app:srcCompat="@drawable/white_square" tools:layout_editor_absoluteX="-72dp"
-        tools:layout_editor_absoluteY="16dp"/>
+        android:layout_height="match_parent"
+        android:alpha="0.0"
+        app:srcCompat="@drawable/white_square"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="-32dp" />
+
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/resumeBubble"
         android:layout_width="234dp" android:layout_height="115dp"

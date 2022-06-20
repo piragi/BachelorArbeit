@@ -16,13 +16,13 @@ class RocketTakeOff (private val height: Int, private val activity: ComponentAct
             rocketWithoutFire.visibility = View.INVISIBLE
             rocketWithFire.visibility = View.VISIBLE
 
-            ValueAnimator.ofFloat(0.0f, 1.0f).apply {
+            ValueAnimator.ofFloat(0.0f, 1.2f).apply {
                 interpolator = LinearInterpolator()
-                duration = 1500L
+                duration = 2200L
                 start()
                 addUpdateListener {
                     val progressY = animatedValue as Float * (-height)
-                    val progressX = animatedValue as Float * -90
+                    val progressX = animatedValue as Float * -190
                     rocketWithFire.translationY = progressY
                     rocketWithFire.translationX = progressX
                 }
