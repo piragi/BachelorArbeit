@@ -16,21 +16,22 @@ class SighBreathGesture(
         // mInhale detected
         // drop by 20% or something
         var sighDetected = false
+        val bufferSize = 10
         val bufferSigh: MutableList<Double> = mutableListOf()
 
         while (!sighDetected) {
 
             if (mService.mInspiration == 0 && mService.mThorCorrected > Calibrator.calibratedThor.first * 0.5) {
-                if (bufferSigh.size == 4) {
+                if (bufferSigh.size == bufferSize) {
 
-                    if (bufferSigh[3] != mService.mThorCorrected) {
+                    if (bufferSigh[bufferSize - 1] != mService.mThorCorrected) {
                         Log.i("sigh", "$bufferSigh")
                         Log.i("calibration", "${Calibrator.calibratedAbdo.first * 0.5}")
                         bufferSigh.removeAt(0)
                         bufferSigh.add(mService.mThorCorrected)
                     }
 
-                    if (bufferSigh[3] <= bufferSigh[0]*0.65) {
+                    if (bufferSigh[bufferSize - 1] <= bufferSigh[0] * 0.65) {
                         sighDetected = true
 
                         Log.i("sigh", "detected")
