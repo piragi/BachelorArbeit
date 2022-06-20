@@ -18,7 +18,7 @@ class StaccatoBreathGesture(
 
         while (!staccatoDetetected) {
 
-            if (mService.mExpiration == 0 && mService.mAbdoCorrected > Calibrator.calibratedAbdo.first * 0.5) {
+            if (mService.mExpiration == 0 && mService.mAbdoCorrected > Calibrator.calibratedAbdo.first * 0.4) {
                 //everytime there is a updated value -> add to buffer
                 if (bufferStaccato.size == 4) {
                     if (bufferStaccato[3] != mService.mAbdoCorrected) {
@@ -28,7 +28,7 @@ class StaccatoBreathGesture(
                         bufferStaccato.add(mService.mAbdoCorrected)
                     }
 
-                    if (bufferStaccato[3] >= bufferStaccato[0] * 1.25) {
+                    if (bufferStaccato[3] >= bufferStaccato[0] * 1.35) {
                         staccatoDetetected = true
                         Log.i("staccato", "detected")
                     }
