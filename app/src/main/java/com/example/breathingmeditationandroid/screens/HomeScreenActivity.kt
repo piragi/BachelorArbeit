@@ -69,11 +69,6 @@ class HomeScreenActivity : ComponentActivity() {
         bubble3 = findViewById(R.id.bubble3)
 
         Log.i("init", "create")
-    }
-
-    override fun onStart() {
-        super.onStart()
-        Log.i("init", "start")
         serviceIntent = intent?.extras?.getParcelable("Intent")!!
         applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
     }
