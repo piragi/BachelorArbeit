@@ -21,7 +21,7 @@ class SighBreathGesture(
 
         while (!sighDetected) {
 
-            if (mService.mInspiration == 0 && mService.mThorCorrected > Calibrator.calibratedThor.first * 0.5) {
+            if (mService.mThorCorrected > Calibrator.calibratedThor.first * 0.6) {
                 if (bufferSigh.size == bufferSize) {
 
                     if (bufferSigh[bufferSize - 1] != mService.mThorCorrected) {
@@ -31,7 +31,7 @@ class SighBreathGesture(
                         bufferSigh.add(mService.mThorCorrected)
                     }
 
-                    if (bufferSigh[bufferSize - 1] <= bufferSigh[0] * 0.7) {
+                    if (bufferSigh[bufferSize - 1] <= bufferSigh[0] * 0.75) {
                         sighDetected = true
 
                         Log.i("sigh", "detected")
