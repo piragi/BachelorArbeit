@@ -28,7 +28,7 @@ class StaccatoBreathGesture(
                         bufferStaccato.add(mService.mAbdoCorrected)
                     }
 
-                    if (bufferStaccato[3] >= bufferStaccato[0] * 1.3) {
+                    if (bufferStaccato[3] >= bufferStaccato[0] * 1.25) {
                         staccatoDetetected = true
                         Log.i("staccato", "detected")
                     }

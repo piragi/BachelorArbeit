@@ -87,7 +87,7 @@ class GameScreen : ComponentActivity() {
             deepThorBreathGesture = DeepThorBreathGesture(mService, breathingUtils)
             staccatoBreathGesture = StaccatoBreathGesture(mService, breathingUtils)
             sighBreathGesture = SighBreathGesture(mService, breathingUtils)
-            holdBreathGesture = HoldBreathGesture(mService)
+            holdBreathGesture = HoldBreathGesture(mService, 2000.0)
             deepBreathLevel = DeepBreathLevel(findViewById<View>(R.id.snow) as ImageView, this@GameScreen)
             birdsEmergingLevel = BirdsEmerging(this@GameScreen)
             feedbackTrees = FeedbackTrees(this@GameScreen, mService)
@@ -199,7 +199,7 @@ class GameScreen : ComponentActivity() {
     }
 
     private fun resumeGame() {
-        holdBreathGesture = HoldBreathGesture(mService)
+        holdBreathGesture = HoldBreathGesture(mService, 2000.0)
         holdBreathGesture.detect()
         pause.resumeGame()
     }
