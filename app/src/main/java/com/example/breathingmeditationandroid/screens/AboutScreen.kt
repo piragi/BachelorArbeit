@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.util.Log
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import com.example.breathingmeditationandroid.BluetoothConnection
@@ -14,6 +13,8 @@ import com.example.breathingmeditationandroid.R
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
 
 class AboutScreen : ComponentActivity() {
@@ -31,7 +32,6 @@ class AboutScreen : ComponentActivity() {
             mService = binder.getService()
             holdBreathGesture = HoldBreathGesture(mService)
             breathingUtils = BreathingUtils(mService)
-            holdBreathGesture.detect()
             animateLeaves()
             returnToHomeScreen()
         }
@@ -48,15 +48,12 @@ class AboutScreen : ComponentActivity() {
         cloud = findViewById(R.id.cloud)
     }
 
-    //TODO not detecting correctly sometimes
     private fun getBubbleCoordinates() {
         if (cloud.left == 0 && cloud.right == 0) {
-            Log.i("bubbles", "only zero values")
             clouds = arrayListOf()
             cloud.viewTreeObserver.addOnGlobalLayoutListener {
                 val left: Int = cloud.left
                 val right: Int = cloud.right
-                Log.i("bubbles", "$left, $right")
                 clouds.add(Pair(cloud, Pair(left, right)))
             }
         } else clouds = arrayListOf(Pair(cloud, Pair(cloud.left, cloud.right)))
@@ -65,7 +62,6 @@ class AboutScreen : ComponentActivity() {
     private fun animateLeaves() {
         getBubbleCoordinates()
         if (this::clouds.isInitialized) {
-            Log.i("bubbles", "initialized")
             selectionUtils = SelectionUtils(
                 this@AboutScreen,
                 breathingUtils,
@@ -73,7 +69,7 @@ class AboutScreen : ComponentActivity() {
                 clouds
             )
             thread(start = true, isDaemon = true) {
-                while (!holdBreathGesture.hold) {
+                while (true) {
                     try {
                         selectionUtils.animateLeavesHorizontal()
                         Thread.sleep(2)
@@ -86,15 +82,20 @@ class AboutScreen : ComponentActivity() {
     }
 
     private fun returnToHomeScreen() {
-        thread(start = true, isDaemon = true) {
-            while (!holdBreathGesture.hold)
-                continue
-            Intent(this, HomeScreenActivity::class.java).also { intent ->
-                intent.putExtra("Intent", serviceIntent)
-                startActivity(intent)
-                overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
-                finish()
+        GlobalScope.launch {
+            val holdBreathDetected = holdBreathGesture.detect()
+            if (holdBreathDetected.await()) {
+                changeScreen()
             }
+        }
+    }
+
+    private fun changeScreen() {
+        Intent(this, HomeScreenActivity::class.java).also { intent ->
+            intent.putExtra("Intent", serviceIntent)
+            startActivity(intent)
+            overridePendingTransition(R.anim.slide_up_top, R.anim.slide_up_bottom)
+            finish()
         }
     }
 
