@@ -17,7 +17,9 @@ import com.example.breathingmeditationandroid.R
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import kotlin.concurrent.thread
 
 
@@ -87,7 +89,12 @@ class HomeScreenActivity : ComponentActivity() {
             }
             lifecycleScope.launch {
                 selectionUtils =
-                    SelectionUtils(this@HomeScreenActivity, breathingUtils, holdBreathGesture, bubbles)
+                    SelectionUtils(
+                        this@HomeScreenActivity,
+                        breathingUtils,
+                        holdBreathGesture,
+                        bubbles
+                    )
                 animateLeaves()
                 detectScreenChange()
             }
@@ -129,7 +136,7 @@ class HomeScreenActivity : ComponentActivity() {
 
     private fun animateLeaves() {
         thread(start = true, isDaemon = true) {
-            while (!holdBreathGesture.hold) {
+            while (true) {
                 try {
                     selectionUtils.animateLeavesDiagonal()
                     Thread.sleep(5)
@@ -147,15 +154,20 @@ class HomeScreenActivity : ComponentActivity() {
 
     private fun detectScreenChange() {
         thread(start = true, isDaemon = true) {
-            holdBreathGesture.detect()
-            while (!holdBreathGesture.hold)
-                continue
-            if (bubble1.tag == "selected" && !(bubble2.tag == "selected" || bubble3.tag == "selected"))
-                changeToAboutScreen()
-            else if ((bubble2.tag == "selected" && !(bubble1.tag == "selected" || bubble3.tag == "selected")))
-                changeToCalibrationScreen()
-            else if (bubble3.tag == "selected" && !(bubble1.tag == "selected" || bubble2.tag == "selected"))
-                changeToGameScreen()
+            /* holdBreathGesture.detect()
+            while (!holdBreathGesture.hold && !selectionUtils.screenChangeDetected)
+                continue */
+            GlobalScope.launch {
+                val breathHold = holdBreathGesture.detect()
+                if(breathHold.await()) {
+                    if (bubble1.tag == "selected" && !(bubble2.tag == "selected" || bubble3.tag == "selected"))
+                        changeToAboutScreen()
+                    else if ((bubble2.tag == "selected" && !(bubble1.tag == "selected" || bubble3.tag == "selected")))
+                        changeToCalibrationScreen()
+                    else if (bubble3.tag == "selected" && !(bubble1.tag == "selected" || bubble2.tag == "selected"))
+                        changeToGameScreen()
+                }
+            }
         }
     }
 

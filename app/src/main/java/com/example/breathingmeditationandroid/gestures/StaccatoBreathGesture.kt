@@ -10,9 +10,9 @@ import kotlinx.coroutines.async
 class StaccatoBreathGesture(
     private val mService: BluetoothConnection,
     private val breathingUtils: BreathingUtils
-) {
+): IBreathingGesture {
 
-    fun detect() = GlobalScope.async {
+    override fun detect() = GlobalScope.async {
         val bufferStaccato: MutableList<Double> = mutableListOf()
         var staccatoDetetected = false
 

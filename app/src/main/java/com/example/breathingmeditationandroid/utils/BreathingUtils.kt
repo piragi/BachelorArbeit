@@ -3,6 +3,8 @@ package com.example.breathingmeditationandroid.utils
 import android.util.Log
 import com.example.breathingmeditationandroid.BluetoothConnection
 import com.example.breathingmeditationandroid.Calibrator
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import java.lang.System.currentTimeMillis
 import kotlin.concurrent.thread
 import kotlin.math.absoluteValue
@@ -161,6 +163,19 @@ class BreathingUtils(private val mService: BluetoothConnection) {
         val medianAbdo =
             (list[list.size.div(2)].second.plus(list[list.size.div(2).plus(1)].second)).div(2)
         return Pair(medianAbdo, medianThor)
+    }
+
+
+    fun detectInspiration() = GlobalScope.async {
+        while (mService.mExpiration == 0)
+            continue
+        return@async true
+    }
+
+    fun detectExpiration() = GlobalScope.async {
+        while (mService.mInspiration == 0)
+            continue
+        return@async true
     }
 
     fun detectFiveSecondInspiration(): Boolean {

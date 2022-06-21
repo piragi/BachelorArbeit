@@ -59,7 +59,7 @@ class GamePause(
             thread(start = true, isDaemon = true) {
                 while (!stop) {
                     try {
-                        if (!holdBreathGesture.hold && paused) {
+                        if (!holdBreathGesture.hold && paused && !selectionUtils.screenChangeDetected) {
                             selectionUtils.animateLeavesDiagonal()
                             Thread.sleep(2)
                         }
@@ -120,7 +120,6 @@ class GamePause(
         }
     }
 
-    // TODO leaves displayed double
     fun pauseGame() {
         GlobalScope.launch {
             pauseTextDisplay()

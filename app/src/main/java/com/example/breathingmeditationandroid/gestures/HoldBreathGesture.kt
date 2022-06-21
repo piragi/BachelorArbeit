@@ -34,50 +34,45 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double = 4000.0) : 
 
 
     //TODO not detected properly
-    override fun detect() {
-        thread(start = true, isDaemon = true) {
-            startTime = currentTimeMillis()
-            hold = false
-            var localPrevAbdo = 0.0
-            var localPrevThor = 0.0
-            val buffer = 0.1 // 10% of values
-            var valueCount = 0
-            var errorCount = 0
-            while (!hold) {
-                if (!stop) {
-                    valueCount++
-                    if (!checkPrevValue(
-                            Pair(localPrevAbdo, localPrevThor),
-                            Pair(mService.mAbdoCorrected, mService.mThorCorrected)
-                        )
-                    ) {
-                        errorCount++
-                        Log.i("buffer", "values: $valueCount")
-                        Log.i("buffer", "errors: $errorCount")
+    override fun detect() = GlobalScope.async {
+        startTime = currentTimeMillis()
+        hold = false
+        var localPrevAbdo = 0.0
+        var localPrevThor = 0.0
+        val buffer = 0.1 // 10% of values
+        var valueCount = 0
+        var errorCount = 0
+        while (!hold) {
+            if (!stop) {
+                valueCount++
+                if (!checkPrevValue(
+                        Pair(localPrevAbdo, localPrevThor),
+                        Pair(mService.mAbdoCorrected, mService.mThorCorrected)
+                    )
+                ) {
+                    errorCount++
+                    Log.i("buffer", "values: $valueCount")
+                    Log.i("buffer", "errors: $errorCount")
 
-                        if (valueCount >= 10 && valueCount * buffer < errorCount) {
-                            valueCount = 0
-                            errorCount = 0
-                            localPrevAbdo = mService.mAbdoCorrected
-                            localPrevThor = mService.mThorCorrected
-                            startTime = currentTimeMillis()
-                        }
-                    } else if (currentTimeMillis().minus(startTime) >= time) {
-                        hold = true
+                    if (valueCount >= 10 && valueCount * buffer < errorCount) {
+                        valueCount = 0
+                        errorCount = 0
+                        localPrevAbdo = mService.mAbdoCorrected
+                        localPrevThor = mService.mThorCorrected
+                        startTime = currentTimeMillis()
                     }
-                    Thread.sleep(15)
-                } else {
-                    valueCount = 0
-                    errorCount = 0
-                    startTime = currentTimeMillis()
+                } else if (currentTimeMillis().minus(startTime) >= time) {
+                    hold = true
                 }
+                Thread.sleep(15)
+            } else {
+                valueCount = 0
+                errorCount = 0
+                startTime = currentTimeMillis()
             }
         }
-    }
-
-    fun detected() = GlobalScope.async {
-        detect()
         return@async true
+
     }
 
     private fun checkPrevValue(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {

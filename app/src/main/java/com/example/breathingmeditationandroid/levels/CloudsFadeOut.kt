@@ -6,6 +6,7 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
+import androidx.core.graphics.alpha
 import com.example.breathingmeditationandroid.R
 
 class CloudsFadeOut(private val activity: ComponentActivity) {
@@ -17,7 +18,10 @@ class CloudsFadeOut(private val activity: ComponentActivity) {
             }
 
             override fun onAnimationEnd(animation: Animation?) {
-                clouds.visibility = View.INVISIBLE
+                clouds.animate()
+                    .setDuration(10000)
+                    .alpha(1.0f)
+                    .setListener(null)
             }
 
             override fun onAnimationRepeat(animation: Animation?) {

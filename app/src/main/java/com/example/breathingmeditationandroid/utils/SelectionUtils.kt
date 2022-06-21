@@ -8,6 +8,7 @@ import com.example.breathingmeditationandroid.Calibrator
 import com.example.breathingmeditationandroid.R
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.plattysoft.leonids.ParticleSystem
+import java.lang.System.currentTimeMillis
 import kotlin.math.floor
 
 class SelectionUtils(
@@ -19,6 +20,7 @@ class SelectionUtils(
     private lateinit var leavesMain: ParticleSystem
     private lateinit var leavesSupport: ParticleSystem
     private var bubbles: ArrayList<Pair<ImageView, Pair<Int, Int>>>
+    private var startTime = currentTimeMillis()
 
     private var activity: ComponentActivity
     private var breathingUtils: BreathingUtils
@@ -29,6 +31,9 @@ class SelectionUtils(
     private var holdBreathGesture: HoldBreathGesture
     private var currX: Double = 0.0
     private var currY: Double = 0.0
+    private var currBubble: ImageView? = null
+
+    var screenChangeDetected = false
 
 
     init {
@@ -91,10 +96,14 @@ class SelectionUtils(
         var selectionDetected = false
         for (bubble in bubbles) {
             if (inBubble(bubble.second)) {
+                currBubble = bubble.first
                 if (bubble.second.first < (1 / 3).times(ScreenUtils.xDimension)) {
                     holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferOutAbdo
                     holdBreathGesture.borderThor = Calibrator.holdBreathBufferOutThor
-                } else if(bubble.second.first in (2/3).times(ScreenUtils.xDimension) .. (1/3).times(ScreenUtils.xDimension)){
+                } else if (bubble.second.first in (2 / 3).times(ScreenUtils.xDimension)..(1 / 3).times(
+                        ScreenUtils.xDimension
+                    )
+                ) {
                     holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferMiddleAbdo
                     holdBreathGesture.borderThor = Calibrator.holdBreathBufferMiddleThor
                 } else {
@@ -105,6 +114,11 @@ class SelectionUtils(
                 selectionDetected = true
                 markSelection(bubble.first, 1.0f)
             }
+            if (currBubble != null && currBubble == bubble.first) {
+                if (currentTimeMillis() - startTime >= 3000) {
+                    screenChangeDetected = true
+                }
+            } else startTime = currentTimeMillis()
         }
         if (!selectionDetected) {
             holdBreathGesture.stopDetection()
@@ -153,6 +167,7 @@ class SelectionUtils(
     }
 
     private fun calcYMovement(): Double {
-        return (breathingUtils.calcCombinedValue()).times(Calibrator.flowFactorY).plus(yBorderBottom)
+        return (breathingUtils.calcCombinedValue()).times(Calibrator.flowFactorY)
+            .plus(yBorderBottom)
     }
 }

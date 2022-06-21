@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.View
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
@@ -19,6 +20,7 @@ import com.example.breathingmeditationandroid.gestures.DeepThorBreathGesture
 import com.example.breathingmeditationandroid.gestures.SighBreathGesture
 import com.example.breathingmeditationandroid.gestures.StaccatoBreathGesture
 import com.example.breathingmeditationandroid.levels.*
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -88,7 +90,8 @@ class GameScreen : ComponentActivity() {
             staccatoBreathGesture = StaccatoBreathGesture(mService, breathingUtils)
             sighBreathGesture = SighBreathGesture(mService, breathingUtils)
             holdBreathGesture = HoldBreathGesture(mService, 2000.0)
-            deepBreathLevel = DeepBreathLevel(findViewById<View>(R.id.snow) as ImageView, this@GameScreen)
+            deepBreathLevel =
+                DeepBreathLevel(findViewById<View>(R.id.snow) as ImageView, this@GameScreen)
             birdsEmergingLevel = BirdsEmerging(this@GameScreen)
             feedbackTrees = FeedbackTrees(this@GameScreen, mService)
             rocketTakeOff = RocketTakeOff(background.height, this@GameScreen)
@@ -101,33 +104,19 @@ class GameScreen : ComponentActivity() {
         thread(start = true, isDaemon = true) {
             try {
                 lifecycleScope.launch {
-                    delay(5000L)
+                    pause = GamePause(this@GameScreen, HoldBreathGesture(mService), breathingUtils)
                     listenForPause()
-                    val detectedThorBreathGesture = deepThorBreathGesture.detect()
-                    val detectedAbdoBreathGesture = deepAbdoBreathGesture.detect()
-                    val detectedStaccatoBreathGesture = staccatoBreathGesture.detect()
-                    val detectedSighBreathGesture = sighBreathGesture.detect()
-
                     GlobalScope.launch {
-                        if ( detectedStaccatoBreathGesture.await()) {
-                            birdsEmergingLevel.animationStart()
-                        }
+                        detectBirdsEmerging()
                     }
                     GlobalScope.launch {
-                        if (detectedAbdoBreathGesture.await()) {
-                            deepBreathLevel.animationStart()
-                        }
+                        detectDeepBreathLevel()
                     }
                     GlobalScope.launch {
-                        if (detectedThorBreathGesture.await()) {
-                            //fadeout clouds
-                            cloudsFadeOut.animationStart()
-                        }
+                        detectCloudsLevel()
                     }
                     GlobalScope.launch {
-                        if (detectedSighBreathGesture.await()) {
-                            rocketTakeOff.startAnimation()
-                        }
+                        detectRocketLevel()
                     }
 //                    if ( detectedStaccatoBreathGesture.await()) {
 //                        birdsEmergingLevel.animationStart()
@@ -139,6 +128,7 @@ class GameScreen : ComponentActivity() {
 //                    } else if (detectedSighBreathGesture.await()) {
 //                        rocketTakeOff.startAnimation()
 //                    }
+
                 }
             } catch (consumed: InterruptedException) {
                 Thread.currentThread().interrupt()
@@ -146,40 +136,95 @@ class GameScreen : ComponentActivity() {
         }
     }
 
+    private suspend fun detectBirdsEmerging() {
+        val detectedStaccatoBreathGesture = staccatoBreathGesture.detect()
+        if (detectedStaccatoBreathGesture.await()) {
+            birdsEmergingLevel.animationStart()
+            detectBirdsEmerging()
+        }
+    }
 
-    //TODO oefter als 1x
+    //TODO fix animations
+    private suspend fun detectDeepBreathLevel() {
+        val detectedAbdoBreathGesture = deepAbdoBreathGesture.detect()
+        if (detectedAbdoBreathGesture.await()) {
+            deepBreathLevel.animationStart()
+            delay(5000)
+            val snow = findViewById<ImageView>(R.id.snow)
+            snow.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fadein))
+            detectDeepBreathLevel()
+        }
+    }
+
+    private suspend fun detectCloudsLevel() {
+        val detectedThorBreathGesture = deepThorBreathGesture.detect()
+        if (detectedThorBreathGesture.await()) {
+            //fadeout clouds
+            cloudsFadeOut.animationStart()
+            val clouds = findViewById<ImageView>(R.id.background_clouds)
+            clouds.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fadein))
+            detectCloudsLevel()
+        }
+    }
+
+    private suspend fun detectRocketLevel() {
+        val detectedSighBreathGesture = sighBreathGesture.detect()
+        if (detectedSighBreathGesture.await()) {
+            rocketTakeOff.startAnimation()
+            detectRocketLevel()
+        }
+    }
+
+    private suspend fun listenForInspiration() {
+        val inspirationDetected = breathingUtils.detectInspiration()
+        if (inspirationDetected.await()) {
+            holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
+            holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
+            listenForInspiration()
+        }
+    }
+
+    private suspend fun listenForExpiration() {
+        val expirationDetected = breathingUtils.detectExpiration()
+        if (expirationDetected.await()) {
+            holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferOutAbdo
+            holdBreathGesture.borderThor = Calibrator.holdBreathBufferOutThor
+            listenForExpiration()
+        }
+    }
+
+
+    //TODO continue here
     private fun listenForPause() {
         thread(start = true, isDaemon = true) {
-            holdBreathGesture.detect()
-            var launched = false
-            while (true) {
-                if (holdBreathGesture.hold && !launched) {
-                    Log.i("pause", "paused")
-                    launched = true
-                    lifecycleScope.launch {
-                        pauseGame()
-                    }
-                }
-                if (mService.mExpiration == 0) {
-                    holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
-                    holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
-                }
-                if (mService.mInspiration == 0) {
-                    holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferOutAbdo
-                    holdBreathGesture.borderThor = Calibrator.holdBreathBufferOutThor
-                }
-                if (launched && this@GameScreen::pause.isInitialized) {
-                    if (pause.end) {
-                        Log.i("pause", "ended")
-                        changeToHomeScreen()
-                    } else if (pause.resume) {
-                        Log.i("pause", "resumed")
-                        resumeGame()
-                        launched = false
-                    }
-                }
+            GlobalScope.launch {
+                actOnPause()
+            }
+            GlobalScope.launch {
+                listenForExpiration()
+            }
+            GlobalScope.launch {
+                listenForInspiration()
             }
         }
+    }
+
+    private suspend fun actOnPause() {
+        val holdBreathDetected = holdBreathGesture.detect()
+        if (holdBreathDetected.await()) {
+            Log.i("pause", "paused")
+            pauseGame()
+        }
+        if (this@GameScreen::pause.isInitialized) {
+            if (pause.end) {
+                Log.i("pause", "ended")
+                changeToHomeScreen()
+            } else if (pause.resume) {
+                Log.i("pause", "resumed")
+                resumeGame()
+            }
+        }
+        actOnPause()
     }
 
     private fun changeToHomeScreen() {
@@ -194,13 +239,12 @@ class GameScreen : ComponentActivity() {
     }
 
     private fun pauseGame() {
-        pause = GamePause(this@GameScreen, HoldBreathGesture(mService), breathingUtils)
         pause.pauseGame()
     }
 
     private fun resumeGame() {
         holdBreathGesture = HoldBreathGesture(mService, 2000.0)
-        holdBreathGesture.detect()
         pause.resumeGame()
+        pause = GamePause(this@GameScreen, HoldBreathGesture(mService), breathingUtils)
     }
 }

@@ -7,7 +7,7 @@ import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import com.example.breathingmeditationandroid.R
 
-class RocketTakeOff (private val height: Int, private val activity: ComponentActivity) {
+class RocketTakeOff(private val height: Int, private val activity: ComponentActivity) {
 
     fun startAnimation() {
         val rocketWithFire = activity.findViewById<View>(R.id.rocket) as ImageView
@@ -23,6 +23,17 @@ class RocketTakeOff (private val height: Int, private val activity: ComponentAct
                 addUpdateListener {
                     val progressY = animatedValue as Float * (-height)
                     val progressX = animatedValue as Float * -190
+                    rocketWithFire.translationY = progressY
+                    rocketWithFire.translationX = progressX
+                }
+            }
+            ValueAnimator.ofFloat(0.0f, 1.2f).apply {
+                interpolator = LinearInterpolator()
+                duration = 1000L
+                start()
+                addUpdateListener {
+                    val progressY = animatedValue as Float * (height)
+                    val progressX = animatedValue as Float * 190
                     rocketWithFire.translationY = progressY
                     rocketWithFire.translationX = progressX
                 }
