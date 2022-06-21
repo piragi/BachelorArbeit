@@ -31,9 +31,8 @@ class GamePause(
     private var resumeText: TextView
     private var endText: TextView
     private lateinit var bubbles: ArrayList<Pair<ImageView, Pair<Int, Int>>>
-    var resume = false
-    var end = false
-    private var paused = false
+    private var resume = false
+    private var end = false
     private var stop = false
 
     init {
@@ -48,21 +47,21 @@ class GamePause(
         endText = activity.findViewById(R.id.end)
 
         getUiResources()
-        startAnimation()
-        detectScreenChange()
-
+        GlobalScope.launch {
+            resumeGame()
+        }
     }
 
     private fun startAnimation() {
         initializeBubbles()
         if (this::bubbles.isInitialized) {
+            this.selectionUtils =
+                SelectionUtils(activity, breathingUtils, holdBreathGesture, bubbles)
             thread(start = true, isDaemon = true) {
-                while (!stop) {
+                while (!resume && !end) {
                     try {
-                        if (!holdBreathGesture.hold && paused && !selectionUtils.screenChangeDetected) {
-                            selectionUtils.animateLeavesDiagonal()
-                            Thread.sleep(2)
-                        }
+                        selectionUtils.animateLeavesDiagonal()
+                        Thread.sleep(2)
                     } catch (e: ConcurrentModificationException) {
                         continue
                     }
@@ -71,23 +70,32 @@ class GamePause(
         }
     }
 
-    private fun detectScreenChange() {
-        thread(start = true, isDaemon = true) {
-            while (!stop) {
-                if (holdBreathGesture.hold && paused) {
-                    if (endBubble.tag == "selected") {
-                        end = true
-                    } else if (resumeBubble.tag == "selected") {
-                        resume = true
-                    }
-                    end = false
-                    resume = false
-                    selectionUtils.stopLeaves()
-                }
+    private suspend fun resumeGame() {
+        val holdBreathDetected = holdBreathGesture.detect()
+        if (holdBreathDetected.await()) {
+            selectionUtils.stopLeaves()
+            if (endBubble.tag == "selected") {
+                end = true
+            } else {
+                resumeAnimation()
+                resume = true
             }
         }
     }
 
+    fun gameResumedAsync() = GlobalScope.async {
+        while (!resume)
+            continue
+        stop = true
+        return@async true
+    }
+
+    fun gameEndedAsync() = GlobalScope.async {
+        while (!end)
+            continue
+        stop = true
+        return@async true
+    }
 
     private suspend fun pauseTextDisplay() = coroutineScope {
         val text = activity.findViewById<TextView>(R.id.pauseText)
@@ -124,10 +132,6 @@ class GamePause(
         GlobalScope.launch {
             pauseTextDisplay()
         }
-        holdBreathGesture.detect()
-        selectionUtils = SelectionUtils(activity, breathingUtils, holdBreathGesture, bubbles)
-        paused = true
-
         activity.runOnUiThread {
             whiteBox.alpha = 0.5f
             resumeBubble.startAnimation(AnimationUtils.loadAnimation(activity, R.anim.fadein))
@@ -139,10 +143,7 @@ class GamePause(
             endText.startAnimation(AnimationUtils.loadAnimation(activity, R.anim.fadein))
             endText.alpha = 1.0f
         }
-    }
-
-    fun stopAll() {
-        stop = true
+        startAnimation()
     }
 
     private fun initializeBubbles() {
@@ -157,7 +158,8 @@ class GamePause(
                     endBubble.viewTreeObserver.removeOnGlobalLayoutListener(this)
                 }
             })
-            resumeBubble.viewTreeObserver.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
+            resumeBubble.viewTreeObserver.addOnGlobalLayoutListener(object :
+                OnGlobalLayoutListener {
                 override fun onGlobalLayout() {
                     val left: Int = resumeBubble.left
                     val right: Int = resumeBubble.right
@@ -169,13 +171,14 @@ class GamePause(
             Pair(endBubble, Pair(endBubble.left, endBubble.right)),
             Pair(resumeBubble, Pair(resumeBubble.left, resumeBubble.right))
         )
-        Log.i("bubbles", "(${endBubble.left}, ${endBubble.right}), (${resumeBubble.left}, ${resumeBubble.right})")
+        Log.i(
+            "bubbles",
+            "(${endBubble.left}, ${endBubble.right}), (${resumeBubble.left}, ${resumeBubble.right})"
+        )
     }
 
-    fun resumeGame() {
+    private fun resumeAnimation() {
         selectionUtils.stopLeaves()
-        holdBreathGesture.stopDetection()
-        paused = false
         GlobalScope.launch {
             pauseTextReposition()
         }

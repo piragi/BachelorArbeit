@@ -20,7 +20,6 @@ import com.example.breathingmeditationandroid.gestures.DeepThorBreathGesture
 import com.example.breathingmeditationandroid.gestures.SighBreathGesture
 import com.example.breathingmeditationandroid.gestures.StaccatoBreathGesture
 import com.example.breathingmeditationandroid.levels.*
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -104,9 +103,8 @@ class GameScreen : ComponentActivity() {
         thread(start = true, isDaemon = true) {
             try {
                 lifecycleScope.launch {
-                    pause = GamePause(this@GameScreen, HoldBreathGesture(mService), breathingUtils)
                     listenForPause()
-                    GlobalScope.launch {
+                    /* GlobalScope.launch {
                         detectBirdsEmerging()
                     }
                     GlobalScope.launch {
@@ -117,7 +115,7 @@ class GameScreen : ComponentActivity() {
                     }
                     GlobalScope.launch {
                         detectRocketLevel()
-                    }
+                    } */
 //                    if ( detectedStaccatoBreathGesture.await()) {
 //                        birdsEmergingLevel.animationStart()
 //                    } else if (detectedAbdoBreathGesture.await()) {
@@ -196,40 +194,35 @@ class GameScreen : ComponentActivity() {
 
     //TODO continue here
     private fun listenForPause() {
-        thread(start = true, isDaemon = true) {
-            GlobalScope.launch {
-                actOnPause()
-            }
-            GlobalScope.launch {
-                listenForExpiration()
-            }
-            GlobalScope.launch {
-                listenForInspiration()
-            }
+        GlobalScope.launch {
+            actOnPause()
+        }
+        GlobalScope.launch {
+            listenForExpiration()
+        }
+        GlobalScope.launch {
+            listenForInspiration()
         }
     }
 
     private suspend fun actOnPause() {
         val holdBreathDetected = holdBreathGesture.detect()
         if (holdBreathDetected.await()) {
-            Log.i("pause", "paused")
-            pauseGame()
-        }
-        if (this@GameScreen::pause.isInitialized) {
-            if (pause.end) {
-                Log.i("pause", "ended")
-                changeToHomeScreen()
-            } else if (pause.resume) {
-                Log.i("pause", "resumed")
+            lifecycleScope.launch {
+                pauseGame()
+            }.join()
+            val gameResumed = pause.gameResumedAsync()
+            val gameEnded = pause.gameEndedAsync()
+            if (gameResumed.await()) {
                 resumeGame()
+                actOnPause()
             }
+            if (gameEnded.await())
+                changeToHomeScreen()
         }
-        actOnPause()
     }
 
     private fun changeToHomeScreen() {
-        pause.stopAll()
-        holdBreathGesture.stopDetection()
         Intent(this, HomeScreenActivity::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
@@ -239,12 +232,11 @@ class GameScreen : ComponentActivity() {
     }
 
     private fun pauseGame() {
+        pause = GamePause(this, HoldBreathGesture(mService), breathingUtils)
         pause.pauseGame()
     }
 
     private fun resumeGame() {
         holdBreathGesture = HoldBreathGesture(mService, 2000.0)
-        pause.resumeGame()
-        pause = GamePause(this@GameScreen, HoldBreathGesture(mService), breathingUtils)
     }
 }
