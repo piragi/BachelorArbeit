@@ -238,10 +238,10 @@ class GameScreen : ComponentActivity() {
 
     private fun pauseGame() {
 
-        deepAbdoBreathGesture.stopDetection()
-        deepThorBreathGesture.stopDetection()
-        staccatoBreathGesture.stopDetection()
-        sighBreathGesture.stopDetection()
+        // deepAbdoBreathGesture.stopDetection()
+        // deepThorBreathGesture.stopDetection()
+        // staccatoBreathGesture.stopDetection()
+        // sighBreathGesture.stopDetection()
 
         pause = GamePause(this, HoldBreathGesture(mService), breathingUtils)
         pause.pauseGame()

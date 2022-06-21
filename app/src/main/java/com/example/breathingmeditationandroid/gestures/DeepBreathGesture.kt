@@ -12,15 +12,16 @@ class DeepThorBreathGesture(
     private val breathingUtils: BreathingUtils
 ) : IBreathingGesture {
     private var stop = false
+
     override fun detect() = GlobalScope.async {
         var thorBreathDetected = false
         while (!thorBreathDetected) {
             if (!stop) {
-                if (mService.mThorCorrected < Calibrator.calibratedThor.first * 0.8) {
+                while (mService.mThorCorrected < Calibrator.calibratedThor.first * 0.8) {
                     Thread.sleep(2)
                 }
 
-                if (mService.mExpiration == 0) {
+                while (mService.mExpiration == 0) {
                 }
                 Log.i("ThorBreath", "detected")
                 thorBreathDetected = true
@@ -55,7 +56,7 @@ class DeepAbdoBreathGesture(
     override fun detect() = GlobalScope.async {
         var abdoBreathDetected = false
         while (!abdoBreathDetected) {
-            if (mService.mAbdoCorrected < Calibrator.calibratedAbdo.first * 0.8) {
+            while (mService.mAbdoCorrected < Calibrator.calibratedAbdo.first * 0.8) {
                 Thread.sleep(2)
             }
             Log.i("AbdoBreath", "detected")

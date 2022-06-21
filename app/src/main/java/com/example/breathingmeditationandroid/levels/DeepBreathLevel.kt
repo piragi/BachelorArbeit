@@ -15,6 +15,8 @@ class DeepBreathLevel(private val snow: ImageView, private val activity: Compone
 
     var snowParticleSystemSet = mutableSetOf<ParticleSystem>()
 
+
+    //TODO crashed random, irgendwas mit den particles
     fun animationStart() {
         val positions =
             arrayOf(
@@ -37,7 +39,7 @@ class DeepBreathLevel(private val snow: ImageView, private val activity: Compone
                 for (i in positions.indices) {
                     //750 good emittingTime
                     snowParticleSystemSet.elementAt(i)
-                        .emit(positions.elementAt(i).first, positions.elementAt(i).second, 11, 250)
+                        .emit(positions.elementAt(i).first, positions.elementAt(i).second, 11)
                 }
             }
 
@@ -52,12 +54,6 @@ class DeepBreathLevel(private val snow: ImageView, private val activity: Compone
     }
 
     fun resetView() {
-
-        snowParticleSystemSet.elementAt(0).emit(0, 20, 11, 2000)
-        snowParticleSystemSet.elementAt(1).emit(ScreenUtils.xDimension.times(1 / 3), 20, 11, 2000)
-        snowParticleSystemSet.elementAt(2).emit(ScreenUtils.xDimension.times(2 / 3), 20, 11, 2000)
-        snowParticleSystemSet.elementAt(3).emit(ScreenUtils.xDimension, 20, 11, 2000)
-
         Thread.sleep(3000)
 
         activity.runOnUiThread {
