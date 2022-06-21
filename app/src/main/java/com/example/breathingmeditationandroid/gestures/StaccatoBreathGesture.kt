@@ -10,37 +10,48 @@ import kotlinx.coroutines.async
 class StaccatoBreathGesture(
     private val mService: BluetoothConnection,
     private val breathingUtils: BreathingUtils
-): IBreathingGesture {
+) : IBreathingGesture {
+
+    private var stop = false
 
     override fun detect() = GlobalScope.async {
         val bufferStaccato: MutableList<Double> = mutableListOf()
         var staccatoDetetected = false
 
         while (!staccatoDetetected) {
+            if (!stop) {
+                if (mService.mAbdoCorrected > Calibrator.calibratedAbdo.first * 0.35) {
+                    //everytime there is a updated value -> add to buffer
+                    if (bufferStaccato.size == 4) {
+                        if (bufferStaccato[3] != mService.mAbdoCorrected) {
+                            Log.i("valuesBuffer", "$bufferStaccato")
+                            Log.i("calibration", "${Calibrator.calibratedAbdo.first * 0.5}")
+                            bufferStaccato.removeAt(0)
+                            bufferStaccato.add(mService.mAbdoCorrected)
+                        }
 
-            if ( mService.mAbdoCorrected > Calibrator.calibratedAbdo.first * 0.35) {
-                //everytime there is a updated value -> add to buffer
-                if (bufferStaccato.size == 4) {
-                    if (bufferStaccato[3] != mService.mAbdoCorrected) {
-                        Log.i("valuesBuffer", "$bufferStaccato")
-                        Log.i("calibration", "${Calibrator.calibratedAbdo.first * 0.5}")
-                        bufferStaccato.removeAt(0)
+                        if (bufferStaccato[3] >= bufferStaccato[0] * 1.45) {
+                            staccatoDetetected = true
+                            Log.i("staccato", "detected")
+                        }
+                    } else {
                         bufferStaccato.add(mService.mAbdoCorrected)
                     }
-
-                    if (bufferStaccato[3] >= bufferStaccato[0] * 1.45) {
-                        staccatoDetetected = true
-                        Log.i("staccato", "detected")
-                    }
                 } else {
-                    bufferStaccato.add(mService.mAbdoCorrected)
+                    bufferStaccato.clear()
                 }
-            } else {
-                bufferStaccato.clear()
             }
         }
         return@async true
 
+    }
+
+    override fun stopDetection() {
+        stop = true
+    }
+
+    override fun resumeDetection() {
+        stop = false
     }
 
     // TODO: remove bad practice

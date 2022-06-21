@@ -10,19 +10,31 @@ import kotlinx.coroutines.async
 class DeepThorBreathGesture(
     private val mService: BluetoothConnection,
     private val breathingUtils: BreathingUtils
-) {
+) : IBreathingGesture {
+    private var stop = false
+    override fun detect() = GlobalScope.async {
+        var thorBreathDetected = false
+        while (!thorBreathDetected) {
+            if (!stop) {
+                if (mService.mThorCorrected < Calibrator.calibratedThor.first * 0.8) {
+                    Thread.sleep(2)
+                }
 
-    fun detect() = GlobalScope.async {
-        while (mService.mThorCorrected < Calibrator.calibratedThor.first * 0.8) {
-            Thread.sleep(2)
+                if (mService.mExpiration == 0) {
+                }
+                Log.i("ThorBreath", "detected")
+                thorBreathDetected = true
+            }
         }
-
-        while (mService.mExpiration == 0) {
-        }
-        Log.i("ThorBreath", "detected")
         return@async true
+    }
 
+    override fun stopDetection() {
+        stop = true
+    }
 
+    override fun resumeDetection() {
+        stop = false
     }
 
     // TODO: remove bad practice
@@ -36,18 +48,28 @@ class DeepThorBreathGesture(
 class DeepAbdoBreathGesture(
     private val mService: BluetoothConnection,
     private val breathingUtils: BreathingUtils
-) {
+) : IBreathingGesture {
 
-    fun detect() = GlobalScope.async {
-        while (mService.mAbdoCorrected < Calibrator.calibratedAbdo.first * 0.8) {
-            Thread.sleep(2)
-        }
+    private var stop = false
 
-        while (mService.mExpiration == 0) {
+    override fun detect() = GlobalScope.async {
+        var abdoBreathDetected = false
+        while (!abdoBreathDetected) {
+            if (mService.mAbdoCorrected < Calibrator.calibratedAbdo.first * 0.8) {
+                Thread.sleep(2)
+            }
+            Log.i("AbdoBreath", "detected")
+            abdoBreathDetected = true
         }
-        Log.i("AbdoBreath", "detected")
         return@async true
+    }
 
+    override fun stopDetection() {
+        stop = true
+    }
+
+    override fun resumeDetection() {
+        stop = false
     }
 
     // TODO: remove bad practice

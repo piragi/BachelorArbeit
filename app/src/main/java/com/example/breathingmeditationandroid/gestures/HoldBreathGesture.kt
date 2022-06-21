@@ -24,11 +24,11 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double = 4000.0) : 
     }
 
 
-    fun stopDetection() {
+    override fun stopDetection() {
         stop = true
     }
 
-    fun resumeDetection() {
+    override fun resumeDetection() {
         stop = false
     }
 
