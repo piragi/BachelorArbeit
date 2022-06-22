@@ -10,7 +10,7 @@ import java.lang.System.currentTimeMillis
 import kotlin.concurrent.thread
 import kotlin.math.abs
 
-class HoldBreathGesture(mService: BluetoothConnection, time: Double = 4000.0) : IBreathingGesture {
+class HoldBreathGesture(mService: BluetoothConnection, time: Double = 2000.0) : IBreathingGesture {
     private val mService: BluetoothConnection
     private var startTime: Long = 0
     var hold = false

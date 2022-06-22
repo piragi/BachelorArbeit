@@ -181,7 +181,7 @@
         app:layout_constraintRight_toRightOf="@+id/resumeBubble" app:layout_constraintTop_toTopOf="@+id/resumeBubble"
         app:layout_constraintVertical_bias="0.459"/>
     <TextView
-        android:id="@id/pauseText"
+        android:id="@+id/pauseText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" android:text="Game paused"
         android:textColor="#00838D"

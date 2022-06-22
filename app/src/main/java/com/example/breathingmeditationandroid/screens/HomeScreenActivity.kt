@@ -18,6 +18,7 @@ import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlin.concurrent.thread
@@ -91,6 +92,7 @@ class HomeScreenActivity : ComponentActivity() {
                         breathingUtils,
                         bubbles
                     )
+                delay(3000)
                 animateLeaves()
                 detectScreenChange()
             }

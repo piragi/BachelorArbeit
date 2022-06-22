@@ -87,7 +87,7 @@ class GameScreen : ComponentActivity() {
             deepThorBreathGesture = DeepThorBreathGesture(mService, breathingUtils)
             staccatoBreathGesture = StaccatoBreathGesture(mService, breathingUtils)
             sighBreathGesture = SighBreathGesture(mService, breathingUtils)
-            holdBreathGesture = HoldBreathGesture(mService, 3000.0)
+            holdBreathGesture = HoldBreathGesture(mService, 2000.0)
             deepBreathLevel =
                 DeepBreathLevel(findViewById<View>(R.id.snow) as ImageView, this@GameScreen)
             birdsEmergingLevel = BirdsEmerging(this@GameScreen)

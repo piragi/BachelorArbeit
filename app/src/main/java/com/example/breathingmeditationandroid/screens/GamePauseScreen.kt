@@ -15,10 +15,7 @@ import com.example.breathingmeditationandroid.BluetoothConnection
 import com.example.breathingmeditationandroid.R
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlin.concurrent.thread
 
 class GamePauseScreen : ComponentActivity() {
@@ -56,21 +53,28 @@ class GamePauseScreen : ComponentActivity() {
 
     private fun start() {
         initializeBubbles()
-        if (this::bubbles.isInitialized) {
-            for (bubble in bubbles) {
-                Log.i("bubbles", "${bubble.second}")
-            }
-            lifecycleScope.launch {
-                selectionUtils =
-                    SelectionUtils(
-                        this@GamePauseScreen,
-                        breathingUtils,
-                        bubbles
-                    )
-                animateLeaves()
-                detectScreenChange()
+        GlobalScope.launch {
+            val bubblesInitialized = waitForBubbleInitAsync()
+            if (bubblesInitialized.await()) {
+                lifecycleScope.launch {
+                    selectionUtils =
+                        SelectionUtils(
+                            this@GamePauseScreen,
+                            breathingUtils,
+                            bubbles
+                        )
+                    delay(3000)
+                    animateLeaves()
+                    detectScreenChange()
+                }
             }
         }
+    }
+
+    private fun waitForBubbleInitAsync() = GlobalScope.async {
+        while (!this@GamePauseScreen::bubbles.isInitialized)
+            continue
+        return@async true
     }
 
     private fun initializeBubbles() {
