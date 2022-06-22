@@ -61,8 +61,6 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double = 4000.0) : 
                         localPrevThor = mService.mThorCorrected
                         startTime = currentTimeMillis()
                     }
-                    if (currentTimeMillis().minus(startTime) >= 2000)
-                        buffer += 0.1
                 } else if (currentTimeMillis().minus(startTime) >= time) {
                     hold = true
                 }
