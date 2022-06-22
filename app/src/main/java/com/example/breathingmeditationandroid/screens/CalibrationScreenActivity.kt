@@ -94,20 +94,20 @@ class CalibrationScreenActivity : ComponentActivity() {
                 2 -> decreaseSnowFlow(1.0)
             }
 
-            launch { Calibrator.calibrateBreathHold(5000, "in") }
+            launch { Calibrator.calibrateBreathHold(4000, "in") }
             lifecycleScope.launch {
-                displayTimer(4000)
+                displayTimer(3000)
             }
-            delay(4000)
+            delay(3000)
             displayText("Breathe out...", 5000)
             displayText("Hold your breath...", 2000)
             launch {
-                Calibrator.calibrateBreathHold(5000, "out")
+                Calibrator.calibrateBreathHold(4000, "out")
             }
             if (iteration == 2)
                 launch { fadeOutGreySky() }
-            lifecycleScope.launch { displayTimer(4000) }
-            delay(4000)
+            lifecycleScope.launch { displayTimer(3000) }
+            delay(3000)
         }
         displayText("Calibration finished!", 5000)
         Log.i("calibration", "bufferInAbdo: ${Calibrator.holdBreathBufferInAbdo}")

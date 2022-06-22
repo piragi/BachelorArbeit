@@ -92,10 +92,14 @@ class SelectionUtils(
 
     private fun detectSelection() {
         GlobalScope.launch {
-            for (bubble in bubbles) {
-                if (inBubble(bubble.second)) {
-                    leaveBubbleAsync(bubble).await()
+            try {
+                for (bubble in bubbles) {
+                    if (inBubble(bubble.second)) {
+                        leaveBubbleAsync(bubble).await()
+                    }
                 }
+            } catch (e: ConcurrentModificationException) {
+                detectSelection()
             }
         }
     }

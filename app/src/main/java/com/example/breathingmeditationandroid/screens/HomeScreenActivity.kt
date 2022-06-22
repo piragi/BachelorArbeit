@@ -18,6 +18,7 @@ import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
@@ -85,16 +86,21 @@ class HomeScreenActivity : ComponentActivity() {
             for (bubble in bubbles) {
                 Log.i("bubbles", "${bubble.second}")
             }
-            lifecycleScope.launch {
-                selectionUtils =
-                    SelectionUtils(
-                        this@HomeScreenActivity,
-                        breathingUtils,
-                        bubbles
-                    )
-                delay(2000)
-                animateLeaves()
-                detectScreenChange()
+            GlobalScope.launch {
+                val bubblesInitialized = waitForBubbleInitAsync()
+                if (bubblesInitialized.await()) {
+                    lifecycleScope.launch {
+                        selectionUtils =
+                            SelectionUtils(
+                                this@HomeScreenActivity,
+                                breathingUtils,
+                                bubbles
+                            )
+                        delay(2000)
+                        animateLeaves()
+                        detectScreenChange()
+                    }
+                }
             }
         }
     }
@@ -105,6 +111,12 @@ class HomeScreenActivity : ComponentActivity() {
             bubble2.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fadein))
             bubble3.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fadein))
         }
+    }
+
+    private fun waitForBubbleInitAsync() = GlobalScope.async {
+        while (!this@HomeScreenActivity::bubbles.isInitialized)
+            continue
+        return@async true
     }
 
     private fun initializeBubbles() {

@@ -8,12 +8,14 @@ import android.os.Bundle
 import android.os.IBinder
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.breathingmeditationandroid.BluetoothConnection
 import com.example.breathingmeditationandroid.R
-import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
 
@@ -30,8 +32,7 @@ class AboutScreen : ComponentActivity() {
             val binder = service as BluetoothConnection.LocalBinder
             mService = binder.getService()
             breathingUtils = BreathingUtils(mService)
-            animateLeaves()
-            returnToHomeScreen()
+            start()
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -46,6 +47,12 @@ class AboutScreen : ComponentActivity() {
         cloud = findViewById(R.id.cloud)
     }
 
+    private fun waitForBubbleInitAsync() = GlobalScope.async {
+        while (!this@AboutScreen::clouds.isInitialized)
+            continue
+        return@async true
+    }
+
     private fun getBubbleCoordinates() {
         if (cloud.left == 0 && cloud.right == 0) {
             clouds = arrayListOf()
@@ -57,18 +64,29 @@ class AboutScreen : ComponentActivity() {
         } else clouds = arrayListOf(Pair(cloud, Pair(cloud.left, cloud.right)))
     }
 
-    private fun animateLeaves() {
+    private fun start() {
         getBubbleCoordinates()
-        if (this::clouds.isInitialized) {
-            selectionUtils = SelectionUtils(this@AboutScreen, breathingUtils, clouds)
-            thread(start = true, isDaemon = true) {
-                while (true) {
-                    try {
-                        selectionUtils.animateLeavesHorizontal()
-                        Thread.sleep(2)
-                    } catch (error: ConcurrentModificationException) {
-                        continue
-                    }
+        GlobalScope.launch {
+            val cloudInitialized = waitForBubbleInitAsync()
+            if (cloudInitialized.await()) {
+                lifecycleScope.launch {
+                    selectionUtils = SelectionUtils(this@AboutScreen, breathingUtils, clouds)
+                    returnToHomeScreen()
+                    delay(2000)
+                    startAnimation()
+                }
+            }
+        }
+    }
+
+    private fun startAnimation() {
+        thread(start = true, isDaemon = true) {
+            while (true) {
+                try {
+                    selectionUtils.animateLeavesHorizontal()
+                    Thread.sleep(2)
+                } catch (error: ConcurrentModificationException) {
+                    continue
                 }
             }
         }
