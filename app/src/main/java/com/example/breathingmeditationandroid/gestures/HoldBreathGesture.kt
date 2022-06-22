@@ -40,7 +40,7 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double = 2000.0) : 
         hold = false
         var localPrevAbdo = 0.0
         var localPrevThor = 0.0
-        val buffer = 0.2 // 10% of values
+        var buffer = 0.1 // 10% of values
         var valueCount = 0
         var errorCount = 0
         while (!hold) {
@@ -60,7 +60,8 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double = 2000.0) : 
                         localPrevAbdo = mService.mAbdoCorrected
                         localPrevThor = mService.mThorCorrected
                         startTime = currentTimeMillis()
-                    }
+                    } else if(currentTimeMillis().minus(startTime) >= 2000)
+                        buffer += 0.1
                 } else if (currentTimeMillis().minus(startTime) >= time) {
                     hold = true
                 }

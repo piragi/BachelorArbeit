@@ -32,7 +32,7 @@ class CloudsFadeOut(private val activity: ComponentActivity) {
     fun resetView() {
         activity.runOnUiThread {
             clouds.animate()
-                .setDuration(10000)
+                .setDuration(3000)
                 .alpha(1.0f)
                 .setListener(null)
             clouds.alpha = 1.0f
