@@ -21,7 +21,6 @@ class AboutScreen : ComponentActivity() {
     private lateinit var serviceIntent: Intent
     private lateinit var mService: BluetoothConnection
     private lateinit var breathingUtils: BreathingUtils
-    private lateinit var holdBreathGesture: HoldBreathGesture
     private lateinit var cloud: ImageView
     private lateinit var selectionUtils: SelectionUtils
     private lateinit var clouds: ArrayList<Pair<ImageView, Pair<Int, Int>>>
@@ -30,7 +29,6 @@ class AboutScreen : ComponentActivity() {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as BluetoothConnection.LocalBinder
             mService = binder.getService()
-            holdBreathGesture = HoldBreathGesture(mService)
             breathingUtils = BreathingUtils(mService)
             animateLeaves()
             returnToHomeScreen()
@@ -62,12 +60,7 @@ class AboutScreen : ComponentActivity() {
     private fun animateLeaves() {
         getBubbleCoordinates()
         if (this::clouds.isInitialized) {
-            selectionUtils = SelectionUtils(
-                this@AboutScreen,
-                breathingUtils,
-                holdBreathGesture,
-                clouds
-            )
+            selectionUtils = SelectionUtils(this@AboutScreen, breathingUtils, clouds)
             thread(start = true, isDaemon = true) {
                 while (true) {
                     try {
@@ -83,8 +76,8 @@ class AboutScreen : ComponentActivity() {
 
     private fun returnToHomeScreen() {
         GlobalScope.launch {
-            val holdBreathDetected = holdBreathGesture.detect()
-            if (holdBreathDetected.await()) {
+            val screenChangeDetected = selectionUtils.detectSafeStopAsync()
+            if (screenChangeDetected.await()) {
                 changeScreen()
             }
         }

@@ -16,13 +16,11 @@ import kotlin.concurrent.thread
 
 class GamePause(
     activity: ComponentActivity,
-    holdBreathGesture: HoldBreathGesture,
     breathingUtils: BreathingUtils
 ) {
 
     private var activity: ComponentActivity
     private var breathingUtils: BreathingUtils
-    private var holdBreathGesture: HoldBreathGesture
     private lateinit var selectionUtils: SelectionUtils
     private lateinit var whiteBox: ImageView
     private var background: ViewGroup
@@ -37,7 +35,6 @@ class GamePause(
 
     init {
         this.activity = activity
-        this.holdBreathGesture = holdBreathGesture
         this.breathingUtils = breathingUtils
 
         background = activity.findViewById(R.id.game_screen)
@@ -47,37 +44,41 @@ class GamePause(
         endText = activity.findViewById(R.id.end)
 
         getUiResources()
-        GlobalScope.launch {
-            resumeGame()
-        }
+        initializeBubbles()
+    }
+
+    fun waitForResourcesAsync() = GlobalScope.async {
+        while (!this@GamePause::bubbles.isInitialized)
+            continue
+        Log.i("bubbles", "${bubbles[0].second}, ${bubbles[1].second}")
+        return@async true
     }
 
     private fun startAnimation() {
-        initializeBubbles()
-        if (this::bubbles.isInitialized) {
-            this.selectionUtils =
-                SelectionUtils(activity, breathingUtils, holdBreathGesture, bubbles)
-            thread(start = true, isDaemon = true) {
-                while (!resume && !end) {
-                    try {
-                        selectionUtils.animateLeavesDiagonal()
-                        Thread.sleep(2)
-                    } catch (e: ConcurrentModificationException) {
-                        continue
-                    }
+        Log.i("bubbles", "animation started")
+        Log.i("bubbles", "${bubbles[0].second}, ${bubbles[1].second}")
+        this.selectionUtils =
+            SelectionUtils(activity, breathingUtils, bubbles)
+        thread(start = true, isDaemon = true) {
+            while (!resume && !end) {
+                try {
+                    selectionUtils.animateLeavesDiagonal()
+                    Thread.sleep(2)
+                } catch (e: ConcurrentModificationException) {
+                    continue
                 }
             }
         }
     }
 
+
     private suspend fun resumeGame() {
-        val holdBreathDetected = holdBreathGesture.detect()
-        if (holdBreathDetected.await()) {
+        val selectionDetected = selectionUtils.detectSafeStopAsync()
+        if (selectionDetected.await()) {
             selectionUtils.stopLeaves()
             if (endBubble.tag == "selected") {
                 end = true
             } else {
-                resumeAnimation()
                 resume = true
             }
         }
@@ -144,6 +145,7 @@ class GamePause(
             endText.alpha = 1.0f
         }
         startAnimation()
+        GlobalScope.launch { resumeGame() }
     }
 
     private fun initializeBubbles() {
@@ -171,20 +173,21 @@ class GamePause(
             Pair(endBubble, Pair(endBubble.left, endBubble.right)),
             Pair(resumeBubble, Pair(resumeBubble.left, resumeBubble.right))
         )
-        Log.i(
-            "bubbles",
-            "(${endBubble.left}, ${endBubble.right}), (${resumeBubble.left}, ${resumeBubble.right})"
-        )
     }
 
-    private fun resumeAnimation() {
+    fun resumeAnimation() {
         selectionUtils.stopLeaves()
         GlobalScope.launch {
             pauseTextReposition()
         }
         activity.runOnUiThread {
             whiteBox.alpha = 0.0f
-            resumeBubble.startAnimation(AnimationUtils.loadAnimation(activity, R.anim.fadeout_quick))
+            resumeBubble.startAnimation(
+                AnimationUtils.loadAnimation(
+                    activity,
+                    R.anim.fadeout_quick
+                )
+            )
             resumeBubble.alpha = 0.0f
             endBubble.startAnimation(AnimationUtils.loadAnimation(activity, R.anim.fadeout_quick))
             endBubble.alpha = 0.0f

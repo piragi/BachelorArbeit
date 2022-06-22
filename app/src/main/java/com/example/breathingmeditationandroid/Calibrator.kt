@@ -9,21 +9,21 @@ import kotlin.math.max
 
 object Calibrator {
 
-    var calibratedAbdo: Pair<Double, Double> = Pair(0.0, 0.0)
-    var calibratedThor: Pair<Double, Double> = Pair(0.0, 0.0)
+    var calibratedAbdo: Pair<Double, Double> = Pair(1.0, 1.0)
+    var calibratedThor: Pair<Double, Double> = Pair(1.0, 1.0)
 
     // Buffers for how much difference there can be for holding breath
-    var holdBreathBufferInAbdo = 0.0
-    var holdBreathBufferInThor = 0.0
+    var holdBreathBufferInAbdo = 1.0
+    var holdBreathBufferInThor = 1.0
 
-    var holdBreathBufferMiddleAbdo = 0.0
-    var holdBreathBufferMiddleThor = 0.0
+    var holdBreathBufferMiddleAbdo = 1.0
+    var holdBreathBufferMiddleThor = 1.0
 
-    var holdBreathBufferOutAbdo = 0.0
-    var holdBreathBufferOutThor = 0.0
+    var holdBreathBufferOutAbdo = 1.0
+    var holdBreathBufferOutThor = 1.0
 
-    var flowFactorX = 0.0
-    var flowFactorY = 0.0
+    var flowFactorX = 500.0
+    var flowFactorY = -250.0
 
     var correction = 0.0
 
@@ -78,7 +78,10 @@ object Calibrator {
             }
         }
         calibratedAbdo =
-            Pair(mService.calculateMedian(maximaAbdo) * 1.2, mService.calculateMedian(minimaAbdo) * 1.2)
+            Pair(
+                mService.calculateMedian(maximaAbdo) * 1.2,
+                mService.calculateMedian(minimaAbdo) * 1.2
+            )
 
         val minimaThor: ArrayList<Double> = ArrayList()
         val maximaThor: ArrayList<Double> = ArrayList()
@@ -106,7 +109,10 @@ object Calibrator {
             }
         }
         calibratedThor =
-            Pair(mService.calculateMedian(maximaThor) * 1.2, mService.calculateMedian(minimaThor) * 1.2)
+            Pair(
+                mService.calculateMedian(maximaThor) * 1.2,
+                mService.calculateMedian(minimaThor) * 1.2
+            )
         Log.i("Calibration", "MaxAbdo: ${calibratedAbdo.first} MinAbdo: ${calibratedAbdo.second}")
         Log.i("Calibration", "MaxThor: ${calibratedThor.first} MinThor: ${calibratedThor.second}")
     }
@@ -130,16 +136,22 @@ object Calibrator {
         diffValuesThor.sort()
         when (pos) {
             "in" -> {
-                holdBreathBufferInAbdo = max(diffValuesAbdo[diffValuesAbdo.size - 1], holdBreathBufferInAbdo)
-                holdBreathBufferInThor = max(diffValuesThor[diffValuesThor.size - 1], holdBreathBufferInThor)
+                holdBreathBufferInAbdo =
+                    max(diffValuesAbdo[diffValuesAbdo.size - 1], holdBreathBufferInAbdo)
+                holdBreathBufferInThor =
+                    max(diffValuesThor[diffValuesThor.size - 1], holdBreathBufferInThor)
             }
             "out" -> {
-                holdBreathBufferOutAbdo = max(diffValuesAbdo[diffValuesAbdo.size - 1], holdBreathBufferOutAbdo)
-                holdBreathBufferOutThor = max(diffValuesThor[diffValuesThor.size - 1], holdBreathBufferOutThor)
+                holdBreathBufferOutAbdo =
+                    max(diffValuesAbdo[diffValuesAbdo.size - 1], holdBreathBufferOutAbdo)
+                holdBreathBufferOutThor =
+                    max(diffValuesThor[diffValuesThor.size - 1], holdBreathBufferOutThor)
             }
             "mid" -> {
-                holdBreathBufferMiddleAbdo = max(diffValuesAbdo[diffValuesAbdo.size - 1], holdBreathBufferMiddleAbdo)
-                holdBreathBufferMiddleThor = max(diffValuesThor[diffValuesThor.size - 1], holdBreathBufferMiddleThor)
+                holdBreathBufferMiddleAbdo =
+                    max(diffValuesAbdo[diffValuesAbdo.size - 1], holdBreathBufferMiddleAbdo)
+                holdBreathBufferMiddleThor =
+                    max(diffValuesThor[diffValuesThor.size - 1], holdBreathBufferMiddleThor)
             }
         }
         Thread.sleep(15)

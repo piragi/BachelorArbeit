@@ -2,6 +2,7 @@ package com.example.breathingmeditationandroid.gestures
 
 import android.util.Log
 import com.example.breathingmeditationandroid.BluetoothConnection
+import com.example.breathingmeditationandroid.Calibrator
 import com.example.breathingmeditationandroid.utils.BreathingUtils
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -39,32 +40,32 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double = 4000.0) : 
         hold = false
         var localPrevAbdo = 0.0
         var localPrevThor = 0.0
-        val buffer = 0.1 // 10% of values
+        var buffer = 0.1 // 10% of values
         var valueCount = 0
         var errorCount = 0
         while (!hold) {
             if (!stop) {
                 valueCount++
+                setBuffer()
                 if (!checkPrevValue(
                         Pair(localPrevAbdo, localPrevThor),
                         Pair(mService.mAbdoCorrected, mService.mThorCorrected)
                     )
                 ) {
                     errorCount++
-                    Log.i("buffer", "values: $valueCount")
-                    Log.i("buffer", "errors: $errorCount")
 
-                    if (valueCount >= 10 && valueCount * buffer < errorCount) {
+                    if (valueCount * buffer < errorCount) {
                         valueCount = 0
                         errorCount = 0
                         localPrevAbdo = mService.mAbdoCorrected
                         localPrevThor = mService.mThorCorrected
                         startTime = currentTimeMillis()
                     }
+                    if (currentTimeMillis().minus(startTime) >= 2000)
+                        buffer += 0.1
                 } else if (currentTimeMillis().minus(startTime) >= time) {
                     hold = true
                 }
-                Thread.sleep(15)
             } else {
                 valueCount = 0
                 errorCount = 0
@@ -72,19 +73,31 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double = 4000.0) : 
             }
         }
         return@async true
+    }
 
+    private fun setBuffer() {
+        if (mService.mAbdoCorrected <= (Calibrator.calibratedAbdo.first).times(1 / 3))
+            borderAbdo = Calibrator.holdBreathBufferOutAbdo
+        else if (mService.mAbdoCorrected in (Calibrator.calibratedAbdo.first).times(1 / 3)..(Calibrator.calibratedAbdo.first).times(
+                2 / 3
+            )
+        )
+            borderAbdo = Calibrator.holdBreathBufferMiddleAbdo
+        else if (mService.mAbdoCorrected >= (Calibrator.calibratedAbdo.first).times(2 / 3))
+            borderAbdo = Calibrator.holdBreathBufferInAbdo
+
+        if (mService.mThorCorrected <= (Calibrator.calibratedThor.first).times(1 / 3))
+            borderThor = Calibrator.holdBreathBufferOutThor
+        else if (mService.mThorCorrected in (Calibrator.calibratedThor.first).times(1 / 3)..(Calibrator.calibratedThor.first).times(
+                2 / 3
+            )
+        )
+            borderThor = Calibrator.holdBreathBufferMiddleThor
+        else if (mService.mThorCorrected >= (Calibrator.calibratedThor.first).times(2 / 3))
+            borderThor = Calibrator.holdBreathBufferInThor
     }
 
     private fun checkPrevValue(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
-        Log.i(
-            "holdBreath",
-            "${abs(prev.first.minus(curr.first)) <= borderAbdo.times(1.1)}, $borderAbdo"
-        )
-        Log.i(
-            "holdBreath",
-            "${abs(prev.second.minus(curr.second)) <= borderThor.times(1.1)}, $borderThor"
-        )
-
         return abs(prev.first.minus(curr.first)) <= borderAbdo.times(1.1)
                 && abs(prev.second.minus(curr.second)) <= borderThor.times(1.1)
     }

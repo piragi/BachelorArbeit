@@ -116,17 +116,6 @@ class GameScreen : ComponentActivity() {
                     GlobalScope.launch {
                         detectRocketLevel()
                     }
-//                    if ( detectedStaccatoBreathGesture.await()) {
-//                        birdsEmergingLevel.animationStart()
-//                    } else if (detectedAbdoBreathGesture.await()) {
-//                        deepBreathLevel.animationStart()
-//                    } else if (detectedThorBreathGesture.await()) {
-//                        //fadeout clouds
-//                        cloudsFadeOut.animationStart()
-//                    } else if (detectedSighBreathGesture.await()) {
-//                        rocketTakeOff.startAnimation()
-//                    }
-
                 }
             } catch (consumed: InterruptedException) {
                 Thread.currentThread().interrupt()
@@ -162,6 +151,7 @@ class GameScreen : ComponentActivity() {
         if (detectedThorBreathGesture.await()) {
             //fadeout clouds
             cloudsFadeOut.animationStart()
+            delay(10000)
             cloudsFadeOut.resetView()
             detectCloudsLevel()
         }
@@ -193,8 +183,6 @@ class GameScreen : ComponentActivity() {
         }
     }
 
-
-    //TODO continue here
     private fun listenForPause() {
         GlobalScope.launch {
             actOnPause()
@@ -211,12 +199,17 @@ class GameScreen : ComponentActivity() {
         val holdBreathDetected = holdBreathGesture.detect()
         if (holdBreathDetected.await()) {
             lifecycleScope.launch {
-                pauseGame()
+                pause = GamePause(this@GameScreen, breathingUtils)
+                val pauseResourcesInitialized = pause.waitForResourcesAsync()
+                if (pauseResourcesInitialized.await()) {
+                    pauseGame()
+                }
             }.join()
             val gameResumed = pause.gameResumedAsync()
             changeToHomeScreen()
             if (gameResumed.await()) {
                 resumeGame()
+                pause.resumeAnimation()
                 actOnPause()
             }
         }
@@ -225,7 +218,7 @@ class GameScreen : ComponentActivity() {
     private fun changeToHomeScreen() {
         GlobalScope.launch {
             val gameEnded = pause.gameEndedAsync()
-            if(gameEnded.await()) {
+            if (gameEnded.await()) {
                 Intent(this@GameScreen, HomeScreenActivity::class.java).also { intent ->
                     intent.putExtra("Intent", serviceIntent)
                     startActivity(intent)
@@ -237,13 +230,10 @@ class GameScreen : ComponentActivity() {
     }
 
     private fun pauseGame() {
-
-        // deepAbdoBreathGesture.stopDetection()
-        // deepThorBreathGesture.stopDetection()
-        // staccatoBreathGesture.stopDetection()
-        // sighBreathGesture.stopDetection()
-
-        pause = GamePause(this, HoldBreathGesture(mService), breathingUtils)
+        deepAbdoBreathGesture.stopDetection()
+        deepThorBreathGesture.stopDetection()
+        staccatoBreathGesture.stopDetection()
+        sighBreathGesture.stopDetection()
         pause.pauseGame()
     }
 

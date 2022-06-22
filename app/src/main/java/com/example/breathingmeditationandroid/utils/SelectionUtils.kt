@@ -8,13 +8,15 @@ import com.example.breathingmeditationandroid.Calibrator
 import com.example.breathingmeditationandroid.R
 import com.example.breathingmeditationandroid.gestures.HoldBreathGesture
 import com.plattysoft.leonids.ParticleSystem
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.lang.System.currentTimeMillis
 import kotlin.math.floor
 
 class SelectionUtils(
     activity: ComponentActivity,
     breathingUtils: BreathingUtils,
-    holdBreathGesture: HoldBreathGesture? = null,
     bubbles: ArrayList<Pair<ImageView, Pair<Int, Int>>>
 ) {
     private lateinit var leavesMain: ParticleSystem
@@ -28,10 +30,9 @@ class SelectionUtils(
     private var xBorderRight = ScreenUtils.xBorderRight
     private var yBorderBottom = ScreenUtils.yBorderBottom
     private var yBorderTop = ScreenUtils.yBorderTop
-    private var holdBreathGesture: HoldBreathGesture
     private var currX: Double = 0.0
     private var currY: Double = 0.0
-    private var currBubble: ImageView? = null
+    private var selectionDetected = false
 
     var screenChangeDetected = false
 
@@ -39,7 +40,6 @@ class SelectionUtils(
     init {
         this.activity = activity
         this.breathingUtils = breathingUtils
-        this.holdBreathGesture = holdBreathGesture!!
         this.bubbles = bubbles
         initializeLeaves()
     }
@@ -90,45 +90,40 @@ class SelectionUtils(
         currY = newY
     }
 
-    //TODO mechanismus der bubble auswählt nachdem 4 sekunden vergangen sind
-
     private fun detectSelection() {
-        var selectionDetected = false
-        for (bubble in bubbles) {
-            if (inBubble(bubble.second)) {
-                currBubble = bubble.first
-                if (bubble.second.first < (1 / 3).times(ScreenUtils.xDimension)) {
-                    holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferOutAbdo
-                    holdBreathGesture.borderThor = Calibrator.holdBreathBufferOutThor
-                } else if (bubble.second.first in (2 / 3).times(ScreenUtils.xDimension)..(1 / 3).times(
-                        ScreenUtils.xDimension
-                    )
-                ) {
-                    holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferMiddleAbdo
-                    holdBreathGesture.borderThor = Calibrator.holdBreathBufferMiddleThor
-                } else {
-                    holdBreathGesture.borderAbdo = Calibrator.holdBreathBufferInAbdo
-                    holdBreathGesture.borderThor = Calibrator.holdBreathBufferInThor
+        GlobalScope.launch {
+            for (bubble in bubbles) {
+                if (inBubble(bubble.second)) {
+                    leaveBubbleAsync(bubble).await()
                 }
-                holdBreathGesture.resumeDetection()
-                selectionDetected = true
-                markSelection(bubble.first, 1.0f)
             }
-            if (currBubble != null && currBubble == bubble.first) {
-                if (currentTimeMillis() - startTime >= 3000) {
-                    screenChangeDetected = true
-                }
-            } else startTime = currentTimeMillis()
-        }
-        if (!selectionDetected) {
-            holdBreathGesture.stopDetection()
-            for (bubble in bubbles)
-                markSelection(bubble.first, 0.7f)
         }
     }
 
+    private fun leaveBubbleAsync(bubble: Pair<ImageView, Pair<Int, Int>>) = GlobalScope.async {
+        selectionDetected = true
+        markSelection(bubble.first, 1.0f)
+        while (inBubble(bubble.second) && !screenChangeDetected) {
+            continue
+        }
+        selectionDetected = false
+        if (!screenChangeDetected)
+            markSelection(bubble.first, 0.7f)
+        return@async true
+    }
+
+    fun detectSafeStopAsync() = GlobalScope.async {
+        while (!screenChangeDetected) {
+            startTime = currentTimeMillis()
+            while (selectionDetected) {
+                if (currentTimeMillis().minus(startTime) >= 3000)
+                    screenChangeDetected = true
+            }
+        }
+        return@async true
+    }
+
     private fun inBubble(coordinatesBubble: Pair<Int, Int>): Boolean {
-        Log.i("selection", "currx: $currX, range: $coordinatesBubble")
         return currX in coordinatesBubble.first.toDouble()..coordinatesBubble.second.toDouble()
     }
 

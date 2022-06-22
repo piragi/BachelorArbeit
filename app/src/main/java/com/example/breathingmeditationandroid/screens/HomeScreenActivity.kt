@@ -36,8 +36,6 @@ class HomeScreenActivity : ComponentActivity() {
     private lateinit var bubbles: ArrayList<Pair<ImageView, Pair<Int, Int>>>
 
     private lateinit var view: ConstraintLayout
-
-    private lateinit var holdBreathGesture: HoldBreathGesture
     private lateinit var selectionUtils: SelectionUtils
 
     private var bubble1Selected = false
@@ -49,7 +47,6 @@ class HomeScreenActivity : ComponentActivity() {
             val binder = service as BluetoothConnection.LocalBinder
             mService = binder.getService()
             breathingUtils = BreathingUtils(mService)
-            holdBreathGesture = HoldBreathGesture(mService)
             start()
             Log.i("init", "service connected")
         }
@@ -92,7 +89,6 @@ class HomeScreenActivity : ComponentActivity() {
                     SelectionUtils(
                         this@HomeScreenActivity,
                         breathingUtils,
-                        holdBreathGesture,
                         bubbles
                     )
                 animateLeaves()
@@ -148,25 +144,19 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun stopActivity() {
-        holdBreathGesture.stopDetection()
         selectionUtils.stopLeaves()
     }
 
     private fun detectScreenChange() {
-        thread(start = true, isDaemon = true) {
-            /* holdBreathGesture.detect()
-            while (!holdBreathGesture.hold && !selectionUtils.screenChangeDetected)
-                continue */
-            GlobalScope.launch {
-                val breathHold = holdBreathGesture.detect()
-                if(breathHold.await()) {
-                    if (bubble1.tag == "selected" && !(bubble2.tag == "selected" || bubble3.tag == "selected"))
-                        changeToAboutScreen()
-                    else if ((bubble2.tag == "selected" && !(bubble1.tag == "selected" || bubble3.tag == "selected")))
-                        changeToCalibrationScreen()
-                    else if (bubble3.tag == "selected" && !(bubble1.tag == "selected" || bubble2.tag == "selected"))
-                        changeToGameScreen()
-                }
+        GlobalScope.launch {
+            val screenChangeDetected = selectionUtils.detectSafeStopAsync()
+            if (screenChangeDetected.await()) {
+                if (bubble1.tag == "selected" && !(bubble2.tag == "selected" || bubble3.tag == "selected"))
+                    changeToAboutScreen()
+                else if ((bubble2.tag == "selected" && !(bubble1.tag == "selected" || bubble3.tag == "selected")))
+                    changeToCalibrationScreen()
+                else if (bubble3.tag == "selected" && !(bubble1.tag == "selected" || bubble2.tag == "selected"))
+                    changeToGameScreen()
             }
         }
     }
