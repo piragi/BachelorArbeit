@@ -92,7 +92,7 @@ class HomeScreenActivity : ComponentActivity() {
                         breathingUtils,
                         bubbles
                     )
-                delay(3000)
+                delay(2000)
                 animateLeaves()
                 detectScreenChange()
             }
