@@ -39,7 +39,7 @@ class DeepBreathLevel(private val snow: ImageView, private val activity: Compone
                 for (i in positions.indices) {
                     //750 good emittingTime
                     snowParticleSystemSet.elementAt(i)
-                        .emit(positions.elementAt(i).first, positions.elementAt(i).second, 11)
+                        .emit(positions.elementAt(i).first, positions.elementAt(i).second, 8, 200)
                 }
             }
 
@@ -63,11 +63,11 @@ class DeepBreathLevel(private val snow: ImageView, private val activity: Compone
     }
 
     private fun setSnowParticleSystem(): ParticleSystem {
-        return ParticleSystem(activity, 30, R.drawable.snowflake, 300)
+        return ParticleSystem(activity, 30, R.drawable.snowflake, 750)
             .setScaleRange(0.2f, 0.3f)
-            .setSpeedModuleAndAngleRange(0.007f, 0.016f, 190, 330)
+            .setSpeedModuleAndAngleRange(0.15f, 0.16f, 200, 300)
+            .setAcceleration(0.00013f, 90)
             .setRotationSpeedRange(90f, 180f)
-            .setAcceleration(0.0025f, 90)
             .setFadeOut(150, AccelerateInterpolator())
     }
 }
