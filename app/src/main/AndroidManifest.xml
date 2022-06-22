@@ -41,7 +41,11 @@
             android:name=".screens.AboutScreen"
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"></activity>
-
+        <activity
+            android:name=".screens.GamePauseScreen"
+            android:hardwareAccelerated="true"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"></activity>
         <service android:name=".BluetoothConnection" />
     </application>
 

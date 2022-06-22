@@ -22,29 +22,27 @@ class SighBreathGesture(
         val bufferSigh: MutableList<Double> = mutableListOf()
 
         while (!sighDetected) {
-            if (!stop) {
-                if (mService.mThorCorrected > Calibrator.calibratedThor.first * 0.6) {
-                    if (bufferSigh.size == bufferSize) {
+            if (!stop && mService.mThorCorrected > Calibrator.calibratedThor.first * 0.6) {
+                if (bufferSigh.size == bufferSize) {
 
-                        if (bufferSigh[bufferSize - 1] != mService.mThorCorrected) {
-                            Log.i("sigh", "$bufferSigh")
-                            Log.i("calibration", "${Calibrator.calibratedAbdo.first * 0.5}")
-                            bufferSigh.removeAt(0)
-                            bufferSigh.add(mService.mThorCorrected)
-                        }
-
-                        if (bufferSigh[bufferSize - 1] <= bufferSigh[0] * 0.75) {
-                            sighDetected = true
-
-                            Log.i("sigh", "detected")
-
-                        }
-                    } else {
+                    if (bufferSigh[bufferSize - 1] != mService.mThorCorrected) {
+                        Log.i("sigh", "$bufferSigh")
+                        Log.i("calibration", "${Calibrator.calibratedAbdo.first * 0.5}")
+                        bufferSigh.removeAt(0)
                         bufferSigh.add(mService.mThorCorrected)
                     }
+
+                    if (bufferSigh[bufferSize - 1] <= bufferSigh[0] * 0.75) {
+                        sighDetected = true
+
+                        Log.i("sigh", "detected")
+
+                    }
                 } else {
-                    bufferSigh.clear()
+                    bufferSigh.add(mService.mThorCorrected)
                 }
+            } else {
+                bufferSigh.clear()
             }
         }
         return@async true

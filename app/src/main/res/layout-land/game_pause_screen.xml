@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/game_pause_screen"
+    android:background="#3AA8A5"
+    tools:ignore="MissingDefaultResource">
+
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/background"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/background_without_trees"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/snow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/snow"
+        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"
+        app:layout_constraintVertical_bias="0.088" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/background_clouds"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/background_clouds"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/rocket"
+        android:layout_width="66dp"
+        android:layout_height="90dp"
+        android:rotation="-16"
+        android:src="@drawable/rocket_shadow_left"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintHorizontal_bias="0.499"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"
+        app:layout_constraintVertical_bias="0.792" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/rocket_without_fire"
+        android:layout_width="66dp"
+        android:layout_height="90dp"
+        android:rotation="-16"
+        android:src="@drawable/rocket_shadow_left_without_fire"
+        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintHorizontal_bias="0.499"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"
+        app:layout_constraintVertical_bias="0.792" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/trees_neutral"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/trees_neutral"
+        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"/>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/trees_left_background"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/tree_left_background"
+        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"/>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/trees_right_background"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/tree_right_background"
+        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background"/>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/white_box"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.5"
+        app:srcCompat="@drawable/white_square"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="-32dp" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/resumeBubble"
+        android:layout_width="234dp" android:layout_height="115dp"
+        android:layout_marginEnd="88dp"
+        android:layout_marginBottom="48dp"
+        android:alpha="0.7"
+        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintEnd_toEndOf="@+id/snow"
+        app:layout_constraintTop_toTopOf="@id/background" app:layout_constraintVertical_bias="0.338"
+        app:srcCompat="@drawable/bubble_unselected"/>
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/endBubble"
+        android:layout_width="234dp"
+        android:layout_height="115dp"
+        android:layout_marginStart="90dp"
+        android:alpha="0.7"
+        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintEnd_toStartOf="@+id/resumeBubble"
+        app:layout_constraintHorizontal_bias="0.322"
+        app:layout_constraintRight_toRightOf="@id/background"
+        app:layout_constraintStart_toStartOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/background" app:layout_constraintVertical_bias="0.809"
+        app:srcCompat="@drawable/bubble_unselected"/>
+    <TextView
+        android:id="@+id/end"
+        android:layout_width="172dp"
+        android:layout_height="39dp"
+        android:alpha="1.0"
+        android:fontFamily="sans-serif"
+        android:lineSpacingExtra="8sp"
+        android:text="End"
+        android:textAlignment="center"
+        android:textColor="#FDFDFD"
+        android:textSize="24sp" android:textStyle="bold" android:typeface="normal"
+        app:layout_constraintBottom_toBottomOf="@+id/endBubble" app:layout_constraintHorizontal_bias="0.545"
+        app:layout_constraintLeft_toLeftOf="@+id/endBubble"
+        app:layout_constraintRight_toRightOf="@+id/endBubble" app:layout_constraintTop_toTopOf="@+id/endBubble"
+        app:layout_constraintVertical_bias="0.529"/>
+    <TextView
+        android:id="@+id/resume"
+        android:layout_width="115dp"
+        android:layout_height="39dp"
+        android:layout_marginTop="46dp"
+        android:layout_marginBottom="42dp"
+        android:alpha="1.0"
+        android:fontFamily="sans-serif"
+        android:lineSpacingExtra="8sp"
+        android:text="Resume"
+        android:textAlignment="center"
+        android:textColor="#FDFDFD"
+        android:textSize="24sp" android:textStyle="bold" android:typeface="normal"
+        app:layout_constraintBottom_toBottomOf="@+id/resumeBubble" app:layout_constraintHorizontal_bias="0.457"
+        app:layout_constraintLeft_toLeftOf="@+id/resumeBubble"
+        app:layout_constraintRight_toRightOf="@+id/resumeBubble" app:layout_constraintTop_toTopOf="@+id/resumeBubble"
+        app:layout_constraintVertical_bias="0.459"/>
+    <TextView
+        android:id="@id/pauseText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:text="Game paused"
+        android:textColor="#00838D"
+        android:textSize="24dp"
+        android:textStyle="bold"
+        android:alpha="0.0"
+        app:layout_constraintBottom_toBottomOf="@id/background" app:layout_constraintHorizontal_bias="0.499"
+        app:layout_constraintLeft_toLeftOf="@id/background"
+        app:layout_constraintRight_toRightOf="@+id/background" app:layout_constraintTop_toTopOf="@+id/background"
+        app:layout_constraintVertical_bias="0.509"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
