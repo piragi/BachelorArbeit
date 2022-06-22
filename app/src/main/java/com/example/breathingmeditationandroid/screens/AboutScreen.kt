@@ -72,7 +72,7 @@ class AboutScreen : ComponentActivity() {
                 lifecycleScope.launch {
                     selectionUtils = SelectionUtils(this@AboutScreen, breathingUtils, clouds)
                     returnToHomeScreen()
-                    delay(2000)
+                    delay(1000)
                     startAnimation()
                 }
             }

@@ -63,7 +63,7 @@ class GamePauseScreen : ComponentActivity() {
                             breathingUtils,
                             bubbles
                         )
-                    delay(2000)
+                    delay(1000)
                     animateLeaves()
                     detectScreenChange()
                 }
