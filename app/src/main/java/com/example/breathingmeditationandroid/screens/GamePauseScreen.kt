@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.breathingmeditationandroid.BluetoothConnection
 import com.example.breathingmeditationandroid.R
 import com.example.breathingmeditationandroid.utils.BreathingUtils
+import com.example.breathingmeditationandroid.utils.ScreenUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
 import kotlinx.coroutines.*
 import kotlin.concurrent.thread
@@ -33,6 +34,9 @@ class GamePauseScreen : ComponentActivity() {
             mService = binder.getService()
             breathingUtils = BreathingUtils(mService)
             start()
+            lifecycleScope.launch {
+                pauseTextDisplay()
+            }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -44,51 +48,52 @@ class GamePauseScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.game_pause_screen)
-        endBubble = findViewById(R.id.endBubble)
-        resumeBubble = findViewById(R.id.resumeBubble)
-        lifecycleScope.launch {
-            pauseTextDisplay()
-        }
+
+        serviceIntent = intent?.extras?.getParcelable("Intent")!!
+        applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
     }
 
     private fun start() {
-        initializeBubbles()
-        GlobalScope.launch {
-            val bubblesInitialized = waitForBubbleInitAsync()
-            if (bubblesInitialized.await()) {
-                lifecycleScope.launch {
-                    selectionUtils =
-                        SelectionUtils(
-                            this@GamePauseScreen,
-                            breathingUtils,
-                            bubbles
-                        )
-                    delay(1000)
-                    animateLeaves()
-                    detectScreenChange()
-                }
-            }
+        endBubble = findViewById(R.id.endBubble)
+        resumeBubble = findViewById(R.id.resumeBubble)
+        bubbles = arrayListOf(
+            Pair(
+                endBubble,
+                Pair(ScreenUtils.endBubble.first, ScreenUtils.endBubble.second)
+            ),
+            Pair(
+                resumeBubble,
+                Pair(ScreenUtils.resumeBubble.first, ScreenUtils.resumeBubble.second)
+            )
+        )
+        lifecycleScope.launch {
+            selectionUtils =
+                SelectionUtils(
+                    this@GamePauseScreen,
+                    breathingUtils,
+                    bubbles
+                )
+            delay(1000)
+            animateLeaves()
+            detectScreenChange()
         }
-    }
-
-    private fun waitForBubbleInitAsync() = GlobalScope.async {
-        while (!this@GamePauseScreen::bubbles.isInitialized)
-            continue
-        return@async true
     }
 
     private fun initializeBubbles() {
         if (endBubble.left == 0 || endBubble.right == 0 || resumeBubble.left == 0 || resumeBubble.right == 0) {
-            bubbles = arrayListOf()
             endBubble.viewTreeObserver.addOnGlobalLayoutListener {
                 val left: Int = endBubble.left
                 val right: Int = endBubble.right
-                bubbles.add(Pair(endBubble, Pair(left, right)))
+                if (this::bubbles.isInitialized)
+                    bubbles.add(Pair(endBubble, Pair(left, right)))
+                else bubbles = arrayListOf(Pair(endBubble, Pair(left, right)))
             }
             resumeBubble.viewTreeObserver.addOnGlobalLayoutListener {
                 val left: Int = resumeBubble.left
                 val right: Int = resumeBubble.right
-                bubbles.add(Pair(resumeBubble, Pair(left, right)))
+                if (this::bubbles.isInitialized)
+                    bubbles.add(Pair(resumeBubble, Pair(left, right)))
+                else bubbles = arrayListOf(Pair(resumeBubble, Pair(left, right)))
             }
         } else bubbles = arrayListOf(
             Pair(endBubble, Pair(endBubble.left, endBubble.right)),
@@ -97,16 +102,13 @@ class GamePauseScreen : ComponentActivity() {
     }
 
     private fun animateLeaves() {
-        if (this::bubbles.isInitialized) {
-            selectionUtils = SelectionUtils(this@GamePauseScreen, breathingUtils, bubbles)
-            thread(start = true, isDaemon = true) {
-                while (true) {
-                    try {
-                        selectionUtils.animateLeavesDiagonal()
-                        Thread.sleep(2)
-                    } catch (error: ConcurrentModificationException) {
-                        continue
-                    }
+        thread(start = true, isDaemon = true) {
+            while (true) {
+                try {
+                    selectionUtils.animateLeavesDiagonal()
+                    Thread.sleep(2)
+                } catch (error: ConcurrentModificationException) {
+                    continue
                 }
             }
         }
@@ -134,8 +136,8 @@ class GamePauseScreen : ComponentActivity() {
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
             overridePendingTransition(R.anim.fadein_fast_full, R.anim.fadeout_fast_full)
-            finish()
         }
+        finish()
     }
 
     private fun changeToGameScreen() {
@@ -144,8 +146,8 @@ class GamePauseScreen : ComponentActivity() {
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
             overridePendingTransition(R.anim.fadein_fast_full, R.anim.fadeout_fast_full)
-            finish()
         }
+        finish()
     }
 
     private suspend fun pauseTextDisplay() = coroutineScope {
@@ -159,12 +161,6 @@ class GamePauseScreen : ComponentActivity() {
                 .setListener(null)
         }
         delay(1000)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        serviceIntent = intent?.extras?.getParcelable("Intent")!!
-        applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
     }
 
     override fun onDestroy() {

@@ -11,6 +11,14 @@ object ScreenUtils {
     var yBorderTop = 0
     lateinit var absoluteX: Pair<Int, Int>
     lateinit var absoluteY: Pair<Int, Int>
+    var endBubble = Pair(351, 1053)
+    var resumeBubble = Pair(1224, 1926)
+
+    var aboutScreenBubble = Pair(210, 660)
+    var calibrationBubble = Pair(870, 1320)
+    var playBubble = Pair(1530, 1980)
+
+    var cloud = Pair(1365, 2142)
 
     var initialized = false
 

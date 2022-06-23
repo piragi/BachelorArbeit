@@ -6,12 +6,14 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.breathingmeditationandroid.BluetoothConnection
 import com.example.breathingmeditationandroid.R
 import com.example.breathingmeditationandroid.utils.BreathingUtils
+import com.example.breathingmeditationandroid.utils.ScreenUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -44,16 +46,12 @@ class AboutScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.about_screen)
-        cloud = findViewById(R.id.cloud)
-    }
-
-    private fun waitForBubbleInitAsync() = GlobalScope.async {
-        while (!this@AboutScreen::clouds.isInitialized)
-            continue
-        return@async true
     }
 
     private fun getBubbleCoordinates() {
+        cloud = findViewById(R.id.cloud)
+        clouds = arrayListOf(Pair(cloud, Pair(ScreenUtils.cloud.first, ScreenUtils.cloud.second)))
+        /* Log.i("bubbles", "${cloud.left}, ${cloud.right}")
         if (cloud.left == 0 && cloud.right == 0) {
             clouds = arrayListOf()
             cloud.viewTreeObserver.addOnGlobalLayoutListener {
@@ -61,21 +59,16 @@ class AboutScreen : ComponentActivity() {
                 val right: Int = cloud.right
                 clouds.add(Pair(cloud, Pair(left, right)))
             }
-        } else clouds = arrayListOf(Pair(cloud, Pair(cloud.left, cloud.right)))
+        } else clouds = arrayListOf(Pair(cloud, Pair(cloud.left, cloud.right))) */
     }
 
     private fun start() {
         getBubbleCoordinates()
-        GlobalScope.launch {
-            val cloudInitialized = waitForBubbleInitAsync()
-            if (cloudInitialized.await()) {
-                lifecycleScope.launch {
-                    selectionUtils = SelectionUtils(this@AboutScreen, breathingUtils, clouds)
-                    returnToHomeScreen()
-                    delay(1000)
-                    startAnimation()
-                }
-            }
+        lifecycleScope.launch {
+            selectionUtils = SelectionUtils(this@AboutScreen, breathingUtils, clouds)
+            returnToHomeScreen()
+            delay(1000)
+            startAnimation()
         }
     }
 

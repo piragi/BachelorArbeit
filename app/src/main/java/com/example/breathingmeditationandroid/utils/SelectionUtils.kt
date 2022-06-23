@@ -14,6 +14,8 @@ import kotlinx.coroutines.launch
 import java.lang.System.currentTimeMillis
 import kotlin.math.floor
 
+
+// TODO diese Klasse zieht sich über die anderen ...
 class SelectionUtils(
     activity: ComponentActivity,
     breathingUtils: BreathingUtils,
@@ -33,6 +35,8 @@ class SelectionUtils(
     private var currX: Double = 0.0
     private var currY: Double = 0.0
     private var selectionDetected = false
+    private var currSelection: ImageView
+    private var prevSelection: ImageView
 
     var screenChangeDetected = false
 
@@ -42,6 +46,8 @@ class SelectionUtils(
         this.breathingUtils = breathingUtils
         this.bubbles = bubbles
         initializeLeaves()
+        currSelection = bubbles[0].first
+        prevSelection = currSelection
     }
 
     fun animateLeavesDiagonal() {
@@ -49,6 +55,7 @@ class SelectionUtils(
             moveLeaves(leavesMain, calcXMovement(), calcYMovement())
             moveLeaves(leavesSupport, calcXMovement(), calcYMovement())
             detectSelection()
+            Thread.sleep(10)
             breathingUtils.smoothValue()
         }
     }
@@ -58,6 +65,7 @@ class SelectionUtils(
             moveLeaves(leavesMain, calcXMovement(), ScreenUtils.yBorderBottom.toDouble())
             moveLeaves(leavesSupport, calcXMovement(), ScreenUtils.yBorderBottom.toDouble())
             detectSelection()
+            Thread.sleep(10)
             breathingUtils.smoothValue()
         }
     }
@@ -92,17 +100,32 @@ class SelectionUtils(
 
     private fun detectSelection() {
         GlobalScope.launch {
-            try {
-                for (bubble in bubbles) {
-                    if (inBubble(bubble.second)) {
-                        leaveBubbleAsync(bubble).await()
-                    }
+            for (bubble in bubbles) {
+                Log.i("selection", "${bubble.second}")
+                if (inBubble(bubble.second)) {
+                    Log.i("selection", "inBubble")
+                    val leftBubble = leaveBubbleAsync(bubble)
+                    if (leftBubble.await())
+                        continue
                 }
-            } catch (e: ConcurrentModificationException) {
-                detectSelection()
             }
         }
     }
+
+    /* private fun detectSelection() {
+        var selectionDetected = false
+        for (bubble in bubbles) {
+            if (inBubble(bubble.second)) {
+                selectionDetected = true
+                markSelection(bubble.first, 1.0f)
+                currSelection = bubble.first
+            }
+        }
+        if (!selectionDetected) {
+            for (bubble in bubbles)
+                markSelection(bubble.first, 0.7f)
+        }
+    } */
 
     private fun leaveBubbleAsync(bubble: Pair<ImageView, Pair<Int, Int>>) = GlobalScope.async {
         selectionDetected = true

@@ -9,21 +9,21 @@ import kotlin.math.max
 
 object Calibrator {
 
-    var calibratedAbdo: Pair<Double, Double> = Pair(0.0, 0.0)
-    var calibratedThor: Pair<Double, Double> = Pair(0.0, 0.0)
+    var calibratedAbdo: Pair<Double, Double> = Pair(2.0, 0.0)
+    var calibratedThor: Pair<Double, Double> = Pair(2.0, 0.0)
 
     // Buffers for how much difference there can be for holding breath
-    var holdBreathBufferInAbdo = 0.0
-    var holdBreathBufferInThor = 0.0
+    var holdBreathBufferInAbdo = 1.0
+    var holdBreathBufferInThor = 1.0
 
-    var holdBreathBufferMiddleAbdo = 0.0
-    var holdBreathBufferMiddleThor = 0.0
+    var holdBreathBufferMiddleAbdo = 1.0
+    var holdBreathBufferMiddleThor = 1.0
 
-    var holdBreathBufferOutAbdo = 0.0
-    var holdBreathBufferOutThor = 0.0
+    var holdBreathBufferOutAbdo = 1.0
+    var holdBreathBufferOutThor = 1.0
 
-    var flowFactorX = 0.0
-    var flowFactorY = 0.0
+    var flowFactorX = 500.0
+    var flowFactorY = -250.0
 
     var correction = 0.0
 
