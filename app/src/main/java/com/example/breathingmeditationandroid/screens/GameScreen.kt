@@ -98,7 +98,7 @@ class GameScreen : ComponentActivity() {
         }
     }
 
-    // TODO funktioniert nur ein paar mal
+    // TODO funktioniert nur ein paar mal (ab 2x pausiert und wieder gestartet gehts nimma)
     private fun startLevel() {
         thread(start = true, isDaemon = true) {
             try {
