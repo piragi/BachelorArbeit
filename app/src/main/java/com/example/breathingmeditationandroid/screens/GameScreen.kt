@@ -98,23 +98,24 @@ class GameScreen : ComponentActivity() {
         }
     }
 
+    // TODO funktioniert nur ein paar mal
     private fun startLevel() {
         thread(start = true, isDaemon = true) {
             try {
                 lifecycleScope.launch {
-                    GlobalScope.launch {
+                    launch {
                         listenForPause()
                     }
-                    GlobalScope.launch {
+                    launch {
                         detectBirdsEmerging()
                     }
-                    GlobalScope.launch {
+                    launch {
                         detectDeepBreathLevel()
                     }
-                    GlobalScope.launch {
+                    launch {
                         detectCloudsLevel()
                     }
-                    GlobalScope.launch {
+                    launch {
                         detectRocketLevel()
                     }
                 }
@@ -135,13 +136,10 @@ class GameScreen : ComponentActivity() {
     private suspend fun detectDeepBreathLevel() {
         val detectedAbdoBreathGesture = deepAbdoBreathGesture.detect()
         if (detectedAbdoBreathGesture.await()) {
-            lifecycleScope.launch {
-                deepBreathLevel.animationStart()
-            }
+            deepBreathLevel.animationStart()
             delay(3000)
-            lifecycleScope.launch {
-                deepBreathLevel.resetView()
-            }.join()
+            deepBreathLevel.resetView()
+            delay(5000)
             detectDeepBreathLevel()
         }
     }
@@ -177,8 +175,6 @@ class GameScreen : ComponentActivity() {
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
             overridePendingTransition(R.anim.fadein_fast_full, R.anim.fadeout_fast_full)
-            finish()
         }
-
     }
 }
