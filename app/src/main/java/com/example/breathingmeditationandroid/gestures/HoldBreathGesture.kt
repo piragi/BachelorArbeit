@@ -97,7 +97,7 @@ class HoldBreathGesture(mService: BluetoothConnection, time: Double = 2000.0) : 
     }
 
     private fun checkPrevValue(prev: Pair<Double, Double>, curr: Pair<Double, Double>): Boolean {
-        return abs(prev.first.minus(curr.first)) <= borderAbdo.times(1.2)
-                && abs(prev.second.minus(curr.second)) <= borderThor.times(1.2)
+        return abs(prev.first.minus(curr.first)) <= borderAbdo.times(1.1)
+                && abs(prev.second.minus(curr.second)) <= borderThor.times(1.1)
     }
 }
