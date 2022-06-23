@@ -80,7 +80,6 @@ class StartupActivity : AppCompatActivity() {
             lateinit var device: BluetoothDevice
             var textView: TextView = v.findViewById(R.id.row_item) as TextView
 
-
             init {
                 val container = v.findViewById<LinearLayout>(R.id.container)
                 container.setOnClickListener {
@@ -88,7 +87,7 @@ class StartupActivity : AppCompatActivity() {
                     val bluetoothConnection = StartBluetoothConnection(device, applicationContext)
                     val serviceIntent = bluetoothConnection.startBluetoothConnection()
 
-                    Intent(applicationContext, HomeScreenActivity::class.java).also { intent ->
+                    Intent(applicationContext, CalibrationScreenActivity::class.java).also { intent ->
                         intent.putExtra("Intent", serviceIntent)
                         startActivity(intent)
                     }

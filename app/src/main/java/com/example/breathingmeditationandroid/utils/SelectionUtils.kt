@@ -98,7 +98,7 @@ class SelectionUtils(
         currY = newY
     }
 
-    private fun detectSelection() {
+    /* private fun detectSelection() {
         GlobalScope.launch {
             for (bubble in bubbles) {
                 Log.i("selection", "${bubble.second}")
@@ -110,22 +110,21 @@ class SelectionUtils(
                 }
             }
         }
-    }
+    } */
 
-    /* private fun detectSelection() {
+    private fun detectSelection() {
         var selectionDetected = false
         for (bubble in bubbles) {
             if (inBubble(bubble.second)) {
                 selectionDetected = true
                 markSelection(bubble.first, 1.0f)
-                currSelection = bubble.first
             }
         }
         if (!selectionDetected) {
             for (bubble in bubbles)
                 markSelection(bubble.first, 0.7f)
         }
-    } */
+    }
 
     private fun leaveBubbleAsync(bubble: Pair<ImageView, Pair<Int, Int>>) = GlobalScope.async {
         selectionDetected = true
@@ -139,7 +138,7 @@ class SelectionUtils(
         return@async true
     }
 
-    fun detectSafeStopAsync() = GlobalScope.async {
+    /* fun detectSafeStopAsync() = GlobalScope.async {
         while (!screenChangeDetected) {
             startTime = currentTimeMillis()
             while (selectionDetected) {
@@ -148,7 +147,7 @@ class SelectionUtils(
             }
         }
         return@async true
-    }
+    } */
 
     private fun inBubble(coordinatesBubble: Pair<Int, Int>): Boolean {
         return currX in coordinatesBubble.first.toDouble()..coordinatesBubble.second.toDouble()

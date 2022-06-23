@@ -64,12 +64,10 @@ class AboutScreen : ComponentActivity() {
 
     private fun start() {
         getBubbleCoordinates()
-        lifecycleScope.launch {
-            selectionUtils = SelectionUtils(this@AboutScreen, breathingUtils, clouds)
-            returnToHomeScreen()
-            delay(1000)
-            startAnimation()
-        }
+        selectionUtils = SelectionUtils(this@AboutScreen, breathingUtils, clouds)
+        Thread.sleep(1000)
+        detectScreenChange()
+        startAnimation()
     }
 
     private fun startAnimation() {
@@ -85,13 +83,23 @@ class AboutScreen : ComponentActivity() {
         }
     }
 
-    private fun returnToHomeScreen() {
-        GlobalScope.launch {
-            val screenChangeDetected = selectionUtils.detectSafeStopAsync()
-            if (screenChangeDetected.await()) {
-                changeScreen()
+    private fun detectScreenChange() {
+        var screenChanged = false
+        thread(start = true, isDaemon = true) {
+            while (!screenChanged) {
+                val startTime = System.currentTimeMillis()
+                while (cloud.tag == "selected" && !screenChanged)
+                    if (System.currentTimeMillis().minus(startTime) >= 3500) {
+                        screenChanged = true
+                        stopActivity()
+                        changeScreen()
+                    }
             }
         }
+    }
+
+    private fun stopActivity() {
+        selectionUtils.stopLeaves()
     }
 
     private fun changeScreen() {

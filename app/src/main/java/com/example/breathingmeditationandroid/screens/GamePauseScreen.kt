@@ -18,6 +18,7 @@ import com.example.breathingmeditationandroid.utils.ScreenUtils
 import com.example.breathingmeditationandroid.utils.SelectionUtils
 import kotlinx.coroutines.*
 import kotlin.concurrent.thread
+import java.lang.System.currentTimeMillis
 
 class GamePauseScreen : ComponentActivity() {
     private lateinit var serviceIntent: Intent
@@ -66,17 +67,15 @@ class GamePauseScreen : ComponentActivity() {
                 Pair(ScreenUtils.resumeBubble.first, ScreenUtils.resumeBubble.second)
             )
         )
-        lifecycleScope.launch {
-            selectionUtils =
-                SelectionUtils(
-                    this@GamePauseScreen,
-                    breathingUtils,
-                    bubbles
-                )
-            delay(1000)
-            animateLeaves()
-            detectScreenChange()
-        }
+        selectionUtils =
+            SelectionUtils(
+                this@GamePauseScreen,
+                breathingUtils,
+                bubbles
+            )
+        Thread.sleep(1000)
+        animateLeaves()
+        detectScreenChange()
     }
 
     private fun initializeBubbles() {
@@ -115,13 +114,22 @@ class GamePauseScreen : ComponentActivity() {
     }
 
     private fun detectScreenChange() {
-        GlobalScope.launch {
-            val screenChangeDetected = selectionUtils.detectSafeStopAsync()
-            if (screenChangeDetected.await()) {
-                if (endBubble.tag == "selected" && resumeBubble.tag != "selected")
-                    changeToHomeScreen()
-                else if ((endBubble.tag != "selected" && (resumeBubble.tag == "selected")))
-                    changeToGameScreen()
+        var screenChanged = false
+        thread(start = true, isDaemon = true) {
+            while (!screenChanged) {
+                val startTime = currentTimeMillis()
+                while (endBubble.tag == "selected" && resumeBubble.tag != "selected" && !screenChanged)
+                    if (currentTimeMillis().minus(startTime) >= 3500) {
+                        screenChanged = true
+                        stopActivity()
+                        changeToHomeScreen()
+                    }
+                while (endBubble.tag != "selected" && resumeBubble.tag == "selected" && !screenChanged)
+                    if (currentTimeMillis().minus(startTime) >= 3500) {
+                        screenChanged = true
+                        stopActivity()
+                        changeToGameScreen()
+                    }
             }
         }
     }
@@ -131,7 +139,6 @@ class GamePauseScreen : ComponentActivity() {
     }
 
     private fun changeToHomeScreen() {
-        stopActivity()
         Intent(this, HomeScreenActivity::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)
@@ -141,7 +148,6 @@ class GamePauseScreen : ComponentActivity() {
     }
 
     private fun changeToGameScreen() {
-        stopActivity()
         Intent(this, GameScreen::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
             startActivity(intent)

@@ -160,21 +160,33 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun detectScreenChange() {
-        GlobalScope.launch {
-            val screenChangeDetected = selectionUtils.detectSafeStopAsync()
-            if (screenChangeDetected.await()) {
-                if (bubble1.tag == "selected" && !(bubble2.tag == "selected" || bubble3.tag == "selected"))
-                    changeToAboutScreen()
-                else if ((bubble2.tag == "selected" && !(bubble1.tag == "selected" || bubble3.tag == "selected")))
-                    changeToCalibrationScreen()
-                else if (bubble3.tag == "selected" && !(bubble1.tag == "selected" || bubble2.tag == "selected"))
-                    changeToGameScreen()
+        var screenChanged = false
+        thread(start = true, isDaemon = true) {
+            while (!screenChanged) {
+                val startTime = System.currentTimeMillis()
+                while (bubble1.tag == "selected" && bubble2.tag != "selected" &&  bubble3.tag != "selected" && !screenChanged)
+                    if (System.currentTimeMillis().minus(startTime) >= 3500) {
+                        screenChanged = true
+                        stopActivity()
+                        changeToAboutScreen()
+                    }
+                while (bubble1.tag != "selected" && bubble2.tag == "selected" &&  bubble3.tag != "selected" && !screenChanged)
+                    if (System.currentTimeMillis().minus(startTime) >= 3500) {
+                        screenChanged = true
+                        stopActivity()
+                        changeToCalibrationScreen()
+                    }
+                while (bubble1.tag != "selected" && bubble2.tag != "selected" &&  bubble3.tag == "selected" && !screenChanged)
+                    if (System.currentTimeMillis().minus(startTime) >= 3500) {
+                        screenChanged = true
+                        stopActivity()
+                        changeToGameScreen()
+                    }
             }
         }
     }
 
     private fun changeToAboutScreen() {
-        stopActivity()
         bubble1Selected = false
         Intent(this, AboutScreen::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
@@ -187,7 +199,6 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun changeToGameScreen() {
-        stopActivity()
         bubble3Selected = false
         Intent(this, GameScreen::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
@@ -198,7 +209,6 @@ class HomeScreenActivity : ComponentActivity() {
     }
 
     private fun changeToCalibrationScreen() {
-        stopActivity()
         bubble2Selected = false
         Intent(this, CalibrationScreenActivity::class.java).also { intent ->
             intent.putExtra("Intent", serviceIntent)
